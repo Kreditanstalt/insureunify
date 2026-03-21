@@ -21,9 +21,7 @@ Font.register({
   ],
 })
 
-// ─── Shared helpers ────────────────────────────────────────────────────────────
-
-function today() {
+function todayStr() {
   return new Date().toLocaleDateString('bg-BG', {
     day: '2-digit',
     month: '2-digit',
@@ -36,39 +34,8 @@ interface TemplateProps {
   clientName: string
 }
 
-// ─── Shared field-row renderer ─────────────────────────────────────────────────
-
-function renderSections(
-  mappedData: InsurerMappedData,
-  rowStyle: object,
-  rowEvenStyle: object,
-  labelStyle: object,
-  valueStyle: object,
-  sectionTitleStyle: object,
-) {
-  return MASTER_SCHEMA.map((section) => {
-    const fields = section.fields.filter((f) => mappedData[f.id])
-    if (fields.length === 0) return null
-    return (
-      <View key={section.id}>
-        <Text style={sectionTitleStyle}>{section.label}</Text>
-        {fields.map((field, idx) => {
-          const m = mappedData[field.id]
-          if (!m) return null
-          return (
-            <View key={field.id} style={[rowStyle, idx % 2 === 1 ? rowEvenStyle : {}]}>
-              <Text style={labelStyle}>{m.originalLabel}</Text>
-              <Text style={valueStyle}>{m.displayValue}</Text>
-            </View>
-          )
-        })}
-      </View>
-    )
-  })
-}
-
 // ═══════════════════════════════════════════════════════════════════════════════
-// БУЛСТРАД — официален синьо-бял формуляр, стил на правен документ
+// БУЛСТРАД
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const BS = StyleSheet.create({
@@ -135,15 +102,15 @@ const BS = StyleSheet.create({
     color: '#6b7280',
   },
   footerBold: { fontWeight: 700, color: '#0B3D91' },
+  rightAligned: { alignItems: 'flex-end' },
 })
 
 function BulstradTemplate({ mappedData, clientName }: TemplateProps) {
   const insurer = INSURERS.bulstrad
-  const date = today()
+  const date = todayStr()
   return (
     <Document title={`Булстрад — ${clientName}`} author="InsureUnify">
       <Page size="A4" style={BS.page}>
-        {/* Blue top band */}
         <View style={BS.topBand}>
           <View>
             <Text style={BS.bandTitle}>БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП</Text>
@@ -156,22 +123,37 @@ function BulstradTemplate({ mappedData, clientName }: TemplateProps) {
           </View>
         </View>
 
-        {/* Client box */}
         <View style={BS.clientBox}>
           <View>
             <Text style={BS.clientLabel}>Кандидат-застрахован</Text>
             <Text style={BS.clientValue}>{clientName}</Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
+          <View style={BS.rightAligned}>
             <Text style={BS.clientLabel}>Застраховател</Text>
             <Text style={BS.formRef}>Булстрад · Формуляр {insurer.formCode}</Text>
           </View>
         </View>
 
-        {/* Fields */}
-        {renderSections(mappedData, BS.row, BS.rowEven, BS.rowLabel, BS.rowValue, BS.sectionTitle)}
+        {MASTER_SCHEMA.map((section) => {
+          const fields = section.fields.filter((f) => mappedData[f.id])
+          if (fields.length === 0) return null
+          return (
+            <View key={section.id}>
+              <Text style={BS.sectionTitle}>{section.label}</Text>
+              {fields.map((field, idx) => {
+                const m = mappedData[field.id]
+                if (!m) return null
+                return (
+                  <View key={field.id} style={idx % 2 === 1 ? [BS.row, BS.rowEven] : BS.row}>
+                    <Text style={BS.rowLabel}>{m.originalLabel}</Text>
+                    <Text style={BS.rowValue}>{m.displayValue}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          )
+        })}
 
-        {/* Footer */}
         <View style={BS.footer} fixed>
           <Text>
             <Text style={BS.footerBold}>Булстрад</Text> · Формуляр {insurer.formCode}
@@ -184,7 +166,7 @@ function BulstradTemplate({ mappedData, clientName }: TemplateProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ЖЕНЕРАЛИ — модерен червено-бял формуляр
+// ЖЕНЕРАЛИ
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const GN = StyleSheet.create({
@@ -208,10 +190,7 @@ const GN = StyleSheet.create({
   },
   headerTitle: { fontSize: 18, fontWeight: 700, color: '#C8102E' },
   headerSub: { fontSize: 8, color: '#6b7280', marginTop: 2 },
-  headerRight: {
-    alignItems: 'flex-end',
-    justifyContent: 'flex-end',
-  },
+  headerRight: { alignItems: 'flex-end', justifyContent: 'flex-end' },
   headerLabel: { fontSize: 7, color: '#9ca3af', textTransform: 'uppercase' },
   headerDate: { fontSize: 10, fontWeight: 700, color: '#111827' },
   clientStrip: {
@@ -226,11 +205,7 @@ const GN = StyleSheet.create({
   },
   clientLabel: { fontSize: 7, color: '#9f1239' },
   clientName: { fontSize: 13, fontWeight: 700, color: '#9f1239' },
-  formBadge: {
-    backgroundColor: '#C8102E',
-    borderRadius: 3,
-    padding: '3 7',
-  },
+  formBadge: { backgroundColor: '#C8102E', borderRadius: 3, padding: '3 7' },
   formBadgeText: { fontSize: 7, color: '#ffffff', fontWeight: 700 },
   sectionTitle: {
     fontSize: 7,
@@ -263,11 +238,10 @@ const GN = StyleSheet.create({
 
 function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
   const insurer = INSURERS.generali
-  const date = today()
+  const date = todayStr()
   return (
     <Document title={`Женерали — ${clientName}`} author="InsureUnify">
       <Page size="A4" style={GN.page}>
-        {/* Header */}
         <View style={GN.header}>
           <View style={GN.headerLeft}>
             <Text style={GN.headerTitle}>Женерали</Text>
@@ -280,7 +254,6 @@ function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
           </View>
         </View>
 
-        {/* Client strip */}
         <View style={GN.clientStrip}>
           <View>
             <Text style={GN.clientLabel}>Застраховащ</Text>
@@ -291,10 +264,26 @@ function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
           </View>
         </View>
 
-        {/* Fields */}
-        {renderSections(mappedData, GN.row, GN.rowEven, GN.rowLabel, GN.rowValue, GN.sectionTitle)}
+        {MASTER_SCHEMA.map((section) => {
+          const fields = section.fields.filter((f) => mappedData[f.id])
+          if (fields.length === 0) return null
+          return (
+            <View key={section.id}>
+              <Text style={GN.sectionTitle}>{section.label}</Text>
+              {fields.map((field, idx) => {
+                const m = mappedData[field.id]
+                if (!m) return null
+                return (
+                  <View key={field.id} style={idx % 2 === 1 ? [GN.row, GN.rowEven] : GN.row}>
+                    <Text style={GN.rowLabel}>{m.originalLabel}</Text>
+                    <Text style={GN.rowValue}>{m.displayValue}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          )
+        })}
 
-        {/* Footer */}
         <View style={GN.footer} fixed>
           <Text>Женерали · {insurer.formCode}</Text>
           <Text>InsureUnify · {date}</Text>
@@ -305,7 +294,7 @@ function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ИНСТИНКТ — двуезичен зелен формуляр (БГ/EN)
+// ИНСТИНКТ
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const IN = StyleSheet.create({
@@ -325,16 +314,10 @@ const IN = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerLeft: {},
   headerTitle: { fontSize: 16, fontWeight: 700, color: '#1B6B3A' },
   headerSub: { fontSize: 7.5, color: '#6b7280', marginTop: 2 },
   headerRight: { alignItems: 'flex-end' },
-  headerBadge: {
-    backgroundColor: '#1B6B3A',
-    borderRadius: 3,
-    padding: '3 8',
-    marginBottom: 4,
-  },
+  headerBadge: { backgroundColor: '#1B6B3A', borderRadius: 3, padding: '3 8', marginBottom: 4 },
   headerBadgeText: { fontSize: 8, color: '#ffffff', fontWeight: 700 },
   headerDate: { fontSize: 8, color: '#374151' },
   clientRow: {
@@ -348,7 +331,8 @@ const IN = StyleSheet.create({
   },
   clientLabel: { fontSize: 7, color: '#166534' },
   clientName: { fontSize: 12, fontWeight: 700, color: '#14532d' },
-  bilingualNote: { fontSize: 7, color: '#9ca3af', fontStyle: 'italic' },
+  bilingualNote: { fontSize: 7, color: '#9ca3af' },
+  bilingualRight: { alignItems: 'flex-end' },
   sectionTitle: {
     fontSize: 7,
     fontWeight: 700,
@@ -380,13 +364,12 @@ const IN = StyleSheet.create({
 
 function InstinctTemplate({ mappedData, clientName }: TemplateProps) {
   const insurer = INSURERS.instinct
-  const date = today()
+  const date = todayStr()
   return (
     <Document title={`Instinct — ${clientName}`} author="InsureUnify">
       <Page size="A4" style={IN.page}>
-        {/* Header box */}
         <View style={IN.headerBox}>
-          <View style={IN.headerLeft}>
+          <View>
             <Text style={IN.headerTitle}>Инстинкт / Instinct</Text>
             <Text style={IN.headerSub}>All Risks Insurance / Застраховка Всички Рискове</Text>
             <Text style={IN.headerSub}>Form {insurer.formCode}</Text>
@@ -399,22 +382,37 @@ function InstinctTemplate({ mappedData, clientName }: TemplateProps) {
           </View>
         </View>
 
-        {/* Client row */}
         <View style={IN.clientRow}>
           <View>
             <Text style={IN.clientLabel}>Застраховащ / Insured</Text>
             <Text style={IN.clientName}>{clientName}</Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
+          <View style={IN.bilingualRight}>
             <Text style={IN.bilingualNote}>Формулярът е двуезичен</Text>
             <Text style={IN.bilingualNote}>Form is bilingual BG/EN</Text>
           </View>
         </View>
 
-        {/* Fields */}
-        {renderSections(mappedData, IN.row, IN.rowEven, IN.rowLabel, IN.rowValue, IN.sectionTitle)}
+        {MASTER_SCHEMA.map((section) => {
+          const fields = section.fields.filter((f) => mappedData[f.id])
+          if (fields.length === 0) return null
+          return (
+            <View key={section.id}>
+              <Text style={IN.sectionTitle}>{section.label}</Text>
+              {fields.map((field, idx) => {
+                const m = mappedData[field.id]
+                if (!m) return null
+                return (
+                  <View key={field.id} style={idx % 2 === 1 ? [IN.row, IN.rowEven] : IN.row}>
+                    <Text style={IN.rowLabel}>{m.originalLabel}</Text>
+                    <Text style={IN.rowValue}>{m.displayValue}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          )
+        })}
 
-        {/* Footer */}
         <View style={IN.footer} fixed>
           <Text>Instinct · {insurer.formCode}</Text>
           <Text>InsureUnify · {date}</Text>
