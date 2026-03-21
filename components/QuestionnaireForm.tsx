@@ -26,7 +26,7 @@ function computeTotal(data: FormData): number {
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mt-10 mb-5 pb-2 border-b border-gray-800">
+    <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mt-10 mb-5 pb-2 border-b border-gray-200">
       {children}
     </h2>
   )
@@ -43,9 +43,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-sm text-gray-300 mb-2">
+      <label className="block text-sm font-medium text-gray-700 mb-2">
         {label}
-        {required && <span className="text-red-400 ml-0.5">*</span>}
+        {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
       {children}
     </div>
@@ -53,8 +53,8 @@ function Field({
 }
 
 const inputClass =
-  'w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white ' +
-  'placeholder-gray-600 focus:outline-none focus:border-blue-500 transition-colors'
+  'w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 ' +
+  'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow shadow-sm'
 
 function TextInput({
   value,
@@ -77,7 +77,9 @@ function TextInput({
       placeholder={placeholder}
       disabled={disabled}
       min={type === 'number' ? 0 : undefined}
-      className={inputClass + (disabled ? ' opacity-60 cursor-not-allowed bg-gray-900' : '')}
+      className={
+        inputClass + (disabled ? ' bg-gray-50 text-gray-500 cursor-not-allowed' : '')
+      }
     />
   )
 }
@@ -100,8 +102,8 @@ function ToggleGroup({
           onClick={() => onChange(opt.value)}
           className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors min-h-[40px] ${
             value === opt.value
-              ? 'bg-blue-600 border-blue-600 text-white'
-              : 'bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500 hover:text-white'
+              ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-200'
+              : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
           }`}
         >
           {opt.label}
@@ -193,16 +195,30 @@ export default function QuestionnaireForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-50">
+      {/* Top bar */}
+      <header className="bg-white border-b border-gray-200 px-6 py-3.5 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <a href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors text-sm">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Dashboard
+          </a>
+          <span className="text-sm font-medium text-gray-700">Нов въпросник</span>
+          <div className="w-20" />
+        </div>
+      </header>
+
       <div className="max-w-2xl mx-auto px-4 py-8 pb-20">
-        <h1 className="text-2xl font-bold text-white mb-1">Нов въпросник</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник</h1>
         <p className="text-gray-500 text-sm mb-8">
           Попълнете информацията и генерирайте формулярите за застрахователите
         </p>
 
         {/* ── Застрахователи ─────────────────────────────────────── */}
-        <div className="bg-gray-900 rounded-xl p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wider mb-3">
+        <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Застрахователи
           </p>
           <div className="flex flex-wrap gap-2">
@@ -215,24 +231,21 @@ export default function QuestionnaireForm() {
                   type="button"
                   onClick={() => toggleInsurer(key)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                    selected
-                      ? 'text-white'
-                      : 'bg-gray-800 border-gray-700 text-gray-500 hover:text-gray-300'
+                    selected ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'
                   }`}
                   style={
                     selected
-                      ? {
-                          backgroundColor: ins.color + '22',
-                          borderColor: ins.color,
-                        }
+                      ? { backgroundColor: ins.color + '18', borderColor: ins.color, color: ins.color }
                       : {}
                   }
                 >
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: selected ? ins.color : '#4b5563' }}
+                    style={{ backgroundColor: selected ? ins.color : '#d1d5db' }}
                   />
-                  {ins.name}
+                  <span style={selected ? { color: ins.color } : {}}>
+                    {ins.name}
+                  </span>
                   <span className="text-xs opacity-50">{ins.formCode}</span>
                 </button>
               )
@@ -489,7 +502,7 @@ export default function QuestionnaireForm() {
         {/* ── Submit ────────────────────────────────────────────── */}
         <div className="mt-12">
           {!canSubmit && totalMissing > 0 && (
-            <p className="text-xs text-amber-500 text-center mb-4">
+            <p className="text-xs text-amber-600 text-center mb-4">
               Попълнете всички задължителни полета (*) — остават {totalMissing}
             </p>
           )}
@@ -497,10 +510,10 @@ export default function QuestionnaireForm() {
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
-            className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors"
+            className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm shadow-blue-200"
           >
             {submitting
-              ? 'Запазване...'
+              ? 'Запазване…'
               : `Генерирай формуляри за ${selectedInsurers.length} застрахователя`}
           </button>
         </div>

@@ -38,9 +38,9 @@ export default function ReviewPage() {
 
   if (notFound) {
     return (
-      <div className="min-h-screen bg-gray-950 flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-400">Въпросникът не е намерен.</p>
-        <Link href="/dashboard" className="text-blue-400 hover:underline text-sm">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+        <p className="text-gray-500">Въпросникът не е намерен.</p>
+        <Link href="/dashboard" className="text-blue-600 hover:underline text-sm">
           Към dashboard
         </Link>
       </div>
@@ -49,43 +49,53 @@ export default function ReviewPage() {
 
   if (!submission || !mappedData) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="border-b border-gray-800 px-6 py-4 sticky top-0 bg-gray-950/95 backdrop-blur z-10">
+      <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push('/dashboard')}
-              className="text-gray-500 hover:text-gray-300 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div>
-              <h1 className="text-base font-semibold text-white leading-none">{submission.clientName}</h1>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h1 className="text-base font-semibold text-gray-900 leading-none">
+                {submission.clientName}
+              </h1>
+              <p className="text-xs text-gray-400 mt-0.5">
                 {new Date(submission.createdAt).toLocaleDateString('bg-BG', {
-                  day: '2-digit', month: 'long', year: 'numeric',
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
                 })}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="hidden sm:block text-xs text-gray-500">
+            <span className="hidden sm:block text-xs text-gray-400">
               {submission.selectedInsurers.length} застрахователя
             </span>
             <Link
               href="/dashboard/new"
-              className="text-xs px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition-colors"
+              className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors font-medium"
             >
               + Нов
             </Link>
