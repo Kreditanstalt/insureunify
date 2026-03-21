@@ -12,24 +12,18 @@ import type { InsurerMappedData } from '@/lib/mappings'
 import type { InsurerKey } from '@/lib/schema'
 import { INSURERS, MASTER_SCHEMA } from '@/lib/schema'
 
-// Roboto supports Cyrillic
+// DejaVu Sans — local TTF files, Cyrillic support
 Font.register({
-  family: 'Roboto',
+  family: 'DejaVu',
   fonts: [
-    {
-      src: 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2',
-      fontWeight: 400,
-    },
-    {
-      src: 'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmEU9fBBc9.woff2',
-      fontWeight: 700,
-    },
+    { src: '/fonts/DejaVuSans.ttf', fontWeight: 400 },
+    { src: '/fonts/DejaVuSans-Bold.ttf', fontWeight: 700 },
   ],
 })
 
 const S = StyleSheet.create({
   page: {
-    fontFamily: 'Roboto',
+    fontFamily: 'DejaVu',
     fontSize: 9,
     padding: '30 40 50 40',
     color: '#111827',
