@@ -37,7 +37,13 @@ export function DownloadPDFButton({ insurerKey, mappedData, clientName }: Props)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${clientName.replace(/\s+/g, '_')}_${insurer.name}_${insurer.formCode}.pdf`
+      const client = clientName.replace(/\s+/g, '_')
+      const fileNames: Record<string, string> = {
+        bulstrad: `Bulstrad_Imushestvo_${client}.pdf`,
+        generali: `Generali_IMSB_${client}.pdf`,
+        instinct: `Instinct_AllRisks_${client}.pdf`,
+      }
+      a.download = fileNames[insurerKey] ?? `${client}_${insurer.name}.pdf`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
