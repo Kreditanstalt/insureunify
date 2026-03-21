@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
-import { INSURERS, FormData, InsurerKey } from '@/lib/schema'
+import { INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
 
 interface StoredSubmission {
   id: string
@@ -12,8 +12,6 @@ interface StoredSubmission {
   formData: FormData
   createdAt: string
 }
-
-const VALUE_FIELDS = ['val_buildings', 'val_machinery', 'val_electronics', 'val_inventory', 'val_stock']
 
 function computeTotal(data: FormData): number {
   return VALUE_FIELDS.reduce((sum, id) => {
@@ -32,15 +30,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string
-  required?: boolean
-  children: React.ReactNode
-}) {
+function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -77,9 +67,7 @@ function TextInput({
       placeholder={placeholder}
       disabled={disabled}
       min={type === 'number' ? 0 : undefined}
-      className={
-        inputClass + (disabled ? ' bg-gray-50 text-gray-500 cursor-not-allowed' : '')
-      }
+      className={inputClass + (disabled ? ' bg-gray-50 text-gray-500 cursor-not-allowed' : '')}
     />
   )
 }
@@ -113,6 +101,128 @@ function ToggleGroup({
   )
 }
 
+function SelectInput({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: {
+  options: { value: string; label: string }[]
+  value: string | number | undefined
+  onChange: (v: string) => void
+  placeholder?: string
+}) {
+  return (
+    <select
+      value={value ?? ''}
+      onChange={(e) => onChange(e.target.value)}
+      className={inputClass + ' cursor-pointer'}
+    >
+      <option value="" disabled>
+        {placeholder ?? '— изберете —'}
+      </option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+// Conditional visibility rules (field id → { depends on field + value })
+const CONDITIONAL: Record<string, { field: string; value: string }> = {
+  claims_details: { field: 'previous_claims', value: 'yes' },
+  hazardous_desc: { field: 'hazardous_materials', value: 'yes' },
+  deductible_details: { field: 'custom_deductible', value: 'yes' },
+}
+
+// ─── Schema-driven field renderer ────────────────────────────────────────────
+
+function renderFieldInput(
+  field: SchemaField,
+  formData: FormData,
+  set: (id: string, v: string) => void,
+  setNum: (id: string, v: string) => void,
+  total: number
+) {
+  if (field.computed) {
+    return (
+      <TextInput
+        type="number"
+        value={total > 0 ? total : ''}
+        placeholder="0"
+        disabled
+      />
+    )
+  }
+
+  if (field.type === 'select' && field.options) {
+    // Use toggle buttons for ≤4 options, native select for ≥5
+    if (field.options.length <= 4) {
+      return (
+        <ToggleGroup
+          options={field.options}
+          value={formData[field.id]}
+          onChange={(v) => set(field.id, v)}
+        />
+      )
+    }
+    return (
+      <SelectInput
+        options={field.options}
+        value={formData[field.id]}
+        onChange={(v) => set(field.id, v)}
+      />
+    )
+  }
+
+  if (field.type === 'textarea') {
+    return (
+      <textarea
+        value={String(formData[field.id] ?? '')}
+        onChange={(e) => set(field.id, e.target.value)}
+        placeholder={field.placeholder}
+        rows={3}
+        className={inputClass + ' resize-none'}
+      />
+    )
+  }
+
+  if (field.type === 'number') {
+    return (
+      <TextInput
+        type="number"
+        value={formData[field.id]}
+        onChange={(v) => setNum(field.id, v)}
+        placeholder={field.placeholder ?? '0'}
+      />
+    )
+  }
+
+  if (field.type === 'date') {
+    return (
+      <TextInput
+        type="date"
+        value={formData[field.id]}
+        onChange={(v) => set(field.id, v)}
+      />
+    )
+  }
+
+  // text
+  return (
+    <TextInput
+      value={formData[field.id]}
+      onChange={(v) => set(field.id, v)}
+      placeholder={field.placeholder}
+    />
+  )
+}
+
+// Number fields that should pair side-by-side in a 2-col grid
+const NUM_GRID_SECTION = 'property_values'
+
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export default function QuestionnaireForm() {
@@ -144,29 +254,11 @@ export default function QuestionnaireForm() {
 
   const total = computeTotal(formData)
 
-  const REQUIRED = [
-    'company_name',
-    'eik',
-    'address',
-    'phone',
-    'email',
-    'activity',
-    'property_address',
-    'currency',
-    'construction_type',
-    'roof_type',
-    'construction_year',
-    'floors',
-    'fire_alarm',
-    'fire_extinguishers',
-    'fire_station_distance',
-    'alarm_system',
-    'previous_claims',
-  ]
-
-  const missing = REQUIRED.filter(
-    (id) => formData[id] === undefined || formData[id] === ''
+  const REQUIRED_IDS = MASTER_SCHEMA.flatMap((s) =>
+    s.fields.filter((f) => f.required && !f.computed).map((f) => f.id)
   )
+
+  const missing = REQUIRED_IDS.filter((id) => formData[id] === undefined || formData[id] === '')
   const totalMissing = missing.length + (total === 0 ? 1 : 0)
   const canSubmit = selectedInsurers.length > 0 && totalMissing === 0
 
@@ -183,9 +275,7 @@ export default function QuestionnaireForm() {
         formData: { ...formData, val_total: total },
         createdAt: new Date().toISOString(),
       }
-      const existing = JSON.parse(
-        localStorage.getItem('iu_submissions') ?? '[]'
-      ) as StoredSubmission[]
+      const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]') as StoredSubmission[]
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))
       router.push(`/review/${id}`)
     } catch (err) {
@@ -199,7 +289,10 @@ export default function QuestionnaireForm() {
       {/* Top bar */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 sticky top-0 z-10 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <a href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors text-sm">
+          <a
+            href="/dashboard"
+            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors text-sm"
+          >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -216,7 +309,7 @@ export default function QuestionnaireForm() {
           Попълнете информацията и генерирайте формулярите за застрахователите
         </p>
 
-        {/* ── Застрахователи ─────────────────────────────────────── */}
+        {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
             Застрахователи
@@ -231,21 +324,15 @@ export default function QuestionnaireForm() {
                   type="button"
                   onClick={() => toggleInsurer(key)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                    selected ? 'text-white' : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'
+                    selected ? '' : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'
                   }`}
-                  style={
-                    selected
-                      ? { backgroundColor: ins.color + '18', borderColor: ins.color, color: ins.color }
-                      : {}
-                  }
+                  style={selected ? { backgroundColor: ins.color + '18', borderColor: ins.color, color: ins.color } : {}}
                 >
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: selected ? ins.color : '#d1d5db' }}
                   />
-                  <span style={selected ? { color: ins.color } : {}}>
-                    {ins.name}
-                  </span>
+                  <span style={selected ? { color: ins.color } : {}}>{ins.name}</span>
                   <span className="text-xs opacity-50">{ins.formCode}</span>
                 </button>
               )
@@ -253,253 +340,78 @@ export default function QuestionnaireForm() {
           </div>
         </div>
 
-        {/* ── Фирма ──────────────────────────────────────────────── */}
-        <SectionTitle>Фирма</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Наименование" required>
-            <TextInput
-              value={formData.company_name}
-              onChange={(v) => set('company_name', v)}
-              placeholder="Фирма ЕООД / Иван Иванов"
-            />
-          </Field>
-          <Field label="ЕИК / ЕГН" required>
-            <TextInput
-              value={formData.eik}
-              onChange={(v) => set('eik', v)}
-              placeholder="123456789"
-            />
-          </Field>
-          <Field label="Адрес на управление" required>
-            <TextInput
-              value={formData.address}
-              onChange={(v) => set('address', v)}
-              placeholder="гр. София, ул. ..."
-            />
-          </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Телефон" required>
-              <TextInput
-                value={formData.phone}
-                onChange={(v) => set('phone', v)}
-                placeholder="+359 88 888 8888"
-              />
-            </Field>
-            <Field label="Ел. поща" required>
-              <TextInput
-                value={formData.email}
-                onChange={(v) => set('email', v)}
-                placeholder="office@firma.bg"
-              />
-            </Field>
-          </div>
-          <Field label="Основна дейност" required>
-            <TextInput
-              value={formData.activity}
-              onChange={(v) => set('activity', v)}
-              placeholder="Търговия / Производство / Услуги"
-            />
-          </Field>
-        </div>
+        {/* Schema-driven sections */}
+        {MASTER_SCHEMA.map((section) => {
+          // Collect visible fields for this section
+          const visibleFields = section.fields.filter((field) => {
+            const cond = CONDITIONAL[field.id]
+            if (cond) return formData[cond.field] === cond.value
+            return true
+          })
 
-        {/* ── Застраховано имущество ─────────────────────────────── */}
-        <SectionTitle>Застраховано имущество</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Адрес на имуществото" required>
-            <TextInput
-              value={formData.property_address}
-              onChange={(v) => set('property_address', v)}
-              placeholder="гр. ..., ул. ..."
-            />
-          </Field>
-        </div>
+          // For the property_values section, group consecutive number fields into a grid
+          if (section.id === NUM_GRID_SECTION) {
+            const groups: Array<{ type: 'grid'; fields: SchemaField[] } | { type: 'single'; field: SchemaField }> = []
+            let i = 0
+            while (i < visibleFields.length) {
+              const field = visibleFields[i]
+              if (field.type === 'number' && !field.computed) {
+                const pair: SchemaField[] = [field]
+                if (i + 1 < visibleFields.length && visibleFields[i + 1].type === 'number' && !visibleFields[i + 1].computed) {
+                  pair.push(visibleFields[i + 1])
+                  i += 2
+                } else {
+                  i++
+                }
+                groups.push({ type: 'grid', fields: pair })
+              } else {
+                groups.push({ type: 'single', field })
+                i++
+              }
+            }
 
-        {/* ── Застрахователни суми ──────────────────────────────── */}
-        <SectionTitle>Застрахователни суми</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Валута" required>
-            <ToggleGroup
-              options={[
-                { value: 'BGN', label: 'BGN (лв.)' },
-                { value: 'EUR', label: 'EUR (€)' },
-                { value: 'USD', label: 'USD ($)' },
-              ]}
-              value={formData.currency}
-              onChange={(v) => set('currency', v)}
-            />
-          </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Сгради">
-              <TextInput
-                type="number"
-                value={formData.val_buildings}
-                onChange={(v) => setNum('val_buildings', v)}
-                placeholder="0"
-              />
-            </Field>
-            <Field label="Машини и оборудване">
-              <TextInput
-                type="number"
-                value={formData.val_machinery}
-                onChange={(v) => setNum('val_machinery', v)}
-                placeholder="0"
-              />
-            </Field>
-            <Field label="Електронно оборудване">
-              <TextInput
-                type="number"
-                value={formData.val_electronics}
-                onChange={(v) => setNum('val_electronics', v)}
-                placeholder="0"
-              />
-            </Field>
-            <Field label="Стоки и материали">
-              <TextInput
-                type="number"
-                value={formData.val_stock}
-                onChange={(v) => setNum('val_stock', v)}
-                placeholder="0"
-              />
-            </Field>
-          </div>
-          <Field label="ОБЩО (изчислява се автоматично)" required>
-            <TextInput
-              type="number"
-              value={total > 0 ? total : ''}
-              placeholder="0"
-              disabled
-            />
-          </Field>
-        </div>
+            return (
+              <div key={section.id}>
+                <SectionTitle>{section.label}</SectionTitle>
+                <div className="space-y-4">
+                  {groups.map((g, gi) => {
+                    if (g.type === 'grid') {
+                      return (
+                        <div key={gi} className={`grid gap-4 ${g.fields.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                          {g.fields.map((field) => (
+                            <Field key={field.id} label={field.label} required={field.required}>
+                              {renderFieldInput(field, formData, set, setNum, total)}
+                            </Field>
+                          ))}
+                        </div>
+                      )
+                    }
+                    return (
+                      <Field key={g.field.id} label={g.field.label} required={g.field.required}>
+                        {renderFieldInput(g.field, formData, set, setNum, total)}
+                      </Field>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          }
 
-        {/* ── Данни за сградата ─────────────────────────────────── */}
-        <SectionTitle>Данни за сградата</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Носеща конструкция" required>
-            <ToggleGroup
-              options={[
-                { value: 'reinforced_concrete', label: 'ЖБ' },
-                { value: 'metal', label: 'Метална' },
-                { value: 'brick', label: 'Тухлена' },
-                { value: 'wooden', label: 'Дървена' },
-                { value: 'other', label: 'Друга' },
-              ]}
-              value={formData.construction_type}
-              onChange={(v) => set('construction_type', v)}
-            />
-          </Field>
-          <Field label="Вид покрив" required>
-            <ToggleGroup
-              options={[
-                { value: 'reinforced_concrete', label: 'ЖБ плоча' },
-                { value: 'tiles', label: 'Керемиди' },
-                { value: 'metal', label: 'Метален' },
-                { value: 'other', label: 'Друг' },
-              ]}
-              value={formData.roof_type}
-              onChange={(v) => set('roof_type', v)}
-            />
-          </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Година на построяване" required>
-              <TextInput
-                value={formData.construction_year}
-                onChange={(v) => set('construction_year', v)}
-                placeholder="2005"
-              />
-            </Field>
-            <Field label="Брой етажи" required>
-              <TextInput
-                value={formData.floors}
-                onChange={(v) => set('floors', v)}
-                placeholder="2"
-              />
-            </Field>
-          </div>
-        </div>
+          return (
+            <div key={section.id}>
+              <SectionTitle>{section.label}</SectionTitle>
+              <div className="space-y-4">
+                {visibleFields.map((field) => (
+                  <Field key={field.id} label={field.label} required={field.required}>
+                    {renderFieldInput(field, formData, set, setNum, total)}
+                  </Field>
+                ))}
+              </div>
+            </div>
+          )
+        })}
 
-        {/* ── Пожарна безопасност ───────────────────────────────── */}
-        <SectionTitle>Пожарна безопасност</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Пожароизвестителна система" required>
-            <ToggleGroup
-              options={[
-                { value: 'automatic', label: 'Автоматична' },
-                { value: 'manual', label: 'Ръчна' },
-                { value: 'none', label: 'Няма' },
-              ]}
-              value={formData.fire_alarm}
-              onChange={(v) => set('fire_alarm', v)}
-            />
-          </Field>
-          <Field label="Пожарогасители" required>
-            <ToggleGroup
-              options={[
-                { value: 'yes', label: 'Да' },
-                { value: 'no', label: 'Не' },
-              ]}
-              value={formData.fire_extinguishers}
-              onChange={(v) => set('fire_extinguishers', v)}
-            />
-          </Field>
-          <Field label="Разстояние до пожарна служба" required>
-            <ToggleGroup
-              options={[
-                { value: 'lt_1', label: 'до 1 км' },
-                { value: '1_3', label: '1–3 км' },
-                { value: '3_5', label: '3–5 км' },
-                { value: '5_10', label: '5–10 км' },
-                { value: 'gt_10', label: 'над 10 км' },
-              ]}
-              value={formData.fire_station_distance}
-              onChange={(v) => set('fire_station_distance', v)}
-            />
-          </Field>
-        </div>
-
-        {/* ── Охрана ────────────────────────────────────────────── */}
-        <SectionTitle>Охрана</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Алармена система / СОТ" required>
-            <ToggleGroup
-              options={[
-                { value: 'sot', label: 'СОТ' },
-                { value: 'local', label: 'Локална' },
-                { value: 'none', label: 'Няма' },
-              ]}
-              value={formData.alarm_system}
-              onChange={(v) => set('alarm_system', v)}
-            />
-          </Field>
-        </div>
-
-        {/* ── Щети ──────────────────────────────────────────────── */}
-        <SectionTitle>Щети (последните 5 години)</SectionTitle>
-        <div className="space-y-4">
-          <Field label="Имало ли е щети?" required>
-            <ToggleGroup
-              options={[
-                { value: 'yes', label: 'Да' },
-                { value: 'no', label: 'Не' },
-              ]}
-              value={formData.previous_claims}
-              onChange={(v) => set('previous_claims', v)}
-            />
-          </Field>
-          {formData.previous_claims === 'yes' && (
-            <Field label="Описание на щетите">
-              <textarea
-                value={String(formData.claims_details ?? '')}
-                onChange={(e) => set('claims_details', e.target.value)}
-                placeholder="Дата, вид, размер на щетата..."
-                rows={3}
-                className={inputClass + ' resize-none'}
-              />
-            </Field>
-          )}
-        </div>
-
-        {/* ── Submit ────────────────────────────────────────────── */}
+        {/* Submit */}
         <div className="mt-12">
           {!canSubmit && totalMissing > 0 && (
             <p className="text-xs text-amber-600 text-center mb-4">
