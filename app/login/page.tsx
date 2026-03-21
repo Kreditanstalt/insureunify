@@ -108,6 +108,21 @@ export default function LoginPage() {
             <p className="text-center text-xs text-gray-400">
               Без парола — влизате само с линк на пощата
             </p>
+
+            {/* TODO: remove before production */}
+            <div className="border-t border-gray-100 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.setItem('iu_auth', JSON.stringify({ email: 'demo@insureunify.bg' }))
+                  localStorage.setItem('iu_profile', JSON.stringify({ companyName: 'Демо Брокер', email: 'demo@insureunify.bg' }))
+                  router.push('/dashboard')
+                }}
+                className="w-full py-2.5 rounded-lg border border-dashed border-gray-300 text-gray-500 hover:border-gray-400 hover:text-gray-700 text-sm transition-colors"
+              >
+                Влез като демо потребител
+              </button>
+            </div>
           </form>
         ) : (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center space-y-4">
