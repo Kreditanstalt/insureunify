@@ -1,6 +1,6 @@
 'use client'
 
-import { INSURERS, InsurerKey, MASTER_SCHEMA } from '@/lib/schema'
+import { INSURERS, InsurerKey, MASTER_SCHEMA, FormData } from '@/lib/schema'
 import { InsurerMappedData } from '@/lib/mappings'
 import { DownloadPDFButton } from './DownloadPDFButton'
 
@@ -8,9 +8,10 @@ interface Props {
   mappedData: Record<InsurerKey, InsurerMappedData>
   selectedInsurers: InsurerKey[]
   clientName: string
+  formData: FormData
 }
 
-export default function ReviewOutput({ mappedData, selectedInsurers, clientName }: Props) {
+export default function ReviewOutput({ mappedData, selectedInsurers, clientName, formData }: Props) {
   return (
     <div className="space-y-6">
       <div className="text-sm text-gray-500">
@@ -52,7 +53,7 @@ export default function ReviewOutput({ mappedData, selectedInsurers, clientName 
                 <span className="text-xs text-gray-400">{fieldCount} полета</span>
                 <DownloadPDFButton
                   insurerKey={key}
-                  mappedData={data}
+                  formData={formData}
                   clientName={clientName}
                 />
               </div>

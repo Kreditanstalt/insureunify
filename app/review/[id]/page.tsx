@@ -108,6 +108,7 @@ export default function ReviewPage() {
           mappedData={mappedData}
           selectedInsurers={submission.selectedInsurers}
           clientName={submission.clientName}
+          formData={submission.formData}
         />
       </main>
     </div>
