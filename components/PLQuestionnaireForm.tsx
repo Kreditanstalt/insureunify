@@ -254,6 +254,7 @@ function MappingBadges({ field, selectedInsurers }: { field: SchemaField; select
 function PLFieldInput({
   field, formData, set, setNum,
   eikStatus, onEikChange, onCompanySelect,
+  insuredEikStatus, onInsuredEikChange, onInsuredCompanySelect,
 }: {
   field: SchemaField
   formData: PLFormData
@@ -262,6 +263,12 @@ function PLFieldInput({
   eikStatus: EikStatus
   onEikChange: (v: string) => void
   onCompanySelect: (d: {
+    company_name: string; eik: string; address?: string; email?: string;
+    phone?: string; activity?: string;
+  }) => void
+  insuredEikStatus: EikStatus
+  onInsuredEikChange: (v: string) => void
+  onInsuredCompanySelect: (d: {
     company_name: string; eik: string; address?: string; email?: string;
     phone?: string; activity?: string;
   }) => void
@@ -281,6 +288,24 @@ function PLFieldInput({
         value={formData[field.id]}
         onChange={onEikChange}
         status={eikStatus}
+      />
+    )
+  }
+  if (field.id === 'pl_insured_name') {
+    return (
+      <CompanyNameInput
+        value={formData[field.id]}
+        onChange={(v) => set(field.id, v)}
+        onSelect={onInsuredCompanySelect}
+      />
+    )
+  }
+  if (field.id === 'pl_insured_eik') {
+    return (
+      <EikInput
+        value={formData[field.id]}
+        onChange={onInsuredEikChange}
+        status={insuredEikStatus}
       />
     )
   }
@@ -412,6 +437,8 @@ export default function PLQuestionnaireForm() {
   const [submitting, setSubmitting] = useState(false)
   const [eikStatus, setEikStatus] = useState<EikStatus>('idle')
   const abortRef = useRef<AbortController | null>(null)
+  const [insuredEikStatus, setInsuredEikStatus] = useState<EikStatus>('idle')
+  const insuredAbortRef = useRef<AbortController | null>(null)
 
   function set(id: string, v: string) {
     setFormData((prev) => ({ ...prev, [id]: v === '' ? undefined : v }))
@@ -468,6 +495,54 @@ export default function PLQuestionnaireForm() {
     if (d.eik) {
       set('pl_eik', d.eik)
       lookupEik(d.eik)
+    }
+  }
+
+  const lookupInsuredEik = useCallback(async (eik: string) => {
+    insuredAbortRef.current?.abort()
+    const ctrl = new AbortController()
+    insuredAbortRef.current = ctrl
+    setInsuredEikStatus('loading')
+    try {
+      const res = await fetch(`/api/eik?eik=${encodeURIComponent(eik)}`, { signal: ctrl.signal })
+      if (ctrl.signal.aborted) return
+      if (res.ok) {
+        const data = await res.json()
+        if (data.company_name) {
+          setFormData((prev) => ({
+            ...prev,
+            ...(data.company_name ? { pl_insured_name:    data.company_name } : {}),
+            ...(data.address      ? { pl_insured_address: data.address      } : {}),
+          }))
+          setInsuredEikStatus('found')
+          return
+        }
+      }
+      setInsuredEikStatus('not_found')
+    } catch (err) {
+      if ((err as Error).name !== 'AbortError') setInsuredEikStatus('not_found')
+    }
+  }, [])
+
+  function handleInsuredEikChange(v: string) {
+    set('pl_insured_eik', v)
+    const digits = v.replace(/\D/g, '')
+    if (digits.length === 9 || digits.length === 13) {
+      lookupInsuredEik(digits)
+    } else {
+      insuredAbortRef.current?.abort()
+      setInsuredEikStatus('idle')
+    }
+  }
+
+  function handleInsuredCompanySelect(d: {
+    company_name: string; eik: string; address?: string; email?: string;
+    phone?: string; activity?: string;
+  }) {
+    set('pl_insured_name', d.company_name)
+    if (d.eik) {
+      set('pl_insured_eik', d.eik)
+      lookupInsuredEik(d.eik)
     }
   }
 
@@ -612,6 +687,9 @@ export default function PLQuestionnaireForm() {
                     eikStatus={eikStatus}
                     onEikChange={handleEikChange}
                     onCompanySelect={handleCompanySelect}
+                    insuredEikStatus={insuredEikStatus}
+                    onInsuredEikChange={handleInsuredEikChange}
+                    onInsuredCompanySelect={handleInsuredCompanySelect}
                   />
                 </FieldLabel>
               ))}

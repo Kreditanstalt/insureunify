@@ -4,6 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { INSURERS, InsurerKey } from '@/lib/schema'
+import { OA_INSURERS } from '@/lib/oa-schema'
+
+const ALL_INSURERS: Record<string, { color: string; name: string }> = {
+  ...INSURERS,
+  ...OA_INSURERS,
+}
 
 interface Submission {
   id: string
@@ -275,15 +281,19 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                       <div className="flex gap-1.5">
-                        {sub.selectedInsurers.map((key) => (
-                          <span
-                            key={key}
-                            className="inline-flex items-center text-xs px-2 py-0.5 rounded-full text-white font-medium"
-                            style={{ backgroundColor: INSURERS[key].color }}
-                          >
-                            {INSURERS[key].name}
-                          </span>
-                        ))}
+                        {sub.selectedInsurers.map((key) => {
+                          const ins = ALL_INSURERS[key as string]
+                          if (!ins) return null
+                          return (
+                            <span
+                              key={key}
+                              className="inline-flex items-center text-xs px-2 py-0.5 rounded-full text-white font-medium"
+                              style={{ backgroundColor: ins.color }}
+                            >
+                              {ins.name}
+                            </span>
+                          )
+                        })}
                       </div>
                       <span className="text-xs text-gray-400">
                         {new Date(sub.createdAt).toLocaleDateString('bg-BG', {
