@@ -5,17 +5,17 @@ import { mapFormDataForInsurer } from '@/lib/mappings'
 import type { FormData } from '@/lib/schema'
 
 Font.register({
-  family: 'DejaVu',
+  family: 'Roboto',
   fonts: [
-    { src: '/fonts/DejaVuSans.ttf', fontWeight: 400 },
-    { src: '/fonts/DejaVuSans-Bold.ttf', fontWeight: 700 },
+    { src: '/fonts/Roboto-Regular.ttf', fontWeight: 'normal' },
+    { src: '/fonts/Roboto-Bold.ttf', fontWeight: 'bold' },
   ],
 })
 
 const RED = '#C8102E'
 
 const S = StyleSheet.create({
-  page: { fontFamily: 'DejaVu', fontSize: 9, color: '#111', backgroundColor: '#fff', paddingTop: 34, paddingBottom: 50, paddingHorizontal: 42 },
+  page: { fontFamily: 'Roboto', fontSize: 9, color: '#111', backgroundColor: '#fff', paddingTop: 34, paddingBottom: 50, paddingHorizontal: 42 },
   // header
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 4 },
   logo: { fontSize: 16, fontWeight: 700, color: RED },

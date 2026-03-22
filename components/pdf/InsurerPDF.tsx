@@ -12,12 +12,12 @@ import type { InsurerMappedData } from '@/lib/mappings'
 import type { InsurerKey } from '@/lib/schema'
 import { INSURERS, MASTER_SCHEMA } from '@/lib/schema'
 
-// DejaVu Sans — local TTF files, Cyrillic support
+// Roboto — local TTF files, Cyrillic support
 Font.register({
-  family: 'DejaVu',
+  family: 'Roboto',
   fonts: [
-    { src: '/fonts/DejaVuSans.ttf', fontWeight: 400 },
-    { src: '/fonts/DejaVuSans-Bold.ttf', fontWeight: 700 },
+    { src: '/fonts/Roboto-Regular.ttf', fontWeight: 'normal' },
+    { src: '/fonts/Roboto-Bold.ttf', fontWeight: 'bold' },
   ],
 })
 
@@ -40,7 +40,7 @@ interface TemplateProps {
 
 const BS = StyleSheet.create({
   page: {
-    fontFamily: 'DejaVu',
+    fontFamily: 'Roboto',
     fontSize: 9,
     padding: '30 40 55 40',
     color: '#0a0a0a',
@@ -58,11 +58,11 @@ const BS = StyleSheet.create({
     alignItems: 'flex-end',
     marginBottom: 14,
   },
-  bandTitle: { fontSize: 16, fontWeight: 700, color: '#ffffff' },
+  bandTitle: { fontSize: 16, fontWeight: 'bold', color: '#ffffff' },
   bandSub: { fontSize: 7.5, color: '#bfcfef', marginTop: 2 },
   bandRight: { alignItems: 'flex-end' },
   bandLabel: { fontSize: 6.5, color: '#bfcfef', textTransform: 'uppercase' },
-  bandValue: { fontSize: 9, fontWeight: 700, color: '#ffffff' },
+  bandValue: { fontSize: 9, fontWeight: 'bold', color: '#ffffff' },
   clientBox: {
     border: '1.5 solid #0B3D91',
     borderRadius: 3,
@@ -72,11 +72,11 @@ const BS = StyleSheet.create({
     justifyContent: 'space-between',
   },
   clientLabel: { fontSize: 7, color: '#6b7280' },
-  clientValue: { fontSize: 12, fontWeight: 700, color: '#0B3D91' },
+  clientValue: { fontSize: 12, fontWeight: 'bold', color: '#0B3D91' },
   formRef: { fontSize: 8, color: '#374151' },
   sectionTitle: {
     fontSize: 7,
-    fontWeight: 700,
+    fontWeight: 'bold',
     color: '#0B3D91',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -88,7 +88,7 @@ const BS = StyleSheet.create({
   row: { flexDirection: 'row', paddingVertical: 3, borderBottom: '0.5 solid #e5e7eb' },
   rowEven: { backgroundColor: '#f0f4fb' },
   rowLabel: { width: '50%', color: '#374151', paddingRight: 8 },
-  rowValue: { width: '50%', fontWeight: 700 },
+  rowValue: { width: '50%', fontWeight: 'bold' },
   footer: {
     position: 'absolute',
     bottom: 20,
@@ -101,7 +101,7 @@ const BS = StyleSheet.create({
     fontSize: 7,
     color: '#6b7280',
   },
-  footerBold: { fontWeight: 700, color: '#0B3D91' },
+  footerBold: { fontWeight: 'bold', color: '#0B3D91' },
   rightAligned: { alignItems: 'flex-end' },
 })
 
@@ -171,7 +171,7 @@ function BulstradTemplate({ mappedData, clientName }: TemplateProps) {
 
 const GN = StyleSheet.create({
   page: {
-    fontFamily: 'DejaVu',
+    fontFamily: 'Roboto',
     fontSize: 9,
     padding: '28 38 55 38',
     color: '#111827',
@@ -188,11 +188,11 @@ const GN = StyleSheet.create({
     paddingLeft: 10,
     justifyContent: 'center',
   },
-  headerTitle: { fontSize: 18, fontWeight: 700, color: '#C8102E' },
+  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#C8102E' },
   headerSub: { fontSize: 8, color: '#6b7280', marginTop: 2 },
   headerRight: { alignItems: 'flex-end', justifyContent: 'flex-end' },
   headerLabel: { fontSize: 7, color: '#9ca3af', textTransform: 'uppercase' },
-  headerDate: { fontSize: 10, fontWeight: 700, color: '#111827' },
+  headerDate: { fontSize: 10, fontWeight: 'bold', color: '#111827' },
   clientStrip: {
     backgroundColor: '#fff1f2',
     border: '1 solid #fecdd3',
@@ -204,12 +204,12 @@ const GN = StyleSheet.create({
     alignItems: 'center',
   },
   clientLabel: { fontSize: 7, color: '#9f1239' },
-  clientName: { fontSize: 13, fontWeight: 700, color: '#9f1239' },
+  clientName: { fontSize: 13, fontWeight: 'bold', color: '#9f1239' },
   formBadge: { backgroundColor: '#C8102E', borderRadius: 3, padding: '3 7' },
-  formBadgeText: { fontSize: 7, color: '#ffffff', fontWeight: 700 },
+  formBadgeText: { fontSize: 7, color: '#ffffff', fontWeight: 'bold' },
   sectionTitle: {
     fontSize: 7,
-    fontWeight: 700,
+    fontWeight: 'bold',
     color: '#C8102E',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -221,7 +221,7 @@ const GN = StyleSheet.create({
   row: { flexDirection: 'row', paddingVertical: 3.5, borderBottom: '0.5 solid #f9fafb' },
   rowEven: { backgroundColor: '#fff5f5' },
   rowLabel: { width: '48%', color: '#6b7280', paddingRight: 8 },
-  rowValue: { width: '52%', fontWeight: 700 },
+  rowValue: { width: '52%', fontWeight: 'bold' },
   footer: {
     position: 'absolute',
     bottom: 20,
@@ -299,7 +299,7 @@ function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
 
 const IN = StyleSheet.create({
   page: {
-    fontFamily: 'DejaVu',
+    fontFamily: 'Roboto',
     fontSize: 9,
     padding: '28 38 55 38',
     color: '#111827',
@@ -314,11 +314,11 @@ const IN = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  headerTitle: { fontSize: 16, fontWeight: 700, color: '#1B6B3A' },
+  headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#1B6B3A' },
   headerSub: { fontSize: 7.5, color: '#6b7280', marginTop: 2 },
   headerRight: { alignItems: 'flex-end' },
   headerBadge: { backgroundColor: '#1B6B3A', borderRadius: 3, padding: '3 8', marginBottom: 4 },
-  headerBadgeText: { fontSize: 8, color: '#ffffff', fontWeight: 700 },
+  headerBadgeText: { fontSize: 8, color: '#ffffff', fontWeight: 'bold' },
   headerDate: { fontSize: 8, color: '#374151' },
   clientRow: {
     backgroundColor: '#f0fdf4',
@@ -330,12 +330,12 @@ const IN = StyleSheet.create({
     justifyContent: 'space-between',
   },
   clientLabel: { fontSize: 7, color: '#166534' },
-  clientName: { fontSize: 12, fontWeight: 700, color: '#14532d' },
+  clientName: { fontSize: 12, fontWeight: 'bold', color: '#14532d' },
   bilingualNote: { fontSize: 7, color: '#9ca3af' },
   bilingualRight: { alignItems: 'flex-end' },
   sectionTitle: {
     fontSize: 7,
-    fontWeight: 700,
+    fontWeight: 'bold',
     color: '#1B6B3A',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -347,7 +347,7 @@ const IN = StyleSheet.create({
   row: { flexDirection: 'row', paddingVertical: 3.5, borderBottom: '0.5 solid #f0fdf4' },
   rowEven: { backgroundColor: '#f0fdf4' },
   rowLabel: { width: '48%', color: '#374151', paddingRight: 8 },
-  rowValue: { width: '52%', fontWeight: 700 },
+  rowValue: { width: '52%', fontWeight: 'bold' },
   footer: {
     position: 'absolute',
     bottom: 20,
