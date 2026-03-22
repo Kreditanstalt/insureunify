@@ -11,6 +11,8 @@ export interface FieldMapping {
   bulstrad?: string | null
   generali?: string | null
   instinct?: string | null
+  allianz?:  string | null
+  groupama?: string | null
 }
 
 export interface FieldOption {
