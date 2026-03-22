@@ -9,7 +9,7 @@ interface Props {
   availableInsurers?: InsurerKey[]
 }
 
-const INSURER_DESCRIPTIONS: Record<InsurerKey, string> = {
+const INSURER_DESCRIPTIONS: Partial<Record<InsurerKey, string>> = {
   bulstrad: 'Комбинирана полица Имущество · Формуляр 2200-26',
   generali: 'Имущество за малък и среден бизнес · ИМСБ 07.01.2026',
   instinct: 'Всички рискове / All Risks · AR-01082025',
