@@ -20,11 +20,104 @@ function computeTotal(data: FormData): number {
   }, 0)
 }
 
+// ─── Field lookup map ────────────────────────────────────────────────────────
+
+const fieldById = new Map<string, SchemaField>()
+for (const section of MASTER_SCHEMA) {
+  for (const f of section.fields) fieldById.set(f.id, f)
+}
+
+// ─── Layout definition ───────────────────────────────────────────────────────
+// Each section has ordered groups: 'full' = 12 cols, 'pair' = 6+6 cols
+
+type Group =
+  | { type: 'full'; id: string }
+  | { type: 'pair'; ids: [string, string] }
+
+const LAYOUT: Record<string, Group[]> = {
+  applicant: [
+    { type: 'full',  id: 'company_name' },
+    { type: 'pair',  ids: ['eik', 'phone'] },
+    { type: 'pair',  ids: ['email', 'activity'] },
+    { type: 'full',  id: 'address' },
+    { type: 'pair',  ids: ['nkid_code', 'representative'] },
+  ],
+  insurance_object: [
+    { type: 'full',  id: 'property_address' },
+    { type: 'full',  id: 'object_activity' },
+    { type: 'full',  id: 'beneficiary' },
+    { type: 'pair',  ids: ['period_from', 'period_to'] },
+  ],
+  property_values: [
+    { type: 'pair',  ids: ['currency', 'val_total'] },
+    { type: 'pair',  ids: ['val_buildings', 'val_machinery'] },
+    { type: 'pair',  ids: ['val_electronics', 'val_inventory'] },
+    { type: 'pair',  ids: ['val_stock', 'val_vehicles_no_reg'] },
+    { type: 'pair',  ids: ['val_other_dma', 'val_third_party'] },
+    { type: 'pair',  ids: ['val_cash', 'valuation_basis'] },
+    { type: 'full',  id: 'stock_basis' },
+  ],
+  building_info: [
+    { type: 'full',  id: 'building_purpose' },
+    { type: 'pair',  ids: ['construction_type', 'roof_type'] },
+    { type: 'pair',  ids: ['construction_year', 'floors'] },
+    { type: 'pair',  ids: ['area_sqm', 'sandwich_panels'] },
+    { type: 'full',  id: 'last_renovation' },
+    { type: 'pair',  ids: ['building_standalone', 'commissioned'] },
+    { type: 'full',  id: 'energy_cert' },
+    { type: 'pair',  ids: ['photovoltaic', 'lightning_protection'] },
+  ],
+  fire_safety: [
+    { type: 'full',  id: 'fire_compliance' },
+    { type: 'pair',  ids: ['fire_alarm', 'fire_extinguishers'] },
+    { type: 'pair',  ids: ['sprinklers', 'hydrants'] },
+    { type: 'pair',  ids: ['additional_water', 'detectors'] },
+    { type: 'full',  id: 'fire_station_distance' },
+    { type: 'full',  id: 'last_inspection' },
+  ],
+  security: [
+    { type: 'full',  id: 'occupancy' },
+    { type: 'pair',  ids: ['alarm_system', 'guard_type'] },
+    { type: 'pair',  ids: ['cctv', 'fence'] },
+    { type: 'full',  id: 'other_security' },
+  ],
+  risk_environment: [
+    { type: 'full',  id: 'hazardous_materials' },
+    { type: 'full',  id: 'hazardous_desc' },
+    { type: 'pair',  ids: ['water_basin_distance', 'landslide_area'] },
+    { type: 'pair',  ids: ['underground_equipment', 'stock_floor_distance'] },
+    { type: 'pair',  ids: ['nearest_building_distance', 'stored_materials_type'] },
+  ],
+  claims_history: [
+    { type: 'pair',  ids: ['previous_claims', 'existing_insurance'] },
+    { type: 'full',  id: 'claims_details' },
+    { type: 'pair',  ids: ['insurance_declined', 'insurance_cancelled'] },
+    { type: 'full',  id: 'additional_info' },
+  ],
+  payment: [
+    { type: 'pair',  ids: ['payment_type', 'custom_deductible'] },
+    { type: 'full',  id: 'deductible_details' },
+  ],
+}
+
+// ─── Conditional field visibility ────────────────────────────────────────────
+
+const CONDITIONAL: Record<string, { field: string; value: string }> = {
+  claims_details:   { field: 'previous_claims',    value: 'yes' },
+  hazardous_desc:   { field: 'hazardous_materials', value: 'yes' },
+  deductible_details: { field: 'custom_deductible', value: 'yes' },
+}
+
+function isVisible(id: string, formData: FormData): boolean {
+  const cond = CONDITIONAL[id]
+  return !cond || formData[cond.field] === cond.value
+}
+
 // ─── Primitive components ────────────────────────────────────────────────────
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest mt-10 mb-5 pb-2 border-b border-gray-200">
+    <h2 className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest mt-8 mb-3 pb-2 border-b border-gray-200">
       {children}
     </h2>
   )
@@ -33,7 +126,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-[13px] font-medium text-gray-700 mb-1.5">
         {label}
         {required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
@@ -43,15 +136,11 @@ function Field({ label, required, children }: { label: string; required?: boolea
 }
 
 const inputClass =
-  'w-full bg-white border border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-900 ' +
+  'w-full bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 ' +
   'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow shadow-sm'
 
 function TextInput({
-  value,
-  onChange,
-  placeholder,
-  type = 'text',
-  disabled,
+  value, onChange, placeholder, type = 'text', disabled,
 }: {
   value: string | number | undefined
   onChange?: (v: string) => void
@@ -73,22 +162,20 @@ function TextInput({
 }
 
 function ToggleGroup({
-  options,
-  value,
-  onChange,
+  options, value, onChange,
 }: {
   options: { value: string; label: string }[]
   value: string | number | undefined
   onChange: (v: string) => void
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors min-h-[40px] ${
+          className={`px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors min-h-[34px] ${
             value === opt.value
               ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-200'
               : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
@@ -102,15 +189,11 @@ function ToggleGroup({
 }
 
 function SelectInput({
-  options,
-  value,
-  onChange,
-  placeholder,
+  options, value, onChange,
 }: {
   options: { value: string; label: string }[]
   value: string | number | undefined
   onChange: (v: string) => void
-  placeholder?: string
 }) {
   return (
     <select
@@ -118,65 +201,33 @@ function SelectInput({
       onChange={(e) => onChange(e.target.value)}
       className={inputClass + ' cursor-pointer'}
     >
-      <option value="" disabled>
-        {placeholder ?? '— изберете —'}
-      </option>
+      <option value="" disabled>— изберете —</option>
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>
-          {opt.label}
-        </option>
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
       ))}
     </select>
   )
 }
 
-// Conditional visibility rules (field id → { depends on field + value })
-const CONDITIONAL: Record<string, { field: string; value: string }> = {
-  claims_details: { field: 'previous_claims', value: 'yes' },
-  hazardous_desc: { field: 'hazardous_materials', value: 'yes' },
-  deductible_details: { field: 'custom_deductible', value: 'yes' },
-}
+// ─── Render single field input ───────────────────────────────────────────────
 
-// ─── Schema-driven field renderer ────────────────────────────────────────────
-
-function renderFieldInput(
-  field: SchemaField,
-  formData: FormData,
-  set: (id: string, v: string) => void,
-  setNum: (id: string, v: string) => void,
+function FieldInput({
+  field, formData, set, setNum, total,
+}: {
+  field: SchemaField
+  formData: FormData
+  set: (id: string, v: string) => void
+  setNum: (id: string, v: string) => void
   total: number
-) {
+}) {
   if (field.computed) {
-    return (
-      <TextInput
-        type="number"
-        value={total > 0 ? total : ''}
-        placeholder="0"
-        disabled
-      />
-    )
+    return <TextInput type="number" value={total > 0 ? total : ''} placeholder="0" disabled />
   }
-
   if (field.type === 'select' && field.options) {
-    // Use toggle buttons for ≤4 options, native select for ≥5
-    if (field.options.length <= 4) {
-      return (
-        <ToggleGroup
-          options={field.options}
-          value={formData[field.id]}
-          onChange={(v) => set(field.id, v)}
-        />
-      )
-    }
-    return (
-      <SelectInput
-        options={field.options}
-        value={formData[field.id]}
-        onChange={(v) => set(field.id, v)}
-      />
-    )
+    return field.options.length <= 4
+      ? <ToggleGroup options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />
+      : <SelectInput options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />
   }
-
   if (field.type === 'textarea') {
     return (
       <textarea
@@ -188,76 +239,94 @@ function renderFieldInput(
       />
     )
   }
-
   if (field.type === 'number') {
-    return (
-      <TextInput
-        type="number"
-        value={formData[field.id]}
-        onChange={(v) => setNum(field.id, v)}
-        placeholder={field.placeholder ?? '0'}
-      />
-    )
+    return <TextInput type="number" value={formData[field.id]} onChange={(v) => setNum(field.id, v)} placeholder={field.placeholder ?? '0'} />
   }
-
   if (field.type === 'date') {
-    return (
-      <TextInput
-        type="date"
-        value={formData[field.id]}
-        onChange={(v) => set(field.id, v)}
-      />
-    )
+    return <TextInput type="date" value={formData[field.id]} onChange={(v) => set(field.id, v)} />
   }
-
-  // text
-  return (
-    <TextInput
-      value={formData[field.id]}
-      onChange={(v) => set(field.id, v)}
-      placeholder={field.placeholder}
-    />
-  )
+  return <TextInput value={formData[field.id]} onChange={(v) => set(field.id, v)} placeholder={field.placeholder} />
 }
 
-// Number fields that should pair side-by-side in a 2-col grid
-const NUM_GRID_SECTION = 'property_values'
+// ─── Render a layout group ───────────────────────────────────────────────────
+
+function RenderGroup({
+  group, formData, set, setNum, total,
+}: {
+  group: Group
+  formData: FormData
+  set: (id: string, v: string) => void
+  setNum: (id: string, v: string) => void
+  total: number
+}) {
+  if (group.type === 'full') {
+    if (!isVisible(group.id, formData)) return null
+    const field = fieldById.get(group.id)
+    if (!field) return null
+    return (
+      <Field label={field.label} required={field.required}>
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} />
+      </Field>
+    )
+  }
+
+  // pair — hide if both are invisible
+  const [idA, idB] = group.ids
+  const visA = isVisible(idA, formData)
+  const visB = isVisible(idB, formData)
+  if (!visA && !visB) return null
+
+  const fieldA = fieldById.get(idA)
+  const fieldB = fieldById.get(idB)
+
+  // If only one is visible, show it full-width
+  if (!visA || !visB) {
+    const field = visA ? fieldA : fieldB
+    if (!field) return null
+    return (
+      <Field label={field.label} required={field.required}>
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} />
+      </Field>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {fieldA && (
+        <Field label={fieldA.label} required={fieldA.required}>
+          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} />
+        </Field>
+      )}
+      {fieldB && (
+        <Field label={fieldB.label} required={fieldB.required}>
+          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} />
+        </Field>
+      )}
+    </div>
+  )
+}
 
 // ─── Main component ──────────────────────────────────────────────────────────
 
 export default function QuestionnaireForm() {
   const router = useRouter()
-  const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>([
-    'bulstrad',
-    'generali',
-    'instinct',
-  ])
+  const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct'])
   const [formData, setFormData] = useState<FormData>({})
   const [submitting, setSubmitting] = useState(false)
 
   function set(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value }))
   }
-
   function setNum(id: string, value: string) {
-    setFormData((prev) => ({
-      ...prev,
-      [id]: value === '' ? undefined : Number(value),
-    }))
+    setFormData((prev) => ({ ...prev, [id]: value === '' ? undefined : Number(value) }))
   }
-
   function toggleInsurer(key: InsurerKey) {
-    setSelectedInsurers((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    )
+    setSelectedInsurers((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key])
   }
 
   const total = computeTotal(formData)
 
-  const REQUIRED_IDS = MASTER_SCHEMA.flatMap((s) =>
-    s.fields.filter((f) => f.required && !f.computed).map((f) => f.id)
-  )
-
+  const REQUIRED_IDS = MASTER_SCHEMA.flatMap((s) => s.fields.filter((f) => f.required && !f.computed).map((f) => f.id))
   const missing = REQUIRED_IDS.filter((id) => formData[id] === undefined || formData[id] === '')
   const totalMissing = missing.length + (total === 0 ? 1 : 0)
   const canSubmit = selectedInsurers.length > 0 && totalMissing === 0
@@ -269,9 +338,7 @@ export default function QuestionnaireForm() {
       const id = uuidv4()
       const clientName = String(formData.company_name ?? 'Нов клиент')
       const submission: StoredSubmission = {
-        id,
-        clientName,
-        selectedInsurers,
+        id, clientName, selectedInsurers,
         formData: { ...formData, val_total: total },
         createdAt: new Date().toISOString(),
       }
@@ -289,10 +356,7 @@ export default function QuestionnaireForm() {
       {/* Top bar */}
       <header className="bg-white border-b border-gray-200 px-6 py-3.5 sticky top-0 z-10 shadow-sm">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <a
-            href="/dashboard"
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors text-sm"
-          >
+          <a href="/dashboard" className="flex items-center gap-2 text-gray-500 hover:text-gray-700 transition-colors text-sm">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
@@ -303,17 +367,15 @@ export default function QuestionnaireForm() {
         </div>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 pb-20">
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-20">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник</h1>
-        <p className="text-gray-500 text-sm mb-8">
+        <p className="text-gray-500 text-sm mb-6">
           Попълнете информацията и генерирайте формулярите за застрахователите
         </p>
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Застрахователи
-          </p>
+          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Застрахователи</p>
           <div className="flex flex-wrap gap-2">
             {(Object.keys(INSURERS) as InsurerKey[]).map((key) => {
               const ins = INSURERS[key]
@@ -328,10 +390,7 @@ export default function QuestionnaireForm() {
                   }`}
                   style={selected ? { backgroundColor: ins.color + '18', borderColor: ins.color, color: ins.color } : {}}
                 >
-                  <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: selected ? ins.color : '#d1d5db' }}
-                  />
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: selected ? ins.color : '#d1d5db' }} />
                   <span style={selected ? { color: ins.color } : {}}>{ins.name}</span>
                   <span className="text-xs opacity-50">{ins.formCode}</span>
                 </button>
@@ -340,71 +399,23 @@ export default function QuestionnaireForm() {
           </div>
         </div>
 
-        {/* Schema-driven sections */}
+        {/* All sections rendered from LAYOUT config */}
         {MASTER_SCHEMA.map((section) => {
-          // Collect visible fields for this section
-          const visibleFields = section.fields.filter((field) => {
-            const cond = CONDITIONAL[field.id]
-            if (cond) return formData[cond.field] === cond.value
-            return true
-          })
-
-          // For the property_values section, group consecutive number fields into a grid
-          if (section.id === NUM_GRID_SECTION) {
-            const groups: Array<{ type: 'grid'; fields: SchemaField[] } | { type: 'single'; field: SchemaField }> = []
-            let i = 0
-            while (i < visibleFields.length) {
-              const field = visibleFields[i]
-              if (field.type === 'number' && !field.computed) {
-                const pair: SchemaField[] = [field]
-                if (i + 1 < visibleFields.length && visibleFields[i + 1].type === 'number' && !visibleFields[i + 1].computed) {
-                  pair.push(visibleFields[i + 1])
-                  i += 2
-                } else {
-                  i++
-                }
-                groups.push({ type: 'grid', fields: pair })
-              } else {
-                groups.push({ type: 'single', field })
-                i++
-              }
-            }
-
-            return (
-              <div key={section.id}>
-                <SectionTitle>{section.label}</SectionTitle>
-                <div className="space-y-4">
-                  {groups.map((g, gi) => {
-                    if (g.type === 'grid') {
-                      return (
-                        <div key={gi} className={`grid gap-4 ${g.fields.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                          {g.fields.map((field) => (
-                            <Field key={field.id} label={field.label} required={field.required}>
-                              {renderFieldInput(field, formData, set, setNum, total)}
-                            </Field>
-                          ))}
-                        </div>
-                      )
-                    }
-                    return (
-                      <Field key={g.field.id} label={g.field.label} required={g.field.required}>
-                        {renderFieldInput(g.field, formData, set, setNum, total)}
-                      </Field>
-                    )
-                  })}
-                </div>
-              </div>
-            )
-          }
-
+          const groups = LAYOUT[section.id]
+          if (!groups) return null
           return (
             <div key={section.id}>
               <SectionTitle>{section.label}</SectionTitle>
-              <div className="space-y-4">
-                {visibleFields.map((field) => (
-                  <Field key={field.id} label={field.label} required={field.required}>
-                    {renderFieldInput(field, formData, set, setNum, total)}
-                  </Field>
+              <div className="space-y-3">
+                {groups.map((group, i) => (
+                  <RenderGroup
+                    key={i}
+                    group={group}
+                    formData={formData}
+                    set={set}
+                    setNum={setNum}
+                    total={total}
+                  />
                 ))}
               </div>
             </div>
@@ -412,9 +423,9 @@ export default function QuestionnaireForm() {
         })}
 
         {/* Submit */}
-        <div className="mt-12">
+        <div className="mt-10">
           {!canSubmit && totalMissing > 0 && (
-            <p className="text-xs text-amber-600 text-center mb-4">
+            <p className="text-xs text-amber-600 text-center mb-3">
               Попълнете всички задължителни полета (*) — остават {totalMissing}
             </p>
           )}
@@ -422,11 +433,9 @@ export default function QuestionnaireForm() {
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || submitting}
-            className="w-full py-4 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm shadow-blue-200"
+            className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm shadow-blue-200"
           >
-            {submitting
-              ? 'Запазване…'
-              : `Генерирай формуляри за ${selectedInsurers.length} застрахователя`}
+            {submitting ? 'Запазване…' : `Генерирай формуляри за ${selectedInsurers.length} застрахователя`}
           </button>
         </div>
       </div>
