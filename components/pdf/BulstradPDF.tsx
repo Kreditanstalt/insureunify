@@ -3,6 +3,7 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
 import { mapFormDataForInsurer } from '@/lib/mappings'
 import type { FormData } from '@/lib/schema'
+import { fmtDateBG } from '@/lib/utils'
 
 Font.register({
   family: 'Roboto',
@@ -109,9 +110,9 @@ export function BulstradPDF({ formData, clientName }: Props) {
         <Text style={S.sectionHead}>т.2  Период на застраховката:</Text>
         <View style={S.row2}>
           <Text style={S.lbl2}>от:</Text>
-          <Text style={S.val2}>{f('period_from')}</Text>
+          <Text style={S.val2}>{fmtDateBG(f('period_from'))}</Text>
           <Text style={S.lbl2}>до:</Text>
-          <Text style={S.val2}>{f('period_to')}</Text>
+          <Text style={S.val2}>{fmtDateBG(f('period_to'))}</Text>
         </View>
 
         {/* ── т.3 Адрес на имуществото ── */}

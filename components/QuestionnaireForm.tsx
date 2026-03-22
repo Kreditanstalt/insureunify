@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import { INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
+import { fmtDateBG } from '@/lib/utils'
 
 interface StoredSubmission {
   id: string
@@ -37,6 +38,7 @@ for (const section of MASTER_SCHEMA) {
 type Group =
   | { type: 'full'; id: string }
   | { type: 'pair'; ids: [string, string] }
+  | { type: 'period' }
 
 const LAYOUT: Record<string, Group[]> = {
   applicant: [
@@ -50,7 +52,7 @@ const LAYOUT: Record<string, Group[]> = {
     { type: 'full',  id: 'property_address' },
     { type: 'full',  id: 'object_activity' },
     { type: 'full',  id: 'beneficiary' },
-    { type: 'pair',  ids: ['period_from', 'period_to'] },
+    { type: 'period' },
   ],
   property_values: [
     { type: 'pair',  ids: ['currency', 'val_total'] },
@@ -213,6 +215,134 @@ function SelectInput({
   )
 }
 
+// ─── Date helpers ────────────────────────────────────────────────────────────
+
+function todayISO(): string {
+  return new Date().toISOString().split('T')[0]
+}
+
+function addMonths(isoDate: string, months: number): string {
+  const d = new Date(isoDate + 'T00:00:00')
+  d.setMonth(d.getMonth() + months)
+  // Handle month overflow (e.g. Jan 31 + 1 month = Feb 28)
+  return d.toISOString().split('T')[0]
+}
+
+// ─── Period selector ─────────────────────────────────────────────────────────
+
+const DURATIONS = [
+  { label: '6 месеца',  months: 6 },
+  { label: '1 година',  months: 12 },
+  { label: '2 години',  months: 24 },
+  { label: 'Друг',      months: 0 },
+]
+
+function PeriodSelector({
+  formData, set,
+}: {
+  formData: FormData
+  set: (id: string, v: string) => void
+}) {
+  const [selMonths, setSelMonths] = useState(12)
+  const [isCustom, setIsCustom] = useState(false)
+  const [customVal, setCustomVal] = useState('')
+  const initialized = useRef(false)
+
+  // Set defaults once on mount
+  useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
+    const from = (formData.period_from as string) || todayISO()
+    if (!formData.period_from) set('period_from', from)
+    if (!formData.period_to)   set('period_to',   addMonths(from, 12))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function calcTo(from: string, months: number) {
+    if (months > 0) set('period_to', addMonths(from, months))
+  }
+
+  function handleFromChange(v: string) {
+    set('period_from', v)
+    calcTo(v, isCustom ? parseInt(customVal) || 0 : selMonths)
+  }
+
+  function handleDuration(months: number) {
+    if (months === 0) {
+      setIsCustom(true)
+    } else {
+      setIsCustom(false)
+      setSelMonths(months)
+      calcTo((formData.period_from as string) || todayISO(), months)
+    }
+  }
+
+  function handleCustomInput(v: string) {
+    setCustomVal(v)
+    const months = parseInt(v) || 0
+    if (months > 0) calcTo((formData.period_from as string) || todayISO(), months)
+  }
+
+  const periodTo = formData.period_to as string | undefined
+
+  return (
+    <div className="space-y-3">
+      {/* Row: start date + end date display */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <Field label="Начална дата" required>
+          <input
+            type="date"
+            value={(formData.period_from as string) || todayISO()}
+            onChange={(e) => handleFromChange(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Крайна дата">
+          <div className={inputClass + ' bg-gray-50 text-gray-600 cursor-default select-none'}>
+            {periodTo ? `до: ${fmtDateBG(periodTo)}` : '—'}
+          </div>
+        </Field>
+      </div>
+
+      {/* Duration quick-select */}
+      <Field label="Срок на застраховката" required>
+        <div className="flex flex-wrap gap-1.5">
+          {DURATIONS.map(({ label, months }) => {
+            const active = months === 0 ? isCustom : !isCustom && selMonths === months
+            return (
+              <button
+                key={label}
+                type="button"
+                onClick={() => handleDuration(months)}
+                className={`px-3 py-1.5 rounded-lg text-[13px] font-medium border transition-colors min-h-[34px] ${
+                  active
+                    ? 'bg-blue-600 border-blue-600 text-white shadow-sm shadow-blue-200'
+                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400 hover:text-blue-700'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+        {isCustom && (
+          <div className="mt-2 max-w-[160px]">
+            <input
+              type="number"
+              min={1}
+              max={120}
+              value={customVal}
+              onChange={(e) => handleCustomInput(e.target.value)}
+              placeholder="брой месеци"
+              className={inputClass}
+            />
+          </div>
+        )}
+      </Field>
+    </div>
+  )
+}
+
 // ─── EIK input with lookup feedback ─────────────────────────────────────────
 
 function EIKInput({
@@ -344,6 +474,10 @@ function RenderGroup({
   eikStatus: EikStatus
   onEikChange: (v: string) => void
 }) {
+  if (group.type === 'period') {
+    return <PeriodSelector formData={formData} set={set} />
+  }
+
   if (group.type === 'full') {
     if (!isVisible(group.id, formData)) return null
     const field = fieldById.get(group.id)

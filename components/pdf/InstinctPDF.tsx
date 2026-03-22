@@ -3,6 +3,7 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
 import { mapFormDataForInsurer } from '@/lib/mappings'
 import type { FormData } from '@/lib/schema'
+import { fmtDateBG } from '@/lib/utils'
 
 Font.register({
   family: 'Roboto',
@@ -202,11 +203,11 @@ export function InstinctPDF({ formData, clientName }: Props) {
         <View style={S.row2}>
           {has('period_from') && <>
             <Text style={S.lbl2}>от 00.00ч на / from:</Text>
-            <Text style={S.val2}>{f('period_from')}</Text>
+            <Text style={S.val2}>{fmtDateBG(f('period_from'))}</Text>
           </>}
           {has('period_to') && <>
             <Text style={S.lbl2}>до 24.00ч на / to:</Text>
-            <Text style={S.val2}>{f('period_to')}</Text>
+            <Text style={S.val2}>{fmtDateBG(f('period_to'))}</Text>
           </>}
         </View>
 

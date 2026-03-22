@@ -3,6 +3,7 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
 import { mapFormDataForInsurer } from '@/lib/mappings'
 import type { FormData } from '@/lib/schema'
+import { fmtDateBG } from '@/lib/utils'
 
 Font.register({
   family: 'Roboto',
