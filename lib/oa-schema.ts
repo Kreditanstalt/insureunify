@@ -8,7 +8,7 @@
  *      (xlsx, Sheet2)
  */
 
-import type { InsurerKey, SchemaField, SchemaSection } from './schema'
+import type { SchemaField, SchemaSection } from './schema'
 
 // ─── OA Insurer subset ────────────────────────────────────────────────────────
 
@@ -16,7 +16,7 @@ export type OAInsurerKey = 'allianz' | 'groupama'
 export const OA_INSURER_KEYS: OAInsurerKey[] = ['allianz', 'groupama']
 
 export interface OAInsurerMeta {
-  key:         InsurerKey
+  key:         OAInsurerKey
   name:        string
   color:       string
   formCode:    string
