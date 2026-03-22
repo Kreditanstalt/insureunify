@@ -3,8 +3,10 @@
 import Image from 'next/image'
 import { INSURERS, InsurerKey, MASTER_SCHEMA, FormData } from '@/lib/schema'
 import { GL_SCHEMA, GL_INSURERS, GLInsurerKey, GLFormData } from '@/lib/gl-schema'
+import { OA_SCHEMA, OA_INSURERS, OAInsurerKey, OAFormData } from '@/lib/oa-schema'
 import { InsurerMappedData } from '@/lib/mappings'
 import { GLInsurerMappedData } from '@/lib/gl-mappings'
+import { OAInsurerMappedData } from '@/lib/oa-mappings'
 import { DownloadPDFButton } from './DownloadPDFButton'
 
 // ─── Property insurance review ────────────────────────────────────────────────
@@ -27,7 +29,17 @@ interface GLProps {
   insuranceClass:   'general_liability'
 }
 
-type Props = PropertyProps | GLProps
+// ─── OA review ────────────────────────────────────────────────────────────────
+
+interface OAProps {
+  mappedData:       Record<OAInsurerKey, OAInsurerMappedData>
+  selectedInsurers: OAInsurerKey[]
+  clientName:       string
+  formData:         OAFormData
+  insuranceClass:   'occupational_accident'
+}
+
+type Props = PropertyProps | GLProps | OAProps
 
 // ─── Shared insurer card header ───────────────────────────────────────────────
 
@@ -76,6 +88,7 @@ function InsurerHeader({
 
 export default function ReviewOutput({ mappedData, selectedInsurers, clientName, formData, insuranceClass = 'property' }: Props) {
   const isGL = insuranceClass === 'general_liability'
+  const isOA = insuranceClass === 'occupational_accident'
 
   return (
     <div className="space-y-6">
@@ -85,9 +98,13 @@ export default function ReviewOutput({ mappedData, selectedInsurers, clientName,
       </div>
 
       {(selectedInsurers as string[]).map((key) => {
-        const insurer  = isGL ? GL_INSURERS[key as GLInsurerKey]   : INSURERS[key as InsurerKey]
+        const insurer = isOA
+          ? OA_INSURERS[key as OAInsurerKey]
+          : isGL
+            ? GL_INSURERS[key as GLInsurerKey]
+            : INSURERS[key as InsurerKey]
         const data     = (mappedData as Record<string, unknown>)[key] as Record<string, { originalLabel: string; displayValue: string }> ?? {}
-        const schema   = isGL ? GL_SCHEMA : MASTER_SCHEMA
+        const schema   = isOA ? OA_SCHEMA : isGL ? GL_SCHEMA : MASTER_SCHEMA
         const fieldCount = Object.keys(data).length
 
         return (
@@ -99,7 +116,14 @@ export default function ReviewOutput({ mappedData, selectedInsurers, clientName,
               formCode={insurer.formCode}
               fieldCount={fieldCount}
               downloadButton={
-                isGL ? (
+                isOA ? (
+                  <DownloadPDFButton
+                    insurerKey={key as OAInsurerKey}
+                    formData={formData as OAFormData}
+                    clientName={clientName}
+                    insuranceClass="occupational_accident"
+                  />
+                ) : isGL ? (
                   <DownloadPDFButton
                     insurerKey={key as GLInsurerKey}
                     formData={formData as GLFormData}

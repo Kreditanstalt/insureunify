@@ -7,6 +7,8 @@ import { InsurerKey, FormData } from '@/lib/schema'
 import { mapFormDataForAllInsurers, InsurerMappedData } from '@/lib/mappings'
 import { GLInsurerKey, GLFormData } from '@/lib/gl-schema'
 import { mapGLFormDataForAll, GLInsurerMappedData } from '@/lib/gl-mappings'
+import { OAInsurerKey, OAFormData } from '@/lib/oa-schema'
+import { mapOAFormDataForAll, OAInsurerMappedData } from '@/lib/oa-mappings'
 import ReviewOutput from '@/components/ReviewOutput'
 
 interface BaseSubmission {
@@ -28,7 +30,13 @@ interface GLSubmission extends BaseSubmission {
   insuranceClass:   'general_liability'
 }
 
-type StoredSubmission = PropertySubmission | GLSubmission
+interface OASubmission extends BaseSubmission {
+  selectedInsurers: OAInsurerKey[]
+  formData:         OAFormData
+  insuranceClass:   'occupational_accident'
+}
+
+type StoredSubmission = PropertySubmission | GLSubmission | OASubmission
 
 export default function ReviewPage() {
   const params = useParams()
@@ -41,6 +49,7 @@ export default function ReviewPage() {
   // Derived mapped data
   const [propertyMapped, setPropertyMapped] = useState<Record<InsurerKey, InsurerMappedData> | null>(null)
   const [glMapped,       setGlMapped]       = useState<Record<GLInsurerKey, GLInsurerMappedData> | null>(null)
+  const [oaMapped,       setOaMapped]       = useState<Record<OAInsurerKey, OAInsurerMappedData> | null>(null)
 
   useEffect(() => {
     const raw = localStorage.getItem('iu_submissions')
@@ -52,7 +61,10 @@ export default function ReviewPage() {
 
     setSubmission(found)
 
-    if (found.insuranceClass === 'general_liability') {
+    if (found.insuranceClass === 'occupational_accident') {
+      const oa = found as OASubmission
+      setOaMapped(mapOAFormDataForAll(oa.formData, oa.selectedInsurers))
+    } else if (found.insuranceClass === 'general_liability') {
       const gl = found as GLSubmission
       setGlMapped(mapGLFormDataForAll(gl.formData, gl.selectedInsurers))
     } else {
@@ -79,10 +91,12 @@ export default function ReviewPage() {
   }
 
   const isGL = submission.insuranceClass === 'general_liability'
-  if (isGL && !glMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
-  if (!isGL && !propertyMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  const isOA = submission.insuranceClass === 'occupational_accident'
+  if (isOA && !oaMapped)       return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  if (isGL && !glMapped)       return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  if (!isGL && !isOA && !propertyMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
 
-  const classLabel = isGL ? 'ОГО — Обща гражданска отговорност' : 'Имуществено застраховане'
+  const classLabel = isOA ? 'Трудова злополука' : isGL ? 'ОГО — Обща гражданска отговорност' : 'Имуществено застраховане'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -113,7 +127,15 @@ export default function ReviewPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        {isGL ? (
+        {isOA ? (
+          <ReviewOutput
+            mappedData={oaMapped!}
+            selectedInsurers={(submission as OASubmission).selectedInsurers}
+            clientName={submission.clientName}
+            formData={(submission as OASubmission).formData}
+            insuranceClass="occupational_accident"
+          />
+        ) : isGL ? (
           <ReviewOutput
             mappedData={glMapped!}
             selectedInsurers={(submission as GLSubmission).selectedInsurers}

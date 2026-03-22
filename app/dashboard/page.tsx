@@ -33,6 +33,13 @@ const INSURANCE_CLASSES = [
     href:        '/dashboard/new/general-liability',
   },
   {
+    id:          'occupational_accident',
+    label:       'Трудова злополука',
+    description: 'Задължителна и доброволна з-ка злополука',
+    active:      true,
+    href:        '/dashboard/new/occupational-accident',
+  },
+  {
     id:          'cargo',
     label:       'Товари / CMR',
     description: 'Транспортни рискове',

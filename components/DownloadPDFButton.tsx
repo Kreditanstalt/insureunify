@@ -5,8 +5,10 @@ import type { InsurerKey, FormData } from '@/lib/schema'
 import { INSURERS } from '@/lib/schema'
 import type { GLFormData, GLInsurerKey } from '@/lib/gl-schema'
 import { GL_INSURERS } from '@/lib/gl-schema'
+import type { OAFormData, OAInsurerKey } from '@/lib/oa-schema'
+import { OA_INSURERS } from '@/lib/oa-schema'
 
-type InsuranceClass = 'property' | 'general_liability'
+type InsuranceClass = 'property' | 'general_liability' | 'occupational_accident'
 
 interface PropertyProps {
   insurerKey:     InsurerKey
@@ -22,11 +24,21 @@ interface GLProps {
   insuranceClass: 'general_liability'
 }
 
-type Props = PropertyProps | GLProps
+interface OAProps {
+  insurerKey:     OAInsurerKey
+  formData:       OAFormData
+  clientName:     string
+  insuranceClass: 'occupational_accident'
+}
+
+type Props = PropertyProps | GLProps | OAProps
 
 function getColor(insurerKey: string, insuranceClass: InsuranceClass): string {
   if (insuranceClass === 'general_liability') {
     return GL_INSURERS[insurerKey as GLInsurerKey]?.color ?? '#666'
+  }
+  if (insuranceClass === 'occupational_accident') {
+    return OA_INSURERS[insurerKey as OAInsurerKey]?.color ?? '#666'
   }
   return INSURERS[insurerKey as InsurerKey]?.color ?? '#666'
 }
@@ -43,7 +55,15 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
 
       let element: React.ReactElement
 
-      if (insuranceClass === 'general_liability') {
+      if (insuranceClass === 'occupational_accident') {
+        if (insurerKey === 'allianz') {
+          const { AllianzOAPDF } = await import('./pdf/AllianzOAPDF')
+          element = React.createElement(AllianzOAPDF, { formData: formData as OAFormData, clientName })
+        } else {
+          const { GroupamaOAPDF } = await import('./pdf/GroupamaOAPDF')
+          element = React.createElement(GroupamaOAPDF, { formData: formData as OAFormData, clientName })
+        }
+      } else if (insuranceClass === 'general_liability') {
         if (insurerKey === 'generali') {
           const { GeneraliGLPDF } = await import('./pdf/GeneraliGLPDF')
           element = React.createElement(GeneraliGLPDF, { formData: formData as GLFormData, clientName })
@@ -72,7 +92,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
       a.href     = url
 
       const safe = clientName.replace(/\s+/g, '_')
-      if (insuranceClass === 'general_liability') {
+      if (insuranceClass === 'occupational_accident') {
+        const prefix = insurerKey === 'allianz' ? 'Allianz_TZ' : 'Groupama_TZ'
+        a.download = `${prefix}_${safe}.pdf`
+      } else if (insuranceClass === 'general_liability') {
         const prefix = insurerKey === 'generali' ? 'Generali_OGO' : 'Bulstrad_OGO'
         a.download = `${prefix}_${safe}.pdf`
       } else {
