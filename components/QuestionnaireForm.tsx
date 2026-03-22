@@ -410,10 +410,111 @@ function EIKInput({
   )
 }
 
+// ─── Company name input with autocomplete search ──────────────────────────────
+
+interface CompanyResult { uic: string; name: string; legalForm: string; status: string }
+
+function CompanyNameInput({
+  value, onChange, onSelect,
+}: {
+  value: string | number | undefined
+  onChange: (v: string) => void
+  onSelect: (result: { company_name: string; eik: string; address?: string; city?: string }) => void
+}) {
+  const [results, setResults] = useState<CompanyResult[]>([])
+  const [open, setOpen] = useState(false)
+  const [searching, setSearching] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const doSearch = async (q: string) => {
+    if (!q || q.length < 3) { setResults([]); setOpen(false); return }
+    setSearching(true)
+    try {
+      const res = await fetch(`/api/eik/search?name=${encodeURIComponent(q)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setResults(data.results ?? [])
+        setOpen((data.results ?? []).length > 0)
+      }
+    } catch { /* ignore */ }
+    setSearching(false)
+  }
+
+  const handleChange = (v: string) => {
+    onChange(v)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    timerRef.current = setTimeout(() => doSearch(v), 350)
+  }
+
+  const handleSelect = async (item: CompanyResult) => {
+    onChange(item.name)
+    setOpen(false)
+    try {
+      const res = await fetch(`/api/eik?eik=${encodeURIComponent(item.uic)}`)
+      if (res.ok) {
+        const data = await res.json()
+        onSelect({ company_name: item.name, eik: item.uic, address: data.address, city: data.city })
+        return
+      }
+    } catch { /* ignore */ }
+    onSelect({ company_name: item.name, eik: item.uic })
+  }
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={value ?? ''}
+          onChange={(e) => handleChange(e.target.value)}
+          onFocus={() => results.length > 0 && setOpen(true)}
+          placeholder="Наименование на фирмата"
+          className={inputClass + ' pr-9'}
+        />
+        <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-400 text-sm">
+          {searching ? (
+            <svg className="w-4 h-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+          )}
+        </div>
+      </div>
+      {open && results.length > 0 && (
+        <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+          {results.map((c) => (
+            <li
+              key={c.uic}
+              onMouseDown={() => handleSelect(c)}
+              className="px-3 py-2 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-0"
+            >
+              <div className="text-sm font-medium text-gray-900">{c.name}</div>
+              <div className="text-xs text-gray-400 mt-0.5">{c.uic} · {c.legalForm} · {c.status === 'N' ? 'Активна' : 'Неактивна'}</div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 // ─── Render single field input ───────────────────────────────────────────────
 
 function FieldInput({
-  field, formData, set, setNum, total, eikStatus, onEikChange,
+  field, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect,
 }: {
   field: SchemaField
   formData: FormData
@@ -422,7 +523,18 @@ function FieldInput({
   total: number
   eikStatus?: EikStatus
   onEikChange?: (v: string) => void
+  onCompanySelect?: (result: { company_name: string; eik: string; address?: string; city?: string }) => void
 }) {
+  // Special render for company_name field — autocomplete search
+  if (field.id === 'company_name') {
+    return (
+      <CompanyNameInput
+        value={formData.company_name}
+        onChange={(v) => set('company_name', v)}
+        onSelect={onCompanySelect ?? (() => {})}
+      />
+    )
+  }
   // Special render for EIK field
   if (field.id === 'eik') {
     return (
@@ -464,7 +576,7 @@ function FieldInput({
 // ─── Render a layout group ───────────────────────────────────────────────────
 
 function RenderGroup({
-  group, formData, set, setNum, total, eikStatus, onEikChange,
+  group, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect,
 }: {
   group: Group
   formData: FormData
@@ -473,6 +585,7 @@ function RenderGroup({
   total: number
   eikStatus: EikStatus
   onEikChange: (v: string) => void
+  onCompanySelect: (result: { company_name: string; eik: string; address?: string; city?: string }) => void
 }) {
   if (group.type === 'period') {
     return <PeriodSelector formData={formData} set={set} />
@@ -484,7 +597,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
       </Field>
     )
   }
@@ -504,7 +617,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
       </Field>
     )
   }
@@ -513,12 +626,12 @@ function RenderGroup({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {fieldA && (
         <Field label={fieldA.label} required={fieldA.required}>
-          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
         </Field>
       )}
       {fieldB && (
         <Field label={fieldB.label} required={fieldB.required}>
-          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
         </Field>
       )}
     </div>
@@ -584,6 +697,13 @@ export default function QuestionnaireForm() {
       abortRef.current?.abort()
       setEikStatus('idle')
     }
+  }
+
+  function handleCompanySelect(result: { company_name: string; eik: string; address?: string; city?: string }) {
+    set('company_name', result.company_name)
+    set('eik', result.eik)
+    if (result.address) set('address', result.address)
+    setEikStatus('found')
   }
 
   const total = computeTotal(formData)
@@ -679,6 +799,7 @@ export default function QuestionnaireForm() {
                     total={total}
                     eikStatus={eikStatus}
                     onEikChange={handleEikChange}
+                    onCompanySelect={handleCompanySelect}
                   />
                 ))}
               </div>
