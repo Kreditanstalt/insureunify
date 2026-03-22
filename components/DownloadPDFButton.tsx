@@ -3,20 +3,35 @@
 import { useState } from 'react'
 import type { InsurerKey, FormData } from '@/lib/schema'
 import { INSURERS } from '@/lib/schema'
+import type { GLFormData, GLInsurerKey } from '@/lib/gl-schema'
+import { GL_INSURERS } from '@/lib/gl-schema'
 
-interface Props {
-  insurerKey: InsurerKey
-  formData: FormData
-  clientName: string
+type InsuranceClass = 'property' | 'general_liability'
+
+interface PropertyProps {
+  insurerKey:     InsurerKey
+  formData:       FormData
+  clientName:     string
+  insuranceClass?: 'property'
 }
 
-const FILE_NAMES: Record<InsurerKey, (client: string) => string> = {
-  bulstrad: (c) => `Bulstrad_Imushestvo_${c}.pdf`,
-  generali: (c) => `Generali_IMSB_${c}.pdf`,
-  instinct: (c) => `Instinct_AllRisks_${c}.pdf`,
+interface GLProps {
+  insurerKey:     GLInsurerKey
+  formData:       GLFormData
+  clientName:     string
+  insuranceClass: 'general_liability'
 }
 
-export function DownloadPDFButton({ insurerKey, formData, clientName }: Props) {
+type Props = PropertyProps | GLProps
+
+function getColor(insurerKey: string, insuranceClass: InsuranceClass): string {
+  if (insuranceClass === 'general_liability') {
+    return GL_INSURERS[insurerKey as GLInsurerKey]?.color ?? '#666'
+  }
+  return INSURERS[insurerKey as InsurerKey]?.color ?? '#666'
+}
+
+export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceClass = 'property' }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function handleDownload() {
@@ -28,23 +43,47 @@ export function DownloadPDFButton({ insurerKey, formData, clientName }: Props) {
 
       let element: React.ReactElement
 
-      if (insurerKey === 'bulstrad') {
-        const { BulstradPDF } = await import('./pdf/BulstradPDF')
-        element = React.createElement(BulstradPDF, { formData, clientName })
-      } else if (insurerKey === 'generali') {
-        const { GeneraliPDF } = await import('./pdf/GeneraliPDF')
-        element = React.createElement(GeneraliPDF, { formData, clientName })
+      if (insuranceClass === 'general_liability') {
+        if (insurerKey === 'generali') {
+          const { GeneraliGLPDF } = await import('./pdf/GeneraliGLPDF')
+          element = React.createElement(GeneraliGLPDF, { formData: formData as GLFormData, clientName })
+        } else {
+          const { BulstradGLPDF } = await import('./pdf/BulstradGLPDF')
+          element = React.createElement(BulstradGLPDF, { formData: formData as GLFormData, clientName })
+        }
       } else {
-        const { InstinctPDF } = await import('./pdf/InstinctPDF')
-        element = React.createElement(InstinctPDF, { formData, clientName })
+        // Property insurance
+        if (insurerKey === 'bulstrad') {
+          const { BulstradPDF } = await import('./pdf/BulstradPDF')
+          element = React.createElement(BulstradPDF, { formData: formData as FormData, clientName })
+        } else if (insurerKey === 'generali') {
+          const { GeneraliPDF } = await import('./pdf/GeneraliPDF')
+          element = React.createElement(GeneraliPDF, { formData: formData as FormData, clientName })
+        } else {
+          const { InstinctPDF } = await import('./pdf/InstinctPDF')
+          element = React.createElement(InstinctPDF, { formData: formData as FormData, clientName })
+        }
       }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blob = await pdf(element as any).toBlob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = FILE_NAMES[insurerKey](clientName.replace(/\s+/g, '_'))
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+
+      const safe = clientName.replace(/\s+/g, '_')
+      if (insuranceClass === 'general_liability') {
+        const prefix = insurerKey === 'generali' ? 'Generali_OGO' : 'Bulstrad_OGO'
+        a.download = `${prefix}_${safe}.pdf`
+      } else {
+        const prefixes: Record<string, string> = {
+          bulstrad: 'Bulstrad_Imushestvo',
+          generali: 'Generali_IMSB',
+          instinct: 'Instinct_AllRisks',
+        }
+        a.download = `${prefixes[insurerKey] ?? insurerKey}_${safe}.pdf`
+      }
+
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -57,8 +96,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName }: Props) {
     }
   }
 
-  // keep insurer color as visual hint on the button
-  const color = INSURERS[insurerKey].color
+  const color = getColor(insurerKey, insuranceClass)
 
   return (
     <button

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="6" fill="#0B3D91"/>
+  <!-- Shield icon -->
+  <path d="M10 8 L10 24 Q10 30 18 32 Q26 30 26 24 L26 8 Z" fill="none" stroke="white" stroke-width="1.5"/>
+  <path d="M14 16 L17 19 L22 13" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Text -->
+  <text x="32" y="16" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="white">БУЛСТРАД</text>
+  <text x="32" y="27" font-family="Arial, sans-serif" font-size="6.5" fill="#93c5fd">ВИЕНА ИНШУРЪНС ГРУП</text>
+</svg>

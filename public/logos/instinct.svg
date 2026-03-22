@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
+  <rect width="120" height="40" rx="6" fill="#1B6B3A"/>
+  <!-- Leaf/nature mark -->
+  <path d="M20 28 Q12 20 16 12 Q24 8 26 16 Q30 22 20 28Z" fill="none" stroke="white" stroke-width="1.5"/>
+  <path d="M20 28 L20 18" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Text -->
+  <text x="36" y="15" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="white">ИНСТИНКТ</text>
+  <text x="36" y="28" font-family="Arial, sans-serif" font-size="6.5" fill="#86efac">ЗАСТРАХОВАТЕЛНО АД</text>
+</svg>

@@ -1,10 +1,12 @@
 'use client'
 
+import Image from 'next/image'
 import { INSURERS, InsurerKey } from '@/lib/schema'
 
 interface Props {
   selected: InsurerKey[]
   onChange: (selected: InsurerKey[]) => void
+  availableInsurers?: InsurerKey[]
 }
 
 const INSURER_DESCRIPTIONS: Record<InsurerKey, string> = {
@@ -13,7 +15,9 @@ const INSURER_DESCRIPTIONS: Record<InsurerKey, string> = {
   instinct: 'Всички рискове / All Risks · AR-01082025',
 }
 
-export default function InsurerSelector({ selected, onChange }: Props) {
+export default function InsurerSelector({ selected, onChange, availableInsurers }: Props) {
+  const keys = (availableInsurers ?? Object.keys(INSURERS)) as InsurerKey[]
+
   function toggle(key: InsurerKey) {
     if (selected.includes(key)) {
       onChange(selected.filter((k) => k !== key))
@@ -27,9 +31,12 @@ export default function InsurerSelector({ selected, onChange }: Props) {
       <p className="text-sm text-gray-400 mb-4">
         Изберете застрахователите, за които искате да генерирате документи.
       </p>
-      {(Object.keys(INSURERS) as InsurerKey[]).map((key) => {
+      {keys.map((key) => {
         const insurer = INSURERS[key]
+        if (!insurer) return null
         const isSelected = selected.includes(key)
+        const description = INSURER_DESCRIPTIONS[key as keyof typeof INSURER_DESCRIPTIONS]
+
         return (
           <button
             key={key}
@@ -42,18 +49,51 @@ export default function InsurerSelector({ selected, onChange }: Props) {
             }`}
             style={isSelected ? { borderColor: insurer.color } : undefined}
           >
-            {/* Color dot */}
+            {/* Logo */}
             <div
-              className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm"
-              style={{ backgroundColor: insurer.color }}
+              className="w-12 h-10 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
+              style={{ backgroundColor: insurer.color + '20' }}
             >
-              {insurer.name[0]}
+              {insurer.logo ? (
+                <Image
+                  src={insurer.logo}
+                  alt={insurer.name}
+                  width={48}
+                  height={40}
+                  className="object-contain w-full h-full"
+                  onError={(e) => {
+                    // Fallback to color dot with initial
+                    const target = e.currentTarget as HTMLImageElement
+                    target.style.display = 'none'
+                    const parent = target.parentElement
+                    if (parent) {
+                      parent.style.backgroundColor = insurer.color
+                      parent.style.borderRadius = '50%'
+                      parent.style.width = '40px'
+                      parent.style.height = '40px'
+                      parent.textContent = insurer.name[0]
+                      parent.style.color = 'white'
+                      parent.style.fontWeight = 'bold'
+                      parent.style.fontSize = '14px'
+                    }
+                  }}
+                />
+              ) : (
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ backgroundColor: insurer.color }}
+                >
+                  {insurer.name[0]}
+                </div>
+              )}
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-white">{insurer.name}</div>
-              <div className="text-xs text-gray-400 mt-0.5">{INSURER_DESCRIPTIONS[key]}</div>
+              <div className="text-xs text-gray-400 mt-0.5 truncate">
+                {description ?? insurer.formCode}
+              </div>
             </div>
 
             {/* Checkbox */}

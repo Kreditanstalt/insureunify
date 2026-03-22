@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import { INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
 import { fmtDateBG } from '@/lib/utils'
+import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 
 interface StoredSubmission {
   id: string
@@ -21,9 +22,18 @@ function computeTotal(data: FormData): number {
   }, 0)
 }
 
-// ─── EIK lookup types ────────────────────────────────────────────────────────
+// ─── EIK field map for property form ─────────────────────────────────────────
 
-type EikStatus = 'idle' | 'loading' | 'found' | 'not_found'
+const PROPERTY_EIK_FIELD_MAP = {
+  eik:            'eik',
+  company_name:   'company_name',
+  address:        'address',
+  email:          'email',
+  phone:          'phone',
+  activity:       'activity',
+  nkid_code:      'nkid_code',
+  representative: 'representative',
+}
 
 // ─── Field lookup map ────────────────────────────────────────────────────────
 
@@ -343,86 +353,35 @@ function PeriodSelector({
   )
 }
 
-// ─── EIK input with lookup feedback ─────────────────────────────────────────
-
-function EIKInput({
-  value, onChange, status,
-}: {
-  value: string | number | undefined
-  onChange: (v: string) => void
-  status: EikStatus
-}) {
-  return (
-    <div>
-      <div className="relative">
-        <input
-          type="text"
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="123456789"
-          maxLength={13}
-          className={
-            inputClass +
-            (status === 'found' ? ' border-green-400 pr-9' : '') +
-            (status === 'not_found' ? ' border-amber-400 pr-9' : '') +
-            (status === 'loading' ? ' pr-9' : '')
-          }
-        />
-        {/* Right-side icon */}
-        {status === 'loading' && (
-          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          </div>
-        )}
-        {status === 'found' && (
-          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-        )}
-        {status === 'not_found' && (
-          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            </svg>
-          </div>
-        )}
-      </div>
-      {/* Status message */}
-      {status === 'found' && (
-        <p className="text-[12px] text-green-600 mt-1 flex items-center gap-1">
-          <span>✓</span> Данните са заредени от Търговски регистър
-        </p>
-      )}
-      {status === 'not_found' && (
-        <p className="text-[12px] text-amber-600 mt-1">
-          Не е намерен в ТР — попълнете ръчно
-        </p>
-      )}
-      {status === 'loading' && (
-        <p className="text-[12px] text-blue-500 mt-1">Търсене в Търговски регистър…</p>
-      )}
-    </div>
-  )
+// EIKInput is now imported from EikLookup.tsx as SharedEikInput — kept as alias for FieldInput
+function EIKInput(props: Parameters<typeof SharedEikInput>[0]) {
+  return <SharedEikInput {...props} />
 }
 
 // ─── Render single field input ───────────────────────────────────────────────
 
 function FieldInput({
-  field, formData, set, setNum, total, eikStatus, onEikChange,
+  field, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect,
 }: {
   field: SchemaField
   formData: FormData
   set: (id: string, v: string) => void
   setNum: (id: string, v: string) => void
   total: number
-  eikStatus?: EikStatus
+  eikStatus?: import('./EikLookup').EikStatus
   onEikChange?: (v: string) => void
+  onCompanySelect?: Parameters<typeof CompanyNameInput>[0]['onSelect']
 }) {
+  // Special render for company_name — autocomplete from Търговски регистър
+  if (field.id === 'company_name') {
+    return (
+      <CompanyNameInput
+        value={formData.company_name}
+        onChange={(v) => set('company_name', v)}
+        onSelect={onCompanySelect ?? (() => {})}
+      />
+    )
+  }
   // Special render for EIK field
   if (field.id === 'eik') {
     return (
@@ -464,15 +423,16 @@ function FieldInput({
 // ─── Render a layout group ───────────────────────────────────────────────────
 
 function RenderGroup({
-  group, formData, set, setNum, total, eikStatus, onEikChange,
+  group, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect,
 }: {
   group: Group
   formData: FormData
   set: (id: string, v: string) => void
   setNum: (id: string, v: string) => void
   total: number
-  eikStatus: EikStatus
+  eikStatus: import('./EikLookup').EikStatus
   onEikChange: (v: string) => void
+  onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
 }) {
   if (group.type === 'period') {
     return <PeriodSelector formData={formData} set={set} />
@@ -484,7 +444,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
       </Field>
     )
   }
@@ -504,7 +464,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
       </Field>
     )
   }
@@ -513,12 +473,12 @@ function RenderGroup({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {fieldA && (
         <Field label={fieldA.label} required={fieldA.required}>
-          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
         </Field>
       )}
       {fieldB && (
         <Field label={fieldB.label} required={fieldB.required}>
-          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} />
+          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
         </Field>
       )}
     </div>
@@ -532,8 +492,16 @@ export default function QuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct'])
   const [formData, setFormData] = useState<FormData>({})
   const [submitting, setSubmitting] = useState(false)
-  const [eikStatus, setEikStatus] = useState<EikStatus>('idle')
-  const abortRef = useRef<AbortController | null>(null)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const setFormDataGeneric = useCallback((updater: (prev: any) => any) => {
+    setFormData(updater)
+  }, [])
+
+  const { eikStatus, handleEikChange, handleCompanySelect } = useEikLookup(
+    setFormDataGeneric,
+    PROPERTY_EIK_FIELD_MAP,
+  )
 
   function set(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value }))
@@ -543,47 +511,6 @@ export default function QuestionnaireForm() {
   }
   function toggleInsurer(key: InsurerKey) {
     setSelectedInsurers((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key])
-  }
-
-  const lookupEik = useCallback(async (eik: string) => {
-    // Cancel any in-flight request
-    abortRef.current?.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
-
-    setEikStatus('loading')
-    try {
-      const res = await fetch(`/api/eik?eik=${encodeURIComponent(eik)}`, {
-        signal: controller.signal,
-      })
-      if (controller.signal.aborted) return
-      if (res.ok) {
-        const data = await res.json()
-        if (data.company_name) {
-          setFormData((prev) => ({
-            ...prev,
-            ...(data.company_name ? { company_name: data.company_name } : {}),
-            ...(data.address      ? { address: data.address }           : {}),
-          }))
-          setEikStatus('found')
-          return
-        }
-      }
-      setEikStatus('not_found')
-    } catch (err) {
-      if ((err as Error).name !== 'AbortError') setEikStatus('not_found')
-    }
-  }, [])
-
-  function handleEikChange(v: string) {
-    set('eik', v)
-    const digits = v.replace(/\D/g, '')
-    if (digits.length === 9 || digits.length === 13) {
-      lookupEik(digits)
-    } else {
-      abortRef.current?.abort()
-      setEikStatus('idle')
-    }
   }
 
   const total = computeTotal(formData)
@@ -679,6 +606,7 @@ export default function QuestionnaireForm() {
                     total={total}
                     eikStatus={eikStatus}
                     onEikChange={handleEikChange}
+                    onCompanySelect={handleCompanySelect}
                   />
                 ))}
               </div>
