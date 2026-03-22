@@ -675,8 +675,13 @@ export default function QuestionnaireForm() {
         if (data.company_name) {
           setFormData((prev) => ({
             ...prev,
-            ...(data.company_name ? { company_name: data.company_name } : {}),
-            ...(data.address      ? { address: data.address }           : {}),
+            ...(data.company_name  ? { company_name:  data.company_name  } : {}),
+            ...(data.address       ? { address:        data.address       } : {}),
+            ...(data.email         ? { email:          data.email         } : {}),
+            ...(data.phone         ? { phone:          data.phone         } : {}),
+            ...(data.activity      ? { activity:       data.activity      } : {}),
+            ...(data.nkid_code     ? { nkid_code:      data.nkid_code     } : {}),
+            ...(data.representative? { representative: data.representative} : {}),
           }))
           setEikStatus('found')
           return
@@ -701,9 +706,9 @@ export default function QuestionnaireForm() {
 
   function handleCompanySelect(result: { company_name: string; eik: string; address?: string; city?: string }) {
     set('company_name', result.company_name)
+    // Trigger full EIK lookup to fill all fields
     set('eik', result.eik)
-    if (result.address) set('address', result.address)
-    setEikStatus('found')
+    lookupEik(result.eik)
   }
 
   const total = computeTotal(formData)

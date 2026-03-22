@@ -24,22 +24,50 @@ export async function GET(req: NextRequest) {
 
     const data = await res.json()
     const company = data.company ?? data
-    const name: string = company.companyName?.name ?? company.name ?? ''
-    const seat = company.seat ?? {}
-    const city: string = seat.settlement ?? seat.municipality ?? seat.region ?? ''
-    const address: string = [seat.address, city].filter(Boolean).join(', ')
-    const legalForm: string = company.legalForm ?? ''
 
+    // Name
+    const name: string = company.companyName?.name ?? company.name ?? ''
     if (!name) {
       return NextResponse.json({ error: 'Не е намерен в Търговския регистър' }, { status: 404 })
     }
+
+    // Address
+    const seat = company.seat ?? {}
+    const city: string = seat.settlement ?? seat.municipality ?? seat.region ?? ''
+    const streetPart: string = seat.address ?? ''
+    const address: string = [streetPart, city].filter(Boolean).join(', ')
+
+    // Contacts
+    const contacts = company.contacts ?? {}
+    const email: string = contacts.email ?? ''
+    const phone: string = contacts.phone ?? ''
+
+    // Activity
+    const activity: string = company.subjectOfActivity ?? ''
+
+    // NKID — first code from the array
+    const nkids: Array<{ code?: string; nkid?: string }> = company.nkids ?? []
+    const nkid_code: string = nkids[0]?.code ?? nkids[0]?.nkid ?? ''
+
+    // Representative — first manager
+    const managers: Array<{ name?: string; position?: string; role?: string }> =
+      company.managers ?? company.representatives ?? []
+    const mgr = managers[0]
+    const representative: string = mgr
+      ? [mgr.name, mgr.position ?? mgr.role ?? 'Управител'].filter(Boolean).join(' — ')
+      : ''
 
     return NextResponse.json({
       found: true,
       company_name: name,
       address: address || undefined,
       city: city || undefined,
-      legalForm: legalForm || undefined,
+      email: email || undefined,
+      phone: phone || undefined,
+      activity: activity || undefined,
+      nkid_code: nkid_code || undefined,
+      representative: representative || undefined,
+      legalForm: company.legalForm || undefined,
     })
   } catch (err) {
     console.error('[EIK]', err)
