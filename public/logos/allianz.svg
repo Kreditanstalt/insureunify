@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+  <rect width="120" height="40" fill="#003781" rx="4"/>
+  <!-- Eagle symbol simplified -->
+  <circle cx="22" cy="20" r="10" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
+  <polygon points="22,12 25,20 22,18 19,20" fill="#FFFFFF"/>
+  <polygon points="17,15 22,18 22,20 16,22" fill="#FFFFFF" opacity="0.85"/>
+  <polygon points="27,15 22,18 22,20 28,22" fill="#FFFFFF" opacity="0.85"/>
+  <polygon points="22,22 25,28 22,26 19,28" fill="#FFFFFF"/>
+  <!-- Text -->
+  <text x="38" y="15" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#FFFFFF" letter-spacing="0.5">АЛИАНЦ</text>
+  <text x="38" y="27" font-family="Arial,sans-serif" font-size="6" fill="#7BAFD4" letter-spacing="0.3">БЪЛГАРИЯ</text>
+  <text x="38" y="36" font-family="Arial,sans-serif" font-size="5" fill="#FFFFFF" opacity="0.65">ЗАД · VAPROSNIK_0142</text>
+</svg>

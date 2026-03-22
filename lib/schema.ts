@@ -11,8 +11,10 @@ export interface FieldMapping {
   bulstrad?: string | null
   generali?: string | null
   instinct?: string | null
-  axiom?: string | null
-  euroins?: string | null
+  axiom?:    string | null
+  euroins?:  string | null
+  allianz?:  string | null
+  groupama?: string | null
 }
 
 export interface FieldOption {
@@ -41,12 +43,12 @@ export interface SchemaSection {
   fields: SchemaField[]
 }
 
-export const INSURERS: Record<InsurerKey, { key: InsurerKey; name: string; color: string; formCode: string }> = {
-  bulstrad: { key: 'bulstrad', name: 'Булстрад', color: '#0B3D91', formCode: '2200-26' },
-  generali: { key: 'generali', name: 'Женерали', color: '#C8102E', formCode: 'ИМСБ 07.01.2026' },
-  instinct: { key: 'instinct', name: 'Инстинкт', color: '#1B6B3A', formCode: 'AR-01082025' },
-  axiom: { key: 'axiom', name: 'Аксиом', color: '#6B21A8', formCode: 'PL-Application' },
-  euroins: { key: 'euroins', name: 'Евроинс', color: '#1E40AF', formCode: 'ПО-кл.08' },
+export const INSURERS: Record<InsurerKey, { key: InsurerKey; name: string; color: string; formCode: string; logo: string }> = {
+  bulstrad: { key: 'bulstrad', name: 'Булстрад',  color: '#0B3D91', formCode: '2200-26',        logo: '/logos/bulstrad.svg' },
+  generali: { key: 'generali', name: 'Дженерали', color: '#C8102E', formCode: 'ИМСБ 07.01.2026', logo: '/logos/generali.svg' },
+  instinct: { key: 'instinct', name: 'Инстинкт',  color: '#1B6B3A', formCode: 'AR-01082025',     logo: '/logos/instinct.svg' },
+  axiom:    { key: 'axiom',    name: 'Аксиом',    color: '#6B21A8', formCode: 'PL-Application',  logo: '/logos/axiom.svg' },
+  euroins:  { key: 'euroins',  name: 'Евроинс',   color: '#1E40AF', formCode: 'ПО-кл.08',        logo: '/logos/euroins.svg' },
 }
 
 const YES_NO: FieldOption[] = [

@@ -19,34 +19,46 @@ interface Profile {
 
 const INSURANCE_CLASSES = [
   {
-    id: 'property',
-    label: 'Имуществено застраховане',
+    id:          'property',
+    label:       'Имуществено застраховане',
     description: 'Сгради, машини, стоки, оборудване',
-    active: true,
+    active:      true,
+    href:        '/dashboard/new',
   },
   {
-    id: 'cargo',
-    label: 'Товари / CMR',
+    id:          'general_liability',
+    label:       'Обща гражданска отговорност',
+    description: 'ОГО · Отговорност на работодателя',
+    active:      true,
+    href:        '/dashboard/new/general-liability',
+  },
+  {
+    id:          'occupational_accident',
+    label:       'Трудова злополука',
+    description: 'Задължителна и доброволна з-ка злополука',
+    active:      true,
+    href:        '/dashboard/new/occupational-accident',
+  },
+  {
+    id:          'cargo',
+    label:       'Товари / CMR',
     description: 'Транспортни рискове',
-    active: false,
+    active:      false,
+    href:        '#',
   },
   {
-    id: 'liability',
-    label: 'Обща гражданска отговорност',
-    description: 'OGO за предприятия',
-    active: false,
-  },
-  {
-    id: 'cyber',
-    label: 'Кибер застраховка',
+    id:          'cyber',
+    label:       'Кибер застраховка',
     description: 'Cyber & Data Breach',
-    active: false,
+    active:      false,
+    href:        '#',
   },
   {
-    id: 'professional_liability',
-    label: 'Професионална отговорност',
+    id:          'professional_liability',
+    label:       'Професионална отговорност',
     description: 'E&O, D&O · Аксиом, Булстрад, Евроинс',
-    active: true,
+    active:      true,
+    href:        '/dashboard/new/professional-liability',
   },
 ]
 
@@ -135,21 +147,19 @@ export default function DashboardPage() {
                 <span className="font-medium text-gray-900">{profile.companyName}</span>
               </span>
             )}
-            <Link
-              href={selectedClass === 'professional_liability' ? '/dashboard/new/professional-liability' : '/dashboard/new'}
+            <button
+              type="button"
+              onClick={() => {
+                const cls = INSURANCE_CLASSES.find((c) => c.id === selectedClass)
+                router.push(cls?.href ?? '/dashboard/new')
+              }}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               Нов въпросник
-            </Link>
+            </button>
             <button
               onClick={handleLogout}
               className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-2 py-1.5"
@@ -184,7 +194,11 @@ export default function DashboardPage() {
               <button
                 key={cls.id}
                 type="button"
-                onClick={() => cls.active && setSelectedClass(cls.id)}
+                onClick={() => {
+                  if (!cls.active) return
+                  setSelectedClass(cls.id)
+                  if (cls.href && cls.href !== '#') router.push(cls.href)
+                }}
                 disabled={!cls.active}
                 title={!cls.active ? 'Очаквайте скоро' : undefined}
                 className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm transition-colors ${
@@ -236,12 +250,16 @@ export default function DashboardPage() {
               Създайте първия си унифициран въпросник и генерирайте документи за 3
               застрахователя наведнъж.
             </p>
-            <Link
-              href={selectedClass === 'professional_liability' ? '/dashboard/new/professional-liability' : '/dashboard/new'}
+            <button
+              type="button"
+              onClick={() => {
+                const cls = INSURANCE_CLASSES.find((c) => c.id === selectedClass)
+                router.push(cls?.href ?? '/dashboard/new')
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors shadow-sm"
             >
               Създай първия въпросник
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="space-y-2.5">
