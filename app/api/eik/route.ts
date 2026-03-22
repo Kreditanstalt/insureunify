@@ -3,24 +3,52 @@ import { NextRequest, NextResponse } from 'next/server'
 export interface EIKResult {
   company_name: string
   address?: string
+  legalForm?: string
 }
 
-// ─── Source 1: papagal.bg JSON API ──────────────────────────────────────────
+// ─── Source 1: papagal.bg HTML scraping ──────────────────────────────────────
 
 async function tryPapagal(eik: string): Promise<EIKResult | null> {
   try {
-    const res = await fetch(`https://papagal.bg/api/eik/${eik}`, {
-      headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0' },
-      signal: AbortSignal.timeout(6000),
+    const res = await fetch(`https://papagal.bg/eik/${eik}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'bg,en;q=0.9',
+      },
+      signal: AbortSignal.timeout(8000),
     })
     if (!res.ok) return null
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await res.json()
-    const name: string =
-      data?.company ?? data?.name ?? data?.firm ?? data?.naziv ?? ''
-    const addr: string =
-      data?.address ?? data?.seat ?? data?.sedalishte ?? ''
-    if (name) return { company_name: name.trim(), address: addr.trim() || undefined }
+    const html = await res.text()
+
+    // Company name is in <h1> tag: e.g. "Фирма ИНС ЦЕНТЪР ООД" or just "ИНС ЦЕНТЪР ООД"
+    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+    let name = h1Match?.[1]?.trim() ?? ''
+    // Strip leading "Фирма " prefix if present
+    name = name.replace(/^Фирма\s+/i, '').trim()
+
+    if (!name) return null
+
+    // Address: find text after "БЪЛГАРИЯ, гр." pattern
+    // e.g. "БЪЛГАРИЯ, гр. София, ул. ..." or in a data field
+    let address = ''
+    const addrMatch = html.match(/БЪЛГАРИЯ,\s*(гр\.[^<"]{5,200})/i)
+    if (addrMatch?.[1]) {
+      address = ('БЪЛГАРИЯ, ' + addrMatch[1]).trim()
+        .replace(/&amp;/g, '&')
+        .replace(/&nbsp;/g, ' ')
+        .replace(/\s+/g, ' ')
+    }
+
+    // Extract legal form from name suffix
+    const legalFormMatch = name.match(/\b(ЕООД|ООД|ЕАД|АД|ДЗЗД|ЕТ|КД|СД|КООП)\b/i)
+    const legalForm = legalFormMatch?.[1]?.toUpperCase()
+
+    return {
+      company_name: name,
+      address: address || undefined,
+      legalForm: legalForm || undefined,
+    }
   } catch { /* network / parse error */ }
   return null
 }
@@ -45,19 +73,15 @@ async function tryRegistryPortal(eik: string): Promise<EIKResult | null> {
     if (!res.ok) return null
     const html = await res.text()
 
-    // The registry portal renders a table; look for firm name after the UIC cell
-    // Pattern 1: table cell after "Наименование" header
     const namePatterns = [
       /Наименование[^<]*<\/[^>]+>\s*<[^>]+>([^<]{3,120})</i,
       /class="[^"]*firm[^"]*"[^>]*>([А-ЯA-Z][^<]{2,100})</i,
       /<b>([А-ЯA-Z][А-ЯA-Zа-яa-z0-9\s"„"'\-–—,\.]+(?:ООД|ЕООД|АД|ЕАД|ДЗЗД|ЕТ|КД|СД|СА|КООП))/,
-      /UIC[^<]*<\/[^>]+>\s*<[^>]+>[^<]+<\/[^>]+>\s*<[^>]+>([^<]{3,120})</i,
     ]
 
     const addrPatterns = [
       /Седалище[^<]*<\/[^>]+>\s*<[^>]+>([^<]{5,200})</i,
       /Адрес[^<]*<\/[^>]+>\s*<[^>]+>([^<]{5,200})</i,
-      /адрес на управление[^<]*<\/[^>]+>\s*<[^>]+>([^<]{5,200})</i,
     ]
 
     let name = ''
@@ -72,34 +96,15 @@ async function tryRegistryPortal(eik: string): Promise<EIKResult | null> {
       if (m?.[1]?.trim()) { address = m[1].trim(); break }
     }
 
-    if (name) return { company_name: name, address: address || undefined }
-  } catch { /* network / parse error */ }
-  return null
-}
+    if (!name) return null
 
-// ─── Source 3: brra.bg (Bulgarian Registry Agency open data) ────────────────
+    const legalFormMatch = name.match(/\b(ЕООД|ООД|ЕАД|АД|ДЗЗД|ЕТ|КД|СД|КООП)\b/i)
+    const legalForm = legalFormMatch?.[1]?.toUpperCase()
 
-async function tryBRRA(eik: string): Promise<EIKResult | null> {
-  try {
-    // BRRA has an unofficial JSON endpoint used by various apps
-    const res = await fetch(
-      `https://brra.bg/GetXML.ra?id=${encodeURIComponent(eik)}&type=P`,
-      {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-        signal: AbortSignal.timeout(8000),
-      }
-    )
-    if (!res.ok) return null
-    const text = await res.text()
-
-    // Parse XML-like response
-    const nameMatch = text.match(/<Name[^>]*>([^<]+)<\/Name>/i)
-    const addrMatch = text.match(/<Address[^>]*>([^<]+)<\/Address>/i)
-    if (nameMatch?.[1]) {
-      return {
-        company_name: nameMatch[1].trim(),
-        address: addrMatch?.[1]?.trim() || undefined,
-      }
+    return {
+      company_name: name,
+      address: address || undefined,
+      legalForm: legalForm || undefined,
     }
   } catch { /* network / parse error */ }
   return null
@@ -114,21 +119,15 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Невалиден ЕИК' }, { status: 400 })
   }
 
-  // Try sources in parallel — take first successful result
-  const [papagal, brra, registry] = await Promise.allSettled([
-    tryPapagal(eik),
-    tryBRRA(eik),
-    tryRegistryPortal(eik),
-  ])
+  // Try papagal.bg first, fall back to registry portal
+  const papagal = await tryPapagal(eik)
+  if (papagal?.company_name) {
+    return NextResponse.json({ ...papagal, found: true })
+  }
 
-  const result =
-    (papagal.status === 'fulfilled' && papagal.value) ||
-    (brra.status === 'fulfilled' && brra.value) ||
-    (registry.status === 'fulfilled' && registry.value) ||
-    null
-
-  if (result?.company_name) {
-    return NextResponse.json(result)
+  const registry = await tryRegistryPortal(eik)
+  if (registry?.company_name) {
+    return NextResponse.json({ ...registry, found: true })
   }
 
   return NextResponse.json(
