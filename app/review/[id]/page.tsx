@@ -5,13 +5,16 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { InsurerKey, FormData } from '@/lib/schema'
 import { mapFormDataForAllInsurers, InsurerMappedData } from '@/lib/mappings'
+import { mapPLFormDataForAllInsurers, PLInsurerMappedData } from '@/lib/pl-mappings'
+import type { PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import ReviewOutput from '@/components/ReviewOutput'
 
 interface StoredSubmission {
   id: string
   clientName: string
   selectedInsurers: InsurerKey[]
-  formData: FormData
+  formData: FormData | PLFormData
+  insuranceClass?: string
   createdAt: string
 }
 
@@ -21,7 +24,7 @@ export default function ReviewPage() {
   const id = params.id as string
 
   const [submission, setSubmission] = useState<StoredSubmission | null>(null)
-  const [mappedData, setMappedData] = useState<Record<InsurerKey, InsurerMappedData> | null>(null)
+  const [mappedData, setMappedData] = useState<Record<InsurerKey, InsurerMappedData | PLInsurerMappedData> | null>(null)
   const [notFound, setNotFound] = useState(false)
 
   useEffect(() => {
@@ -33,7 +36,17 @@ export default function ReviewPage() {
     if (!found) { setNotFound(true); return }
 
     setSubmission(found)
-    setMappedData(mapFormDataForAllInsurers(found.formData, found.selectedInsurers))
+
+    if (found.insuranceClass === 'professional_liability') {
+      setMappedData(
+        mapPLFormDataForAllInsurers(
+          found.formData as PLFormData,
+          found.selectedInsurers as PLInsurerKey[]
+        ) as Record<InsurerKey, PLInsurerMappedData>
+      )
+    } else {
+      setMappedData(mapFormDataForAllInsurers(found.formData as FormData, found.selectedInsurers))
+    }
   }, [id])
 
   if (notFound) {
@@ -65,13 +78,7 @@ export default function ReviewPage() {
               onClick={() => router.push('/dashboard')}
               className="text-gray-400 hover:text-gray-600 transition-colors"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -81,9 +88,7 @@ export default function ReviewPage() {
               </h1>
               <p className="text-xs text-gray-400 mt-0.5">
                 {new Date(submission.createdAt).toLocaleDateString('bg-BG', {
-                  day: '2-digit',
-                  month: 'long',
-                  year: 'numeric',
+                  day: '2-digit', month: 'long', year: 'numeric',
                 })}
               </p>
             </div>
@@ -109,6 +114,7 @@ export default function ReviewPage() {
           selectedInsurers={submission.selectedInsurers}
           clientName={submission.clientName}
           formData={submission.formData}
+          insuranceClass={submission.insuranceClass}
         />
       </main>
     </div>

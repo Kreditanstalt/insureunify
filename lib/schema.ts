@@ -1,5 +1,5 @@
 export type FieldType = 'text' | 'number' | 'date' | 'select' | 'textarea'
-export type InsurerKey = 'bulstrad' | 'generali' | 'instinct'
+export type InsurerKey = 'bulstrad' | 'generali' | 'instinct' | 'axiom' | 'euroins'
 export type TransformType =
   | 'direct'
   | 'year_to_range'
@@ -11,6 +11,8 @@ export interface FieldMapping {
   bulstrad?: string | null
   generali?: string | null
   instinct?: string | null
+  axiom?: string | null
+  euroins?: string | null
 }
 
 export interface FieldOption {
@@ -43,6 +45,8 @@ export const INSURERS: Record<InsurerKey, { key: InsurerKey; name: string; color
   bulstrad: { key: 'bulstrad', name: 'Булстрад', color: '#0B3D91', formCode: '2200-26' },
   generali: { key: 'generali', name: 'Женерали', color: '#C8102E', formCode: 'ИМСБ 07.01.2026' },
   instinct: { key: 'instinct', name: 'Инстинкт', color: '#1B6B3A', formCode: 'AR-01082025' },
+  axiom: { key: 'axiom', name: 'Аксиом', color: '#6B21A8', formCode: 'PL-Application' },
+  euroins: { key: 'euroins', name: 'Евроинс', color: '#1E40AF', formCode: 'ПО-кл.08' },
 }
 
 const YES_NO: FieldOption[] = [

@@ -43,10 +43,10 @@ const INSURANCE_CLASSES = [
     active: false,
   },
   {
-    id: 'professional',
+    id: 'professional_liability',
     label: 'Професионална отговорност',
-    description: 'E&O, D&O',
-    active: false,
+    description: 'E&O, D&O · Аксиом, Булстрад, Евроинс',
+    active: true,
   },
 ]
 
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               </span>
             )}
             <Link
-              href="/dashboard/new"
+              href={selectedClass === 'professional_liability' ? '/dashboard/new/professional-liability' : '/dashboard/new'}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm"
             >
               <svg
@@ -237,7 +237,7 @@ export default function DashboardPage() {
               застрахователя наведнъж.
             </p>
             <Link
-              href="/dashboard/new"
+              href={selectedClass === 'professional_liability' ? '/dashboard/new/professional-liability' : '/dashboard/new'}
               className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors shadow-sm"
             >
               Създай първия въпросник

@@ -5,15 +5,22 @@ import { INSURERS, InsurerKey } from '@/lib/schema'
 interface Props {
   selected: InsurerKey[]
   onChange: (selected: InsurerKey[]) => void
+  availableInsurers?: InsurerKey[]
 }
 
-const INSURER_DESCRIPTIONS: Record<InsurerKey, string> = {
+const INSURER_DESCRIPTIONS: Partial<Record<InsurerKey, string>> = {
   bulstrad: 'Комбинирана полица Имущество · Формуляр 2200-26',
   generali: 'Имущество за малък и среден бизнес · ИМСБ 07.01.2026',
   instinct: 'Всички рискове / All Risks · AR-01082025',
+  axiom:    'Предложение-въпросник ПО · ЗК Аксиом АД',
+  euroins:  'Въпросник-предложение ПО кл.08 · ЗД Евроинс АД',
 }
 
-export default function InsurerSelector({ selected, onChange }: Props) {
+const PROPERTY_INSURERS: InsurerKey[] = ['bulstrad', 'generali', 'instinct']
+
+export default function InsurerSelector({ selected, onChange, availableInsurers }: Props) {
+  const keys = availableInsurers ?? PROPERTY_INSURERS
+
   function toggle(key: InsurerKey) {
     if (selected.includes(key)) {
       onChange(selected.filter((k) => k !== key))
@@ -27,7 +34,7 @@ export default function InsurerSelector({ selected, onChange }: Props) {
       <p className="text-sm text-gray-400 mb-4">
         Изберете застрахователите, за които искате да генерирате документи.
       </p>
-      {(Object.keys(INSURERS) as InsurerKey[]).map((key) => {
+      {keys.map((key) => {
         const insurer = INSURERS[key]
         const isSelected = selected.includes(key)
         return (
@@ -53,7 +60,9 @@ export default function InsurerSelector({ selected, onChange }: Props) {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-white">{insurer.name}</div>
-              <div className="text-xs text-gray-400 mt-0.5">{INSURER_DESCRIPTIONS[key]}</div>
+              <div className="text-xs text-gray-400 mt-0.5">
+                {INSURER_DESCRIPTIONS[key] ?? insurer.formCode}
+              </div>
             </div>
 
             {/* Checkbox */}

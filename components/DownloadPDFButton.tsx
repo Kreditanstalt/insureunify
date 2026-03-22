@@ -3,20 +3,28 @@
 import { useState } from 'react'
 import type { InsurerKey, FormData } from '@/lib/schema'
 import { INSURERS } from '@/lib/schema'
+import type { PLFormData } from '@/lib/pl-schema'
 
 interface Props {
   insurerKey: InsurerKey
-  formData: FormData
+  formData: FormData | PLFormData
   clientName: string
+  insuranceClass?: string   // 'property' (default) | 'professional_liability'
 }
 
-const FILE_NAMES: Record<InsurerKey, (client: string) => string> = {
+const PROPERTY_FILE_NAMES: Partial<Record<InsurerKey, (c: string) => string>> = {
   bulstrad: (c) => `Bulstrad_Imushestvo_${c}.pdf`,
   generali: (c) => `Generali_IMSB_${c}.pdf`,
   instinct: (c) => `Instinct_AllRisks_${c}.pdf`,
 }
 
-export function DownloadPDFButton({ insurerKey, formData, clientName }: Props) {
+const PL_FILE_NAMES: Partial<Record<InsurerKey, (c: string) => string>> = {
+  axiom:    (c) => `Axiom_PO_${c}.pdf`,
+  bulstrad: (c) => `Bulstrad_PO_${c}.pdf`,
+  euroins:  (c) => `Euroins_PO_${c}.pdf`,
+}
+
+export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceClass = 'property' }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function handleDownload() {
@@ -26,25 +34,46 @@ export function DownloadPDFButton({ insurerKey, formData, clientName }: Props) {
       const { pdf } = await import('@react-pdf/renderer')
       const React = (await import('react')).default
 
-      let element: React.ReactElement
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let element: any
 
-      if (insurerKey === 'bulstrad') {
-        const { BulstradPDF } = await import('./pdf/BulstradPDF')
-        element = React.createElement(BulstradPDF, { formData, clientName })
-      } else if (insurerKey === 'generali') {
-        const { GeneraliPDF } = await import('./pdf/GeneraliPDF')
-        element = React.createElement(GeneraliPDF, { formData, clientName })
+      if (insuranceClass === 'professional_liability') {
+        const plData = formData as PLFormData
+        if (insurerKey === 'axiom') {
+          const { AxiomPLPDF } = await import('./pdf/AxiomPLPDF')
+          element = React.createElement(AxiomPLPDF, { formData: plData, clientName })
+        } else if (insurerKey === 'bulstrad') {
+          const { BulstradPLPDF } = await import('./pdf/BulstradPLPDF')
+          element = React.createElement(BulstradPLPDF, { formData: plData, clientName })
+        } else if (insurerKey === 'euroins') {
+          const { EuroinsPLPDF } = await import('./pdf/EuroinsPLPDF')
+          element = React.createElement(EuroinsPLPDF, { formData: plData, clientName })
+        } else {
+          alert(`PDF за ${INSURERS[insurerKey].name} (ПО) не е наличен.`)
+          setLoading(false)
+          return
+        }
       } else {
-        const { InstinctPDF } = await import('./pdf/InstinctPDF')
-        element = React.createElement(InstinctPDF, { formData, clientName })
+        // Property insurance (default)
+        const propData = formData as FormData
+        if (insurerKey === 'bulstrad') {
+          const { BulstradPDF } = await import('./pdf/BulstradPDF')
+          element = React.createElement(BulstradPDF, { formData: propData, clientName })
+        } else if (insurerKey === 'generali') {
+          const { GeneraliPDF } = await import('./pdf/GeneraliPDF')
+          element = React.createElement(GeneraliPDF, { formData: propData, clientName })
+        } else {
+          const { InstinctPDF } = await import('./pdf/InstinctPDF')
+          element = React.createElement(InstinctPDF, { formData: propData, clientName })
+        }
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const blob = await pdf(element as any).toBlob()
+      const blob = await pdf(element).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = FILE_NAMES[insurerKey](clientName.replace(/\s+/g, '_'))
+      const fileNames = insuranceClass === 'professional_liability' ? PL_FILE_NAMES : PROPERTY_FILE_NAMES
+      a.download = (fileNames[insurerKey] ?? ((c: string) => `${insurerKey}_${c}.pdf`))(clientName.replace(/\s+/g, '_'))
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
@@ -57,7 +86,6 @@ export function DownloadPDFButton({ insurerKey, formData, clientName }: Props) {
     }
   }
 
-  // keep insurer color as visual hint on the button
   const color = INSURERS[insurerKey].color
 
   return (
