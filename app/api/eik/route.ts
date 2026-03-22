@@ -21,111 +21,138 @@ const KNOWN: Record<string, EIKResult> = {
   '830196612': { company_name: 'УНИКА АД', address: 'гр. София, ул. Юнак 11-13', legalForm: 'АД' },
 }
 
+function extractLegalForm(name: string): string | undefined {
+  return name.match(/\b(ЕООД|ООД|ЕАД|АД|ДЗЗД|ЕТ|КД|СД|КООП)\b/i)?.[1]?.toUpperCase()
+}
+
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept-Language': 'bg-BG,bg;q=0.9,en;q=0.8',
+  'Cache-Control': 'no-cache',
+}
+
 // ─── Source 1: papagal.bg HTML scraping ──────────────────────────────────────
 
 async function tryPapagal(eik: string): Promise<EIKResult | null> {
   try {
     const res = await fetch(`https://papagal.bg/eik/${eik}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'bg,en;q=0.9',
-      },
+      headers: { ...BROWSER_HEADERS, Referer: 'https://papagal.bg/' },
       signal: AbortSignal.timeout(8000),
     })
-
-    console.log(`[EIK] papagal.bg status: ${res.status}`)
+    console.log(`[EIK] papagal status: ${res.status}`)
     if (!res.ok) return null
 
     const html = await res.text()
-    console.log(`[EIK] papagal.bg HTML (first 500): ${html.slice(0, 500)}`)
+    console.log(`[EIK] papagal HTML[:500]: ${html.slice(0, 500)}`)
 
     const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-    console.log(`[EIK] papagal.bg <h1> match: ${h1Match?.[1] ?? 'NOT FOUND'}`)
+    console.log(`[EIK] papagal h1: ${h1Match?.[1] ?? 'NOT FOUND'}`)
 
     let name = h1Match?.[1]?.trim() ?? ''
     name = name.replace(/^Фирма\s+/i, '').trim()
     if (!name) return null
 
-    let address = ''
     const addrMatch = html.match(/БЪЛГАРИЯ,\s*(гр\.[^<"]{5,200})/i)
-    if (addrMatch?.[1]) {
-      address = ('БЪЛГАРИЯ, ' + addrMatch[1]).trim()
-        .replace(/&amp;/g, '&')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/\s+/g, ' ')
-    }
+    const address = addrMatch
+      ? ('БЪЛГАРИЯ, ' + addrMatch[1]).replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim()
+      : undefined
 
-    const legalFormMatch = name.match(/\b(ЕООД|ООД|ЕАД|АД|ДЗЗД|ЕТ|КД|СД|КООП)\b/i)
-    const legalForm = legalFormMatch?.[1]?.toUpperCase()
-
-    return { company_name: name, address: address || undefined, legalForm: legalForm || undefined }
+    return { company_name: name, address, legalForm: extractLegalForm(name) }
   } catch (err) {
-    console.log(`[EIK] papagal.bg error: ${err}`)
+    console.log(`[EIK] papagal error: ${err}`)
   }
   return null
 }
 
-// ─── Source 2: TheCompanyBook API ────────────────────────────────────────────
+// ─── Source 2: brra.bg XML ────────────────────────────────────────────────────
 
-async function tryTheCompanyBook(eik: string): Promise<EIKResult | null> {
+async function tryBRRA(eik: string): Promise<EIKResult | null> {
   try {
-    const res = await fetch(`https://www.thecompanybook.bg/api/company/${eik}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Accept: 'application/json',
-      },
+    const res = await fetch(`https://brra.bg/GetXML.ra?id=${encodeURIComponent(eik)}&type=P`, {
+      headers: BROWSER_HEADERS,
       signal: AbortSignal.timeout(8000),
     })
-
-    console.log(`[EIK] thecompanybook status: ${res.status}`)
+    console.log(`[EIK] brra status: ${res.status}`)
     if (!res.ok) return null
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = await res.json()
-    const name: string = data?.name ?? data?.company_name ?? data?.naziv ?? ''
-    const addr: string = data?.address ?? data?.seat ?? data?.registered_address ?? ''
+    const text = await res.text()
+    const nameMatch = text.match(/<Name[^>]*>([^<]+)<\/Name>/i)
+    const addrMatch = text.match(/<Address[^>]*>([^<]+)<\/Address>/i)
+    if (!nameMatch?.[1]) return null
 
-    if (!name) return null
-
-    const legalFormMatch = name.match(/\b(ЕООД|ООД|ЕАД|АД|ДЗЗД|ЕТ|КД|СД|КООП)\b/i)
-    const legalForm = legalFormMatch?.[1]?.toUpperCase()
-
-    console.log(`[EIK] thecompanybook found: ${name}`)
-    return { company_name: name.trim(), address: addr.trim() || undefined, legalForm: legalForm || undefined }
+    const name = nameMatch[1].trim()
+    console.log(`[EIK] brra found: ${name}`)
+    return {
+      company_name: name,
+      address: addrMatch?.[1]?.trim() || undefined,
+      legalForm: extractLegalForm(name),
+    }
   } catch (err) {
-    console.log(`[EIK] thecompanybook error: ${err}`)
+    console.log(`[EIK] brra error: ${err}`)
   }
   return null
 }
 
-// ─── Source 3: Official registry portal (HTML scraping) ─────────────────────
+// ─── Source 3: eik.bg HTML scraping ──────────────────────────────────────────
+
+async function tryEikBg(eik: string): Promise<EIKResult | null> {
+  try {
+    const res = await fetch(`https://eik.bg/${eik}`, {
+      headers: { ...BROWSER_HEADERS, Referer: 'https://eik.bg/' },
+      signal: AbortSignal.timeout(8000),
+    })
+    console.log(`[EIK] eik.bg status: ${res.status}`)
+    if (!res.ok) return null
+
+    const html = await res.text()
+    console.log(`[EIK] eik.bg HTML[:500]: ${html.slice(0, 500)}`)
+
+    // eik.bg shows company name in <h1> or <title>
+    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+    const titleMatch = html.match(/<title[^>]*>([^<|–-]+)/i)
+    let name = (h1Match?.[1] ?? titleMatch?.[1] ?? '').trim()
+    name = name.replace(/^Фирма\s+/i, '').replace(/[-–|].*$/, '').trim()
+    if (!name || name.length < 3) return null
+
+    // Address patterns on eik.bg
+    const addrPatterns = [
+      /Седалище[^:]*:\s*([^\n<]{5,200})/i,
+      /Адрес[^:]*:\s*([^\n<]{5,200})/i,
+      /(гр\.[^<\n]{5,150})/i,
+    ]
+    let address: string | undefined
+    for (const p of addrPatterns) {
+      const m = html.match(p)
+      if (m?.[1]?.trim()) { address = m[1].trim(); break }
+    }
+
+    console.log(`[EIK] eik.bg found: ${name}`)
+    return { company_name: name, address, legalForm: extractLegalForm(name) }
+  } catch (err) {
+    console.log(`[EIK] eik.bg error: ${err}`)
+  }
+  return null
+}
+
+// ─── Source 4: Official registry portal HTML scraping ────────────────────────
 
 async function tryRegistryPortal(eik: string): Promise<EIKResult | null> {
   try {
-    const url =
-      `https://portal.registryagency.bg/CR/Reports/VerificationPersonOrg` +
-      `?guid=&UIC=${encodeURIComponent(eik)}`
-
+    const url = `https://portal.registryagency.bg/CR/Reports/VerificationPersonOrg?guid=&UIC=${encodeURIComponent(eik)}`
     const res = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9',
-        'Accept-Language': 'bg,en;q=0.9',
-      },
+      headers: BROWSER_HEADERS,
       signal: AbortSignal.timeout(10000),
     })
-
     console.log(`[EIK] registryagency status: ${res.status}`)
     if (!res.ok) return null
-    const html = await res.text()
 
+    const html = await res.text()
     const namePatterns = [
       /Наименование[^<]*<\/[^>]+>\s*<[^>]+>([^<]{3,120})</i,
       /class="[^"]*firm[^"]*"[^>]*>([А-ЯA-Z][^<]{2,100})</i,
       /<b>([А-ЯA-Z][А-ЯA-Zа-яa-z0-9\s"„"'\-–—,\.]+(?:ООД|ЕООД|АД|ЕАД|ДЗЗД|ЕТ|КД|СД|СА|КООП))/,
     ]
-
     const addrPatterns = [
       /Седалище[^<]*<\/[^>]+>\s*<[^>]+>([^<]{5,200})</i,
       /Адрес[^<]*<\/[^>]+>\s*<[^>]+>([^<]{5,200})</i,
@@ -136,20 +163,16 @@ async function tryRegistryPortal(eik: string): Promise<EIKResult | null> {
       const m = html.match(p)
       if (m?.[1]?.trim()) { name = m[1].trim(); break }
     }
+    if (!name) return null
 
-    let address = ''
+    let address: string | undefined
     for (const p of addrPatterns) {
       const m = html.match(p)
       if (m?.[1]?.trim()) { address = m[1].trim(); break }
     }
 
-    if (!name) return null
-
-    const legalFormMatch = name.match(/\b(ЕООД|ООД|ЕАД|АД|ДЗЗД|ЕТ|КД|СД|КООП)\b/i)
-    const legalForm = legalFormMatch?.[1]?.toUpperCase()
-
     console.log(`[EIK] registryagency found: ${name}`)
-    return { company_name: name, address: address || undefined, legalForm: legalForm || undefined }
+    return { company_name: name, address, legalForm: extractLegalForm(name) }
   } catch (err) {
     console.log(`[EIK] registryagency error: ${err}`)
   }
@@ -165,35 +188,33 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Невалиден ЕИК' }, { status: 400 })
   }
 
-  console.log(`[EIK] Looking up EIK: ${eik}`)
+  console.log(`[EIK] Looking up: ${eik}`)
 
-  // 1. papagal.bg HTML scraping
-  const papagal = await tryPapagal(eik)
-  if (papagal?.company_name) {
-    return NextResponse.json({ ...papagal, found: true })
+  // Try all sources in parallel, take first hit
+  const [papagal, brra, eikBg, registry] = await Promise.allSettled([
+    tryPapagal(eik),
+    tryBRRA(eik),
+    tryEikBg(eik),
+    tryRegistryPortal(eik),
+  ])
+
+  const result =
+    (papagal.status === 'fulfilled' && papagal.value) ||
+    (brra.status === 'fulfilled' && brra.value) ||
+    (eikBg.status === 'fulfilled' && eikBg.value) ||
+    (registry.status === 'fulfilled' && registry.value) ||
+    null
+
+  if (result?.company_name) {
+    return NextResponse.json({ ...result, found: true })
   }
 
-  // 2. TheCompanyBook API
-  const tcb = await tryTheCompanyBook(eik)
-  if (tcb?.company_name) {
-    return NextResponse.json({ ...tcb, found: true })
-  }
-
-  // 3. Official registry portal
-  const registry = await tryRegistryPortal(eik)
-  if (registry?.company_name) {
-    return NextResponse.json({ ...registry, found: true })
-  }
-
-  // 4. Hardcoded fallback
+  // Hardcoded fallback
   const known = KNOWN[eik]
   if (known) {
-    console.log(`[EIK] Using hardcoded fallback for ${eik}: ${known.company_name}`)
+    console.log(`[EIK] Using hardcoded fallback for ${eik}`)
     return NextResponse.json({ ...known, found: true })
   }
 
-  return NextResponse.json(
-    { error: 'Не е намерен в Търговския регистър' },
-    { status: 404 }
-  )
+  return NextResponse.json({ error: 'Не е намерен в Търговския регистър' }, { status: 404 })
 }
