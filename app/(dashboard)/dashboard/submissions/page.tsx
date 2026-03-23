@@ -71,7 +71,20 @@ export default function SubmissionsPage() {
     // Try Supabase first, fall back to localStorage
     fetch('/api/submissions')
       .then((r) => r.json())
-      .then((d) => { if (d.submissions?.length) setSubmissions(d.submissions) })
+      .then((d) => {
+        if (d.submissions?.length) {
+          // Normalize snake_case from Supabase → camelCase
+          const normalized = d.submissions.map((s: Record<string, unknown>) => ({
+            id:               s.id,
+            clientName:       s.client_name ?? s.clientName,
+            insuranceClass:   s.insurance_class ?? s.insuranceClass,
+            selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
+            formData:         s.form_data ?? s.formData ?? {},
+            createdAt:        s.created_at ?? s.createdAt,
+          }))
+          setSubmissions(normalized)
+        }
+      })
       .catch(() => {
         try {
           const raw = localStorage.getItem('iu_submissions')

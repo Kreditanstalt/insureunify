@@ -102,7 +102,19 @@ export default function DashboardPage() {
     // Then fetch from Supabase
     fetch('/api/submissions')
       .then((r) => r.json())
-      .then((d) => { if (d.submissions?.length) setSubmissions(d.submissions) })
+      .then((d) => {
+        if (d.submissions?.length) {
+          const normalized = d.submissions.map((s: Record<string, unknown>) => ({
+            id:               s.id,
+            clientName:       s.client_name ?? s.clientName,
+            insuranceClass:   s.insurance_class ?? s.insuranceClass,
+            selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
+            formData:         s.form_data ?? s.formData ?? {},
+            createdAt:        s.created_at ?? s.createdAt,
+          }))
+          setSubmissions(normalized)
+        }
+      })
       .catch(() => {/* offline — localStorage is fine */})
 
     // Auto-migrate localStorage data to Supabase once

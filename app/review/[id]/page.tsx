@@ -80,7 +80,18 @@ export default function ReviewPage() {
       try {
         const res = await fetch(`/api/submissions?id=${id}`)
         const data = await res.json()
-        if (data.submission) found = data.submission
+        if (data.submission) {
+          const s = data.submission
+          // Normalize Supabase snake_case → camelCase
+          found = {
+            id:               s.id,
+            clientName:       s.client_name ?? s.clientName,
+            insuranceClass:   s.insurance_class ?? s.insuranceClass,
+            selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
+            formData:         s.form_data ?? s.formData ?? {},
+            createdAt:        s.created_at ?? s.createdAt,
+          } as StoredSubmission
+        }
       } catch { /* offline */ }
 
       // Fallback to localStorage
