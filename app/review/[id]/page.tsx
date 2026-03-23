@@ -76,35 +76,35 @@ export default function ReviewPage() {
     async function loadSubmission() {
       let found: StoredSubmission | null = null
 
-      // Try Supabase first
-      try {
-        const res = await fetch(`/api/submissions?id=${id}`)
-        const data = await res.json()
-        console.log('[review] Supabase response:', JSON.stringify(data).slice(0, 500))
-        if (data.submission) {
-          const s = data.submission
-          // Normalize Supabase snake_case → camelCase
-          found = {
-            id:               s.id,
-            clientName:       s.client_name ?? s.clientName,
-            insuranceClass:   s.insurance_class ?? s.insuranceClass,
-            selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
-            formData:         s.form_data ?? s.formData ?? {},
-            createdAt:        s.created_at ?? s.createdAt,
-          } as StoredSubmission
-          console.log('[review] formData keys:', Object.keys(found.formData ?? {}).slice(0, 10))
-        }
-      } catch (e) { console.log('[review] Supabase error:', e) }
-
-      // Fallback to localStorage
-      if (!found) {
-        console.log('[review] falling back to localStorage')
-        const raw = localStorage.getItem('iu_submissions')
-        if (raw) {
+      // Always check localStorage first - it has the complete formData
+      const raw = localStorage.getItem('iu_submissions')
+      if (raw) {
+        try {
           const list: StoredSubmission[] = JSON.parse(raw)
           found = list.find((s) => s.id === id) ?? null
-          if (found) console.log('[review] localStorage formData keys:', Object.keys((found as {formData?: Record<string,unknown>}).formData ?? {}).slice(0, 10))
-        }
+          if (found) console.log('[review] localStorage formData keys:', Object.keys((found as {formData?: Record<string,unknown>}).formData ?? {}).length)
+        } catch { /* ignore */ }
+      }
+
+      // If not in localStorage, try Supabase
+      if (!found) {
+        try {
+          const res = await fetch(`/api/submissions?id=${id}`)
+          const data = await res.json()
+          console.log('[review] Supabase response keys:', Object.keys(data.submission ?? {}))
+          if (data.submission) {
+            const s = data.submission
+            found = {
+              id:               s.id,
+              clientName:       s.client_name ?? s.clientName,
+              insuranceClass:   s.insurance_class ?? s.insuranceClass,
+              selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
+              formData:         s.form_data ?? s.formData ?? {},
+              createdAt:        s.created_at ?? s.createdAt,
+            } as StoredSubmission
+            console.log('[review] Supabase formData keys:', Object.keys((found.formData as Record<string,unknown>) ?? {}).length)
+          }
+        } catch (e) { console.log('[review] Supabase error:', e) }
       }
 
       if (!found) { setNotFound(true); return }
