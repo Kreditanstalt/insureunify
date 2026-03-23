@@ -12,6 +12,8 @@ import { OAInsurerKey, OAFormData } from '@/lib/oa-schema'
 import { mapOAFormDataForAll, OAInsurerMappedData } from '@/lib/oa-mappings'
 import { mapPLFormDataForAllInsurers, PLInsurerMappedData } from '@/lib/pl-mappings'
 import type { PLFormData, PLInsurerKey } from '@/lib/pl-schema'
+import { TC_INSURERS, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema'
+import { mapTCFormDataForAll, type TCInsurerMappedData } from '@/lib/tc-mappings'
 import ReviewOutput from '@/components/ReviewOutput'
 
 interface BaseSubmission {
@@ -45,7 +47,13 @@ interface PLSubmission extends BaseSubmission {
   insuranceClass:   'professional_liability'
 }
 
-type StoredSubmission = PropertySubmission | GLSubmission | OASubmission | PLSubmission
+interface TCSubmission extends BaseSubmission {
+  selectedInsurers: TCInsurerKey[]
+  formData:         TCFormData
+  insuranceClass:   'trade_credit'
+}
+
+type StoredSubmission = PropertySubmission | GLSubmission | OASubmission | PLSubmission | TCSubmission
 
 export default function ReviewPage() {
   const params = useParams()
@@ -60,6 +68,7 @@ export default function ReviewPage() {
   const [glMapped,       setGlMapped]       = useState<Record<GLInsurerKey, GLInsurerMappedData> | null>(null)
   const [oaMapped,       setOaMapped]       = useState<Record<OAInsurerKey, OAInsurerMappedData> | null>(null)
   const [plMapped,       setPlMapped]       = useState<Record<InsurerKey, InsurerMappedData | PLInsurerMappedData> | null>(null)
+  const [tcMapped,       setTcMapped]       = useState<Record<TCInsurerKey, TCInsurerMappedData> | null>(null)
 
   useEffect(() => {
     const raw = localStorage.getItem('iu_submissions')
@@ -126,6 +135,9 @@ export default function ReviewPage() {
       setPlMapped(
         mapPLFormDataForAllInsurers(pl.formData, pl.selectedInsurers) as Record<InsurerKey, PLInsurerMappedData>
       )
+    } else if (found.insuranceClass === 'trade_credit') {
+      const tc = found as { selectedInsurers: TCInsurerKey[]; formData: TCFormData }
+      setTcMapped(mapTCFormDataForAll(tc.formData, tc.selectedInsurers))
     } else {
       const prop = found as PropertySubmission
       setPropertyMapped(mapFormDataForAllInsurers(prop.formData, prop.selectedInsurers))
@@ -152,12 +164,14 @@ export default function ReviewPage() {
   const isGL = submission.insuranceClass === 'general_liability'
   const isOA = submission.insuranceClass === 'occupational_accident'
   const isPL = submission.insuranceClass === 'professional_liability'
-  if (isOA && !oaMapped)       return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
-  if (isGL && !glMapped)       return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
-  if (isPL && !plMapped)       return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
-  if (!isGL && !isOA && !isPL && !propertyMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  const isTC = submission.insuranceClass === 'trade_credit'
+  if (isOA && !oaMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  if (isGL && !glMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  if (isPL && !plMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  if (isTC && !tcMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
+  if (!isGL && !isOA && !isPL && !isTC && !propertyMapped) return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" /></div>
 
-  const classLabel = isOA ? 'Трудова злополука' : isGL ? 'ОГО — Обща гражданска отговорност' : isPL ? 'Професионална отговорност' : 'Имуществено застраховане'
+  const classLabel = isOA ? 'Трудова злополука' : isGL ? 'ОГО — Обща гражданска отговорност' : isPL ? 'Професионална отговорност' : isTC ? 'Търговски кредит' : 'Имуществено застраховане'
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -212,6 +226,12 @@ export default function ReviewPage() {
             formData={(submission as PLSubmission).formData}
             insuranceClass="professional_liability"
           />
+        ) : isTC ? (
+          <TCReviewOutput
+            mappedData={tcMapped!}
+            selectedInsurers={(submission as TCSubmission).selectedInsurers}
+            clientName={submission.clientName}
+          />
         ) : (
           <ReviewOutput
             mappedData={propertyMapped!}
@@ -221,6 +241,51 @@ export default function ReviewPage() {
           />
         )}
       </main>
+    </div>
+  )
+}
+
+// ─── TC Review Output ─────────────────────────────────────────────────────────
+
+function TCReviewOutput({
+  mappedData,
+  selectedInsurers,
+  clientName,
+}: {
+  mappedData: Record<TCInsurerKey, TCInsurerMappedData>
+  selectedInsurers: TCInsurerKey[]
+  clientName: string
+}) {
+  return (
+    <div className="space-y-6">
+      {selectedInsurers.map((key) => {
+        const ins = TC_INSURERS[key]
+        const data = mappedData[key]
+        if (!data) return null
+        const entries = Object.entries(data.fields).filter(([, v]) => v && v.trim())
+        return (
+          <div key={key} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
+              style={{ borderLeftWidth: 4, borderLeftColor: ins.color }}>
+              <div className="flex-1">
+                <p className="font-bold text-gray-900">{ins.name}</p>
+                <p className="text-xs text-gray-400">Търговски кредит · {clientName}</p>
+              </div>
+              <span className="text-xs text-gray-400">{entries.length} полета</span>
+            </div>
+            {/* Fields */}
+            <div className="divide-y divide-gray-50">
+              {entries.map(([label, value]) => (
+                <div key={label} className="flex items-start gap-4 px-6 py-3">
+                  <span className="w-64 flex-shrink-0 text-xs text-gray-500">{label}</span>
+                  <span className="flex-1 text-sm font-medium text-gray-900">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

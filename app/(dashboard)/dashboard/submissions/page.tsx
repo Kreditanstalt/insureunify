@@ -23,9 +23,10 @@ const CLASS_LABELS: Record<string, { label: string; color: string; bg: string }>
   general_liability:      { label: 'ОГО / Работодател', color: '#991b1b', bg: '#fee2e2' },
   occupational_accident:  { label: 'Трудова злополука', color: '#1e3a8a', bg: '#dbeafe' },
   professional_liability: { label: 'Проф. отговорност', color: '#581c87', bg: '#f3e8ff' },
+  trade_credit:           { label: 'Търговски кредит',  color: '#92400e', bg: '#fef3c7' },
 }
 
-const CLASS_FILTER_KEYS = ['all', 'property', 'general_liability', 'occupational_accident', 'professional_liability'] as const
+const CLASS_FILTER_KEYS = ['all', 'property', 'general_liability', 'occupational_accident', 'professional_liability', 'trade_credit'] as const
 
 const FILTER_LABELS: Record<string, string> = {
   all: 'Всички',
@@ -33,6 +34,7 @@ const FILTER_LABELS: Record<string, string> = {
   general_liability: 'ОГО',
   occupational_accident: 'Трудова зл.',
   professional_liability: 'Проф. отг.',
+  trade_credit: 'Търг. кредит',
 }
 
 function fmtDate(iso: string) {

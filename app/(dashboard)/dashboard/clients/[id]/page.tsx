@@ -18,10 +18,11 @@ interface StoredSubmission {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const CLASS_LABELS: Record<string, { label: string; color: string }> = {
-  property:               { label: 'Имущество',         color: '#1B6B3A' },
-  general_liability:      { label: 'ОГО / Работодател', color: '#C8102E' },
-  occupational_accident:  { label: 'Трудова злополука', color: '#0B3D91' },
-  professional_liability: { label: 'Проф. отговорност', color: '#6B21A8' },
+  property:               { label: 'Имущество',         color: '#166534' },
+  general_liability:      { label: 'ОГО / Работодател', color: '#991b1b' },
+  occupational_accident:  { label: 'Трудова злополука', color: '#1e3a8a' },
+  professional_liability: { label: 'Проф. отговорност', color: '#581c87' },
+  trade_credit:           { label: 'Търговски кредит',  color: '#92400e' },
 }
 
 const ALL_INSURERS: Record<string, { name: string; color: string }> = {

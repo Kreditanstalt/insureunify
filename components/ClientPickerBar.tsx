@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { getClient, getClients, storePrefill, type ClientProfile } from '@/lib/clients'
 
 interface Props {
-  insuranceClass: 'property' | 'general_liability' | 'occupational_accident' | 'professional_liability'
+  insuranceClass: 'property' | 'general_liability' | 'occupational_accident' | 'professional_liability' | 'trade_credit'
 }
 
 export default function ClientPickerBar({ insuranceClass: _insuranceClass }: Props) {
