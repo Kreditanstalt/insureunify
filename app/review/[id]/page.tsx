@@ -80,6 +80,7 @@ export default function ReviewPage() {
       try {
         const res = await fetch(`/api/submissions?id=${id}`)
         const data = await res.json()
+        console.log('[review] Supabase response:', JSON.stringify(data).slice(0, 500))
         if (data.submission) {
           const s = data.submission
           // Normalize Supabase snake_case → camelCase
@@ -91,15 +92,18 @@ export default function ReviewPage() {
             formData:         s.form_data ?? s.formData ?? {},
             createdAt:        s.created_at ?? s.createdAt,
           } as StoredSubmission
+          console.log('[review] formData keys:', Object.keys(found.formData ?? {}).slice(0, 10))
         }
-      } catch { /* offline */ }
+      } catch (e) { console.log('[review] Supabase error:', e) }
 
       // Fallback to localStorage
       if (!found) {
+        console.log('[review] falling back to localStorage')
         const raw = localStorage.getItem('iu_submissions')
         if (raw) {
           const list: StoredSubmission[] = JSON.parse(raw)
           found = list.find((s) => s.id === id) ?? null
+          if (found) console.log('[review] localStorage formData keys:', Object.keys((found as {formData?: Record<string,unknown>}).formData ?? {}).slice(0, 10))
         }
       }
 
