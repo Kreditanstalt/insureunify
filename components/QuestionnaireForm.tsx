@@ -161,14 +161,19 @@ const inputClass =
   'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow shadow-sm'
 
 function TextInput({
-  value, onChange, placeholder, type = 'text', disabled,
+  value, onChange, placeholder, type = 'text', disabled, extraClass = '',
 }: {
   value: string | number | undefined
   onChange?: (v: string) => void
   placeholder?: string
   type?: string
   disabled?: boolean
+  extraClass?: string
 }) {
+  const cls = inputClass
+    .replace('border-gray-300', extraClass.includes('border-red') ? 'border-red-400' : 'border-gray-300')
+    + (extraClass.includes('bg-red') ? ' bg-red-50/30' : '')
+    + (disabled ? ' bg-gray-50 text-gray-500 cursor-not-allowed' : '')
   return (
     <input
       type={type}
@@ -177,7 +182,7 @@ function TextInput({
       placeholder={placeholder}
       disabled={disabled}
       min={type === 'number' ? 0 : undefined}
-      className={inputClass + (disabled ? ' bg-gray-50 text-gray-500 cursor-not-allowed' : '')}
+      className={cls}
     />
   )
 }
@@ -366,7 +371,7 @@ function EIKInput(props: Parameters<typeof SharedEikInput>[0]) {
 // ─── Render single field input ───────────────────────────────────────────────
 
 function FieldInput({
-  field, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect,
+  field, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError,
 }: {
   field: SchemaField
   formData: FormData
@@ -376,7 +381,10 @@ function FieldInput({
   eikStatus?: import('./EikLookup').EikStatus
   onEikChange?: (v: string) => void
   onCompanySelect?: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  showError?: boolean
 }) {
+  const isEmpty = formData[field.id] === undefined || formData[field.id] === '' || formData[field.id] === null
+  const hasError = showError && field.required && isEmpty && !field.computed
   // Special render for company_name — autocomplete from Търговски регистър
   if (field.id === 'company_name') {
     return (
@@ -401,9 +409,13 @@ function FieldInput({
     return <TextInput type="number" value={total > 0 ? total : ''} placeholder="0" disabled />
   }
   if (field.type === 'select' && field.options) {
-    return field.options.length <= 4
-      ? <ToggleGroup options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />
-      : <SelectInput options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />
+    return (
+      <div className={hasError ? 'rounded-lg ring-2 ring-red-400 ring-offset-1' : ''}>
+        {field.options.length <= 4
+          ? <ToggleGroup options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />
+          : <SelectInput options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />}
+      </div>
+    )
   }
   if (field.type === 'textarea') {
     return (
@@ -412,23 +424,23 @@ function FieldInput({
         onChange={(e) => set(field.id, e.target.value)}
         placeholder={field.placeholder}
         rows={3}
-        className={inputClass + ' resize-none'}
+        className={(hasError ? inputClass.replace('border-gray-300','border-red-400 bg-red-50/30') : inputClass) + ' resize-none'}
       />
     )
   }
   if (field.type === 'number') {
-    return <TextInput type="number" value={formData[field.id]} onChange={(v) => setNum(field.id, v)} placeholder={field.placeholder ?? '0'} />
+    return <TextInput type="number" value={formData[field.id]} onChange={(v) => setNum(field.id, v)} placeholder={field.placeholder ?? '0'} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} />
   }
   if (field.type === 'date') {
-    return <TextInput type="date" value={formData[field.id]} onChange={(v) => set(field.id, v)} />
+    return <TextInput type="date" value={formData[field.id]} onChange={(v) => set(field.id, v)} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} />
   }
-  return <TextInput value={formData[field.id]} onChange={(v) => set(field.id, v)} placeholder={field.placeholder} />
+  return <TextInput value={formData[field.id]} onChange={(v) => set(field.id, v)} placeholder={field.placeholder} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} />
 }
 
 // ─── Render a layout group ───────────────────────────────────────────────────
 
 function RenderGroup({
-  group, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect,
+  group, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError,
 }: {
   group: Group
   formData: FormData
@@ -438,6 +450,7 @@ function RenderGroup({
   eikStatus: import('./EikLookup').EikStatus
   onEikChange: (v: string) => void
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  showError?: boolean
 }) {
   if (group.type === 'period') {
     return <PeriodSelector formData={formData} set={set} />
@@ -449,7 +462,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
       </Field>
     )
   }
@@ -469,7 +482,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
+        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
       </Field>
     )
   }
@@ -478,12 +491,12 @@ function RenderGroup({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {fieldA && (
         <Field label={fieldA.label} required={fieldA.required}>
-          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
+          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
         </Field>
       )}
       {fieldB && (
         <Field label={fieldB.label} required={fieldB.required}>
-          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
+          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
         </Field>
       )}
     </div>
@@ -606,6 +619,12 @@ export default function QuestionnaireForm() {
     }
   }
 
+  const errorSectionsProp = MASTER_SCHEMA
+    .slice(0, currentSection)
+    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .map((s) => s.id)
+  const showFieldErrorsProp = currentSection > 0
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-20">
@@ -622,6 +641,7 @@ export default function QuestionnaireForm() {
             completedIds={MASTER_SCHEMA
               .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
               .map((s) => s.id)}
+            errorIds={errorSectionsProp}
             onNavigate={(id) => setCurrentSection(MASTER_SCHEMA.findIndex((s) => s.id === id))}
           />
         </div>

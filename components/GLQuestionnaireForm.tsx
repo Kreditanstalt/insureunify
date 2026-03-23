@@ -89,7 +89,7 @@ function ToggleGroup({ options, value, onChange }: {
 // ─── Field renderer ───────────────────────────────────────────────────────────
 
 function FieldInput({
-  field, formData, set, setNum, eikStatus, onEikChange, onCompanySelect,
+  field, formData, set, setNum, eikStatus, onEikChange, onCompanySelect, showError,
 }: {
   field:           SchemaField
   formData:        GLFormData
@@ -98,7 +98,13 @@ function FieldInput({
   eikStatus:       import('./EikLookup').EikStatus
   onEikChange:     (v: string) => void
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  showError?:      boolean
 }) {
+  const isEmpty = formData[field.id] === undefined || formData[field.id] === ''
+  const hasError = showError && field.required && isEmpty
+  const ic = hasError
+    ? inputClass.replace('border-gray-300', 'border-red-400 bg-red-50/30')
+    : inputClass
   // Company name — autocomplete
   if (field.id === 'gl_company_name') {
     return (
@@ -127,7 +133,7 @@ function FieldInput({
     return field.options.length <= 4
       ? <ToggleGroup options={field.options} value={val} onChange={(v) => set(field.id, v)} />
       : (
-        <select value={String(val ?? '')} onChange={(e) => set(field.id, e.target.value)} className={inputClass + ' cursor-pointer'}>
+        <select value={String(val ?? '')} onChange={(e) => set(field.id, e.target.value)} className={ic + ' cursor-pointer'}>
           <option value="" disabled>— изберете —</option>
           {field.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -141,7 +147,7 @@ function FieldInput({
         onChange={(e) => set(field.id, e.target.value)}
         placeholder={field.placeholder}
         rows={3}
-        className={inputClass + ' resize-none'}
+        className={ic + ' resize-none'}
       />
     )
   }
@@ -154,7 +160,7 @@ function FieldInput({
         value={val ?? ''}
         onChange={(e) => setNum(field.id, e.target.value)}
         placeholder={field.placeholder ?? '0'}
-        className={inputClass}
+        className={ic}
       />
     )
   }
@@ -165,7 +171,7 @@ function FieldInput({
         type="date"
         value={String(val ?? '')}
         onChange={(e) => set(field.id, e.target.value)}
-        className={inputClass}
+        className={ic}
       />
     )
   }
@@ -176,7 +182,7 @@ function FieldInput({
       value={String(val ?? '')}
       onChange={(e) => set(field.id, e.target.value)}
       placeholder={field.placeholder}
-      className={inputClass}
+      className={ic}
     />
   )
 }
@@ -205,7 +211,7 @@ function MappingBadges({ field }: { field: SchemaField }) {
 // Fields are laid out in pairs (2 cols) where possible
 
 function RenderSection({
-  section, formData, set, setNum, eikStatus, onEikChange, onCompanySelect,
+  section, formData, set, setNum, eikStatus, onEikChange, onCompanySelect, showError,
 }: {
   section:         typeof GL_SCHEMA[number]
   formData:        GLFormData
@@ -214,6 +220,7 @@ function RenderSection({
   eikStatus:       import('./EikLookup').EikStatus
   onEikChange:     (v: string) => void
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  showError?:      boolean
 }) {
   const pairs: SchemaField[][] = []
   let i = 0
@@ -238,7 +245,7 @@ function RenderSection({
           group.length === 1 ? (
             <div key={gi}>
               <Label text={group[0].label} required={group[0].required} />
-              <FieldInput field={group[0]} formData={formData} set={set} setNum={setNum} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
+              <FieldInput field={group[0]} formData={formData} set={set} setNum={setNum} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
               {group[0].helpText && <p className="text-[11px] text-blue-600 mt-1">{group[0].helpText}</p>}
               <MappingBadges field={group[0]} />
             </div>
@@ -247,7 +254,7 @@ function RenderSection({
               {group.map((f) => (
                 <div key={f.id}>
                   <Label text={f.label} required={f.required} />
-                  <FieldInput field={f} formData={formData} set={set} setNum={setNum} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} />
+                  <FieldInput field={f} formData={formData} set={set} setNum={setNum} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
                   {f.helpText && <p className="text-[11px] text-blue-600 mt-1">{f.helpText}</p>}
                   <MappingBadges field={f} />
                 </div>
@@ -364,6 +371,15 @@ export default function GLQuestionnaireForm() {
     .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
     .map((s) => s.id)
 
+  // Sections that have been visited (idx <= currentSection) but have missing required fields
+  const errorSections = GL_SCHEMA
+    .slice(0, currentSection)
+    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .map((s) => s.id)
+
+  // Show red border on required fields that are empty (only after user has moved past that section)
+  const showFieldErrors = currentSection > 0
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -378,6 +394,7 @@ export default function GLQuestionnaireForm() {
             steps={GL_STEPS}
             activeId={GL_SCHEMA[currentSection].id}
             completedIds={completedSections}
+            errorIds={errorSections}
             onNavigate={(id) => setCurrentSection(GL_SCHEMA.findIndex((s) => s.id === id))}
           />
         </div>
@@ -429,6 +446,7 @@ export default function GLQuestionnaireForm() {
           eikStatus={eikStatus}
           onEikChange={handleEikChange}
           onCompanySelect={handleCompanySelect}
+          showError={showFieldErrors}
         />
 
         {/* Navigation */}

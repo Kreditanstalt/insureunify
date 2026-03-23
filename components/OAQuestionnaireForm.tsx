@@ -109,7 +109,7 @@ function MappingBadges({ field }: { field: SchemaField }) {
 // ─── Field renderer ───────────────────────────────────────────────────────────
 
 function FieldInput({
-  field, formData, set, setNum, eikStatus, onEikChange, onCompanySelect,
+  field, formData, set, setNum, eikStatus, onEikChange, onCompanySelect, showError,
 }: {
   field:           SchemaField
   formData:        OAFormData
@@ -118,7 +118,11 @@ function FieldInput({
   eikStatus:       import('./EikLookup').EikStatus
   onEikChange:     (v: string) => void
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  showError?:      boolean
 }) {
+  const isEmpty = formData[field.id] === undefined || formData[field.id] === ''
+  const hasError = showError && field.required && isEmpty
+  const ic = hasError ? inputClass.replace('border-gray-300', 'border-red-400 bg-red-50/30') : inputClass
   if (field.id === 'oa_company_name') {
     return (
       <CompanyNameInput
@@ -145,7 +149,7 @@ function FieldInput({
     return field.options.length <= 4
       ? <ToggleGroup options={field.options} value={val} onChange={(v) => set(field.id, v)} />
       : (
-        <select value={String(val ?? '')} onChange={(e) => set(field.id, e.target.value)} className={inputClass + ' cursor-pointer'}>
+        <select value={String(val ?? '')} onChange={(e) => set(field.id, e.target.value)} className={ic + ' cursor-pointer'}>
           <option value="" disabled>— изберете —</option>
           {field.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
@@ -159,7 +163,7 @@ function FieldInput({
         onChange={(e) => set(field.id, e.target.value)}
         placeholder={field.placeholder}
         rows={3}
-        className={inputClass + ' resize-none'}
+        className={ic + ' resize-none'}
       />
     )
   }
@@ -172,7 +176,7 @@ function FieldInput({
         value={val ?? ''}
         onChange={(e) => setNum(field.id, e.target.value)}
         placeholder={field.placeholder ?? '0'}
-        className={inputClass}
+        className={ic}
       />
     )
   }
@@ -183,7 +187,7 @@ function FieldInput({
         type="date"
         value={String(val ?? '')}
         onChange={(e) => set(field.id, e.target.value)}
-        className={inputClass}
+        className={ic}
       />
     )
   }
@@ -194,7 +198,7 @@ function FieldInput({
       value={String(val ?? '')}
       onChange={(e) => set(field.id, e.target.value)}
       placeholder={field.placeholder}
-      className={inputClass}
+      className={ic}
     />
   )
 }
@@ -202,7 +206,7 @@ function FieldInput({
 // ─── Section layout ───────────────────────────────────────────────────────────
 
 function RenderSection({
-  section, formData, set, setNum, eikStatus, onEikChange, onCompanySelect,
+  section, formData, set, setNum, eikStatus, onEikChange, onCompanySelect, showError,
 }: {
   section:         typeof OA_SCHEMA[number]
   formData:        OAFormData
@@ -211,6 +215,7 @@ function RenderSection({
   eikStatus:       import('./EikLookup').EikStatus
   onEikChange:     (v: string) => void
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  showError?:      boolean
 }) {
   const pairs: SchemaField[][] = []
   let i = 0
@@ -353,6 +358,12 @@ export default function OAQuestionnaireForm() {
     }
   }
 
+  const errorSectionsOA = OA_SCHEMA
+    .slice(0, currentSection)
+    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .map((s) => s.id)
+  const showFieldErrorsOA = currentSection > 0
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
@@ -369,6 +380,7 @@ export default function OAQuestionnaireForm() {
             completedIds={OA_SCHEMA
               .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
               .map((s) => s.id)}
+            errorIds={errorSectionsOA}
             onNavigate={(id) => setCurrentSection(OA_SCHEMA.findIndex((s) => s.id === id))}
           />
         </div>
@@ -422,6 +434,7 @@ export default function OAQuestionnaireForm() {
           eikStatus={eikStatus}
           onEikChange={handleEikChange}
           onCompanySelect={handleCompanySelect}
+          showError={showFieldErrorsOA}
         />
 
         {/* Navigation */}

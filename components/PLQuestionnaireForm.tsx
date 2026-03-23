@@ -404,7 +404,11 @@ function PLSidebar({ currentIndex, formData, onNavigate }: {
             key={section.id}
             onClick={() => onNavigate(idx)}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
-              isCurrent ? 'bg-purple-100 text-purple-800 border border-purple-300' : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
+              isCurrent
+                ? 'bg-purple-100 text-purple-800 border border-purple-300'
+                : idx < currentIndex && progress < 100
+                  ? 'text-red-500 hover:bg-red-50'
+                  : 'text-gray-500 hover:text-gray-800 hover:bg-gray-100'
             }`}
           >
             <span className="text-base">{section.icon}</span>
@@ -412,15 +416,17 @@ function PLSidebar({ currentIndex, formData, onNavigate }: {
               <div className="text-xs font-medium truncate">{section.shortLabel}</div>
               {progress > 0 && progress < 100 && (
                 <div className="h-0.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
-                  <div className="h-full bg-purple-500 rounded-full" style={{ width: `${progress}%` }} />
+                  <div className={`h-full rounded-full ${idx < currentIndex && progress < 100 ? 'bg-red-400' : 'bg-purple-500'}`} style={{ width: `${progress}%` }} />
                 </div>
               )}
             </div>
-            {progress === 100 && (
+            {progress === 100 ? (
               <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
-            )}
+            ) : idx < currentIndex && progress < 100 ? (
+              <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center rounded-full bg-red-100 text-red-500 text-[10px] font-bold">!</span>
+            ) : null}
           </button>
         )
       })}
@@ -582,6 +588,11 @@ export default function PLQuestionnaireForm() {
       set('pl_insured_eik', d.eik)
       lookupInsuredEik(d.eik)
     }
+  }
+
+  const showFieldError = (fieldId: string) => {
+    const sectionIdx = PL_SCHEMA.findIndex((s) => s.fields.some((f) => f.id === fieldId))
+    return sectionIdx < currentSection && (formData[fieldId] === undefined || formData[fieldId] === '')
   }
 
   const REQUIRED_IDS = PL_SCHEMA.flatMap((s) => s.fields.filter((f) => f.required).map((f) => f.id))

@@ -28,11 +28,12 @@ const TC_EIK_FIELD_MAP = {
 }
 
 function Field({
-  label, id, value, onChange, placeholder, required, type = 'text', hint,
+  label, id, value, onChange, placeholder, required, type = 'text', hint, showError,
 }: {
   label: string; id: string; value: string; onChange: (v: string) => void
-  placeholder?: string; required?: boolean; type?: string; hint?: string
+  placeholder?: string; required?: boolean; type?: string; hint?: string; showError?: boolean
 }) {
+  const hasError = showError && required && (!value || value === '')
   return (
     <div>
       <label className="block text-xs font-semibold text-gray-600 mb-1">
@@ -43,7 +44,11 @@ function Field({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder ?? ''}
-        className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition-all focus:border-blue-400 focus:ring-2 focus:ring-blue-50 placeholder-gray-300"
+        className={`w-full rounded-lg border px-3 py-2 text-sm text-gray-900 outline-none transition-all focus:ring-2 placeholder-gray-300 ${
+          hasError
+            ? 'border-red-400 bg-red-50/40 focus:border-red-400 focus:ring-red-100'
+            : 'border-gray-200 bg-white focus:border-blue-400 focus:ring-blue-50'
+        }`}
       />
       {hint && <p className="mt-0.5 text-[11px] text-gray-400">{hint}</p>}
     </div>
@@ -233,14 +238,32 @@ export default function TCQuestionnaireForm() {
         </div>
 
         {/* Stepper */}
-        <div className="bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
-          <StepperBar
-            steps={TC_STEPS}
-            activeId={TC_STEPS[currentStep].id}
-            completedIds={TC_STEPS.slice(0, currentStep).map((s) => s.id)}
-            onNavigate={(id) => setCurrentStep(TC_STEPS.findIndex((s) => s.id === id))}
-          />
-        </div>
+        {(() => {
+          // Mark steps that user has passed as error if they have missing required TC fields
+          const tcRequired: Record<string, string[]> = {
+            tc_basic:    ['tc_company_name','tc_eik','tc_contact_person','tc_phone','tc_activity'],
+            tc_turnover: ['tc_expected_insurable_turnover'],
+            tc_markets:  [],
+            tc_sales:    [],
+            tc_payment:  [],
+            tc_buyers:   [],
+          }
+          const errorSteps = TC_STEPS
+            .slice(0, currentStep)
+            .filter((s) => (tcRequired[s.id] ?? []).some((f) => !form[f as keyof typeof form]))
+            .map((s) => s.id)
+          return (
+            <div className="bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+              <StepperBar
+                steps={TC_STEPS}
+                activeId={TC_STEPS[currentStep].id}
+                completedIds={TC_STEPS.slice(0, currentStep).filter((s) => !(errorSteps.includes(s.id))).map((s) => s.id)}
+                errorIds={errorSteps}
+                onNavigate={(id) => setCurrentStep(TC_STEPS.findIndex((s) => s.id === id))}
+              />
+            </div>
+          )
+        })()}
 
         {/* Prefill banner */}
         {prefillBanner && (
@@ -315,10 +338,10 @@ export default function TCQuestionnaireForm() {
               />
             </div>
             <Field label="Адрес" id="tc_address" value={form.tc_address} onChange={f('tc_address')} />
-            <Field label="Лице за контакт" id="tc_contact_person" required
+            <Field label="Лице за контакт" id="tc_contact_person" required showError={currentStep > 0}
               value={form.tc_contact_person} onChange={f('tc_contact_person')} />
             <Field label="Длъжност" id="tc_position" value={form.tc_position} onChange={f('tc_position')} />
-            <Field label="Телефон" id="tc_phone" required value={form.tc_phone} onChange={f('tc_phone')} />
+            <Field label="Телефон" id="tc_phone" required showError={currentStep > 0} value={form.tc_phone} onChange={f('tc_phone')} />
             <Field label="Ел. поща" id="tc_email" value={form.tc_email} onChange={f('tc_email')} type="email" />
             <div className="sm:col-span-2">
               <Field label="Описание на дейността / Trade sector"
@@ -361,7 +384,7 @@ export default function TCQuestionnaireForm() {
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
             <Field label="Прогнозен оборот (хил. EUR)" id="tc_expected_turnover"
               value={form.tc_expected_turnover} onChange={f('tc_expected_turnover')} type="number" />
-            <Field label="Застрах. оборот (хил. EUR)" id="tc_expected_insurable_turnover" required
+            <Field label="Застрах. оборот (хил. EUR)" id="tc_expected_insurable_turnover" required showError={currentStep > 1}
               value={form.tc_expected_insurable_turnover} onChange={f('tc_expected_insurable_turnover')}
               type="number" hint="Застрахователен оборот" />
             <Field label="Вътрешен пазар (хил. EUR)" id="tc_expected_domestic"
