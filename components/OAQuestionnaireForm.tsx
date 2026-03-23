@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { OA_SCHEMA, OA_INSURERS, OA_INSURER_KEYS, OAFormData, OAInsurerKey } from '@/lib/oa-schema'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import type { SchemaField } from '@/lib/schema'
+import AutoFillUploader from './AutoFillUploader'
 
 // ─── EIK field map ────────────────────────────────────────────────────────────
 
@@ -298,6 +299,23 @@ export default function OAQuestionnaireForm() {
   function setNum(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value === '' ? undefined : Number(value) }))
   }
+
+  function handleAutoFill(extracted: Record<string, string | null>) {
+    setFormData((prev) => {
+      const next = { ...prev }
+      const s = (id: string, v: string | null | undefined) => { if (v) next[id] = v }
+      s('oa_company_name',  extracted.company_name)
+      s('oa_eik',           extracted.eik)
+      s('oa_address',       extracted.address)
+      s('oa_phone',         extracted.phone)
+      s('oa_activity',      extracted.activity)
+      s('oa_activity_code', extracted.nkid_code)
+      s('oa_representative', extracted.representative)
+      s('oa_persons_count', extracted.employees_count)
+      return next
+    })
+  }
+
   function toggleInsurer(key: OAInsurerKey) {
     setSelectedInsurers((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
@@ -364,6 +382,8 @@ export default function OAQuestionnaireForm() {
             <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
           </div>
         )}
+
+        <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-6">
