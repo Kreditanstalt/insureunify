@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
 import { fmtDateBG } from '@/lib/utils'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
+import AutoFillUploader from './AutoFillUploader'
 
 interface StoredSubmission {
   id: string
@@ -532,6 +533,33 @@ export default function QuestionnaireForm() {
   function setNum(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value === '' ? undefined : Number(value) }))
   }
+
+  function handleAutoFill(extracted: Record<string, string | null>) {
+    setFormData((prev) => {
+      const next = { ...prev }
+      const s = (id: string, v: string | null | undefined) => { if (v) next[id] = v }
+      s('company_name',   extracted.company_name)
+      s('eik',            extracted.eik)
+      s('address',        extracted.address)
+      s('phone',          extracted.phone)
+      s('email',          extracted.email)
+      s('activity',       extracted.activity)
+      s('nkid_code',      extracted.nkid_code)
+      s('representative', extracted.representative)
+      s('property_address', extracted.property_address)
+      s('val_buildings',  extracted.val_buildings)
+      s('val_machinery',  extracted.val_machinery)
+      s('val_total',      extracted.val_total)
+      s('construction_type', extracted.construction_type)
+      s('construction_year', extracted.construction_year)
+      s('floors',         extracted.floors)
+      s('area_sqm',       extracted.area_sqm)
+      s('fire_alarm',     extracted.fire_alarm)
+      s('sprinklers',     extracted.sprinklers)
+      return next
+    })
+  }
+
   function toggleInsurer(key: InsurerKey) {
     setSelectedInsurers((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key])
   }
@@ -597,6 +625,8 @@ export default function QuestionnaireForm() {
             <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
           </div>
         )}
+
+        <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
