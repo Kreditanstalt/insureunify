@@ -172,7 +172,8 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
       URL.revokeObjectURL(url)
     } catch (err) {
       console.error('PDF generation failed:', err)
-      alert('Грешка при генериране на PDF. Моля, опитайте отново.')
+      const msg = err instanceof Error ? err.message : String(err)
+      alert(`Грешка при генериране на PDF:\n${msg}`)
     } finally {
       setLoading(false)
     }

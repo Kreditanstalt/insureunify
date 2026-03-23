@@ -7,8 +7,8 @@ import type { PLFormData } from '@/lib/pl-schema'
 Font.register({
   family: 'Roboto',
   fonts: [
-    { src: `${typeof window !== 'undefined' ? window.location.origin : ''}/fonts/Roboto-Regular.ttf`, fontWeight: 'normal' },
-    { src: `${typeof window !== 'undefined' ? window.location.origin : ''}/fonts/Roboto-Bold.ttf`, fontWeight: 'bold' },
+    { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Me5WZLCzYlKw.ttf', fontWeight: 'normal' },
+    { src: 'https://fonts.gstatic.com/s/roboto/v30/KFOlCnqEu92Fr1MmWUlvAx05IsDqlA.ttf', fontWeight: 'bold' },
   ],
 })
 
