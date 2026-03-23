@@ -8,8 +8,10 @@ import type { GLFormData, GLInsurerKey } from '@/lib/gl-schema'
 import { GL_INSURERS } from '@/lib/gl-schema'
 import type { OAFormData, OAInsurerKey } from '@/lib/oa-schema'
 import { OA_INSURERS } from '@/lib/oa-schema'
+import type { TCFormData, TCInsurerKey } from '@/lib/tc-schema'
+import { TC_INSURERS } from '@/lib/tc-schema'
 
-type InsuranceClass = 'property' | 'professional_liability' | 'general_liability' | 'occupational_accident'
+type InsuranceClass = 'property' | 'professional_liability' | 'general_liability' | 'occupational_accident' | 'trade_credit'
 
 interface PropertyProps {
   insurerKey:     InsurerKey
@@ -39,7 +41,14 @@ interface OAProps {
   insuranceClass: 'occupational_accident'
 }
 
-type Props = PropertyProps | PLProps | GLProps | OAProps
+interface TCProps {
+  insurerKey:     TCInsurerKey
+  formData:       TCFormData
+  clientName:     string
+  insuranceClass: 'trade_credit'
+}
+
+type Props = PropertyProps | PLProps | GLProps | OAProps | TCProps
 
 function getColor(insurerKey: string, insuranceClass: InsuranceClass): string {
   if (insuranceClass === 'general_liability') {
@@ -47,6 +56,9 @@ function getColor(insurerKey: string, insuranceClass: InsuranceClass): string {
   }
   if (insuranceClass === 'occupational_accident') {
     return OA_INSURERS[insurerKey as OAInsurerKey]?.color ?? '#666'
+  }
+  if (insuranceClass === 'trade_credit') {
+    return TC_INSURERS[insurerKey as TCInsurerKey]?.color ?? '#666'
   }
   return INSURERS[insurerKey as InsurerKey]?.color ?? '#666'
 }
@@ -96,6 +108,15 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           setLoading(false)
           return
         }
+      } else if (insuranceClass === 'trade_credit') {
+        const tcData = formData as TCFormData
+        if (insurerKey === 'atradius') {
+          const { AtradiusTCPDF } = await import('./pdf/AtradiusTCPDF')
+          element = React.createElement(AtradiusTCPDF, { formData: tcData, clientName })
+        } else {
+          const { AllianzTradeTCPDF } = await import('./pdf/AllianzTradeTCPDF')
+          element = React.createElement(AllianzTradeTCPDF, { formData: tcData, clientName })
+        }
       } else {
         // Property insurance
         if (insurerKey === 'bulstrad') {
@@ -130,6 +151,12 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           euroins:  'Euroins_PO',
         }
         a.download = `${plPrefixes[insurerKey as InsurerKey] ?? insurerKey}_${safe}.pdf`
+      } else if (insuranceClass === 'trade_credit') {
+        const tcPrefixes: Record<TCInsurerKey, string> = {
+          atradius:      'Atradius_TK',
+          allianz_trade: 'AllianzTrade_TK',
+        }
+        a.download = `${tcPrefixes[insurerKey as TCInsurerKey] ?? insurerKey}_${safe}.pdf`
       } else {
         const prefixes: Record<string, string> = {
           bulstrad: 'Bulstrad_Imushestvo',

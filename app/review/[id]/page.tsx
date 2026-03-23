@@ -15,6 +15,7 @@ import type { PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import { TC_INSURERS, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema'
 import { mapTCFormDataForAll, type TCInsurerMappedData } from '@/lib/tc-mappings'
 import ReviewOutput from '@/components/ReviewOutput'
+import { DownloadPDFButton } from '@/components/DownloadPDFButton'
 
 interface BaseSubmission {
   id:               string
@@ -231,6 +232,7 @@ export default function ReviewPage() {
             mappedData={tcMapped!}
             selectedInsurers={(submission as TCSubmission).selectedInsurers}
             clientName={submission.clientName}
+            formData={(submission as TCSubmission).formData}
           />
         ) : (
           <ReviewOutput
@@ -251,10 +253,12 @@ function TCReviewOutput({
   mappedData,
   selectedInsurers,
   clientName,
+  formData,
 }: {
   mappedData: Record<TCInsurerKey, TCInsurerMappedData>
   selectedInsurers: TCInsurerKey[]
   clientName: string
+  formData: TCFormData
 }) {
   return (
     <div className="space-y-6">
@@ -273,6 +277,12 @@ function TCReviewOutput({
                 <p className="text-xs text-gray-400">Търговски кредит · {clientName}</p>
               </div>
               <span className="text-xs text-gray-400">{entries.length} полета</span>
+              <DownloadPDFButton
+                insurerKey={key}
+                formData={formData}
+                clientName={clientName}
+                insuranceClass="trade_credit"
+              />
             </div>
             {/* Fields */}
             <div className="divide-y divide-gray-50">
