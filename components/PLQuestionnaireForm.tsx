@@ -7,6 +7,9 @@ import { INSURERS } from '@/lib/schema'
 import { PL_SCHEMA, PL_INSURERS, PL_INSURER_KEYS, PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
+import StepperBar from './StepperBar'
+
+const PL_STEPS = PL_SCHEMA.map((s) => ({ id: s.id, label: s.shortLabel ?? s.label, icon: s.icon }))
 
 // ─── Shared StoredSubmission type ─────────────────────────────────────────────
 
@@ -623,138 +626,144 @@ export default function PLQuestionnaireForm() {
 
   const section = PL_SCHEMA[currentSection]
 
+  const completedSectionsPL = PL_SCHEMA
+    .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
+    .map((s) => s.id)
+
+  const errorSectionsPL = PL_SCHEMA
+    .slice(0, currentSection)
+    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .map((s) => s.id)
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-4">
-        <AutoFillUploader onFill={handleAutoFill} className="mb-2" />
+      <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник ПО</h1>
+        <p className="text-gray-500 text-sm mb-4">Професионална отговорност</p>
 
-        <div className="flex gap-8">
-        {/* Sidebar */}
-        <PLSidebar currentIndex={currentSection} formData={formData} onNavigate={setCurrentSection} />
+        {/* Stepper */}
+        <div className="mb-6 bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+          <StepperBar
+            steps={PL_STEPS}
+            activeId={section.id}
+            completedIds={completedSectionsPL}
+            errorIds={errorSectionsPL}
+            onNavigate={(id) => setCurrentSection(PL_SCHEMA.findIndex((s) => s.id === id))}
+          />
+        </div>
 
-        {/* Main area */}
-        <div className="flex-1 min-w-0 space-y-8">
+        <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
-          {/* Insurer selector */}
-          {currentSection === 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-              <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Застрахователи</h2>
-              <div className="space-y-3">
-                {PL_INSURER_KEYS.map((key) => {
-                  const ins = PL_INSURERS[key]
-                  const isSelected = selectedInsurers.includes(key)
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => {
-                        setSelectedInsurers((prev) =>
-                          prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-                        )
-                      }}
-                      className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left ${
-                        isSelected ? 'bg-purple-50 border-opacity-100' : 'bg-white border-gray-200 hover:border-gray-300'
-                      }`}
-                      style={isSelected ? { borderColor: ins.color } : undefined}
-                    >
-                      <div className="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm"
-                        style={{ backgroundColor: ins.color }}>
-                        {ins.name[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900">{ins.name}</div>
-                        <div className="text-xs text-gray-500 mt-0.5">{ins.description}</div>
-                      </div>
-                      <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-transparent' : 'border-gray-300'}`}
-                        style={isSelected ? { backgroundColor: ins.color } : undefined}>
-                        {isSelected && (
-                          <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                      </div>
-                    </button>
-                  )
-                })}
-                {selectedInsurers.length === 0 && (
-                  <p className="text-xs text-red-500">Моля, изберете поне един застраховател.</p>
-                )}
-              </div>
+        {/* Insurer selector — step 0 only */}
+        {currentSection === 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 mb-4">
+            <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Застрахователи</p>
+            <div className="flex flex-wrap gap-2">
+              {PL_INSURER_KEYS.map((key) => {
+                const ins = PL_INSURERS[key]
+                const isSelected = selectedInsurers.includes(key)
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedInsurers((prev) =>
+                      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+                    )}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
+                      isSelected ? 'text-white' : 'bg-white text-gray-700 border-gray-200'
+                    }`}
+                    style={isSelected ? { backgroundColor: ins.color, borderColor: ins.color } : undefined}
+                  >
+                    <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center text-[10px] font-bold"
+                      style={isSelected ? { backgroundColor: 'rgba(255,255,255,0.2)' } : undefined}>
+                      {ins.name[0]}
+                    </div>
+                    {ins.name}
+                    {isSelected && (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                )
+              })}
             </div>
-          )}
-
-          {/* Current section fields */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">{section.icon}</span>
-                <h2 className="text-base font-semibold text-gray-900">{section.label}</h2>
-              </div>
-            </div>
-            <div className="p-6 space-y-4">
-              {section.fields.map((field) => (
-                <FieldLabel
-                  key={field.id}
-                  label={field.label}
-                  required={field.required}
-                  mappingBadges={
-                    <MappingBadges field={field} selectedInsurers={selectedInsurers} />
-                  }
-                >
-                  <PLFieldInput
-                    field={field}
-                    formData={formData}
-                    set={set}
-                    setNum={setNum}
-                    eikStatus={eikStatus}
-                    onEikChange={handleEikChange}
-                    onCompanySelect={handleCompanySelect}
-                    insuredEikStatus={insuredEikStatus}
-                    onInsuredEikChange={handleInsuredEikChange}
-                    onInsuredCompanySelect={handleInsuredCompanySelect}
-                  />
-                </FieldLabel>
-              ))}
-            </div>
-          </div>
-
-          {/* Section navigation */}
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={() => setCurrentSection((i) => Math.max(0, i - 1))}
-              disabled={currentSection === 0}
-              className="text-sm text-gray-500 hover:text-gray-800 disabled:opacity-30 flex items-center gap-1.5"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-              Предишна
-            </button>
-            {currentSection < PL_SCHEMA.length - 1 ? (
-              <button
-                type="button"
-                onClick={() => setCurrentSection((i) => Math.min(PL_SCHEMA.length - 1, i + 1))}
-                className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors"
-              >
-                Следваща
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!canSubmit || submitting}
-                className="flex items-center gap-1.5 text-sm font-medium px-5 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
-              >
-                {submitting ? 'Запазване…' : 'Генерирай документи'}
-              </button>
+            {selectedInsurers.length === 0 && (
+              <p className="text-xs text-red-400 mt-2">Моля, изберете поне един застраховател.</p>
             )}
           </div>
+        )}
+
+        {/* Current section fields */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="px-5 py-3.5 border-b border-gray-100 flex items-center gap-2">
+            <span className="text-lg">{section.icon}</span>
+            <h2 className="text-sm font-semibold text-gray-900">{section.label}</h2>
+          </div>
+          <div className="p-5 space-y-4">
+            {section.fields.map((field) => (
+              <FieldLabel
+                key={field.id}
+                label={field.label}
+                required={field.required}
+                mappingBadges={<MappingBadges field={field} selectedInsurers={selectedInsurers} />}
+              >
+                <PLFieldInput
+                  field={field}
+                  formData={formData}
+                  set={set}
+                  setNum={setNum}
+                  eikStatus={eikStatus}
+                  onEikChange={handleEikChange}
+                  onCompanySelect={handleCompanySelect}
+                  insuredEikStatus={insuredEikStatus}
+                  onInsuredEikChange={handleInsuredEikChange}
+                  onInsuredCompanySelect={handleInsuredCompanySelect}
+                />
+              </FieldLabel>
+            ))}
+          </div>
         </div>
+
+        {/* Navigation */}
+        <div className="mt-6 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setCurrentSection((i) => Math.max(0, i - 1))}
+            disabled={currentSection === 0}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Назад
+          </button>
+          <span className="text-xs text-gray-400">{currentSection + 1} / {PL_SCHEMA.length}</span>
+          {currentSection < PL_SCHEMA.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setCurrentSection((i) => Math.min(PL_SCHEMA.length - 1, i + 1))}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
+            >
+              Напред
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-200 transition-colors hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Запазване…' : 'Генерирай документи'}
+            </button>
+          )}
         </div>
+        {!canSubmit && missing.length > 0 && currentSection === PL_SCHEMA.length - 1 && (
+          <p className="text-xs text-amber-600 text-center mt-3">Остават {missing.length} задължителни полета</p>
+        )}
       </div>
     </div>
   )
