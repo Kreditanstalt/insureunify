@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import { INSURERS } from '@/lib/schema'
 import { PL_SCHEMA, PL_INSURERS, PL_INSURER_KEYS, PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import type { SchemaField } from '@/lib/schema'
+import AutoFillUploader from './AutoFillUploader'
 
 // ─── Shared StoredSubmission type ─────────────────────────────────────────────
 
@@ -468,6 +469,22 @@ export default function PLQuestionnaireForm() {
     setFormData((prev) => ({ ...prev, [id]: v === '' ? undefined : Number(v) }))
   }
 
+  function handleAutoFill(extracted: Record<string, string | null>) {
+    setFormData((prev) => {
+      const next = { ...prev }
+      const s = (id: string, val: string | null | undefined) => { if (val) next[id] = val }
+      s('pl_company_name',   extracted.company_name)
+      s('pl_eik',            extracted.eik)
+      s('pl_address',        extracted.address)
+      s('pl_phone',          extracted.phone)
+      s('pl_email',          extracted.email)
+      s('pl_activity',       extracted.activity)
+      s('pl_employees_count', extracted.employees_count)
+      s('pl_annual_revenue', extracted.annual_revenue)
+      return next
+    })
+  }
+
   const lookupEik = useCallback(async (eik: string) => {
     abortRef.current?.abort()
     const ctrl = new AbortController()
@@ -639,6 +656,8 @@ export default function PLQuestionnaireForm() {
             <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
           </div>
         )}
+
+        <AutoFillUploader onFill={handleAutoFill} className="mb-2" />
 
         <div className="flex gap-8">
         {/* Sidebar */}
