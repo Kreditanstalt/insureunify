@@ -108,14 +108,14 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
         {/* Package A */}
         <View style={[S.pkgBox, isMandatory ? { borderColor: GREEN } : { borderColor: '#ddd' }]}>
           <Text style={S.pkgTitle}>
-            {isMandatory ? '☑' : '☐'} ПАКЕТ А — ЗАДЪЛЖИТЕЛНА застраховка (по Наредба ПМС № 24/2006)
+            {isMandatory ? '[X]' : '[ ]'} ПАКЕТ А — ЗАДЪЛЖИТЕЛНА застраховка (по Наредба ПМС № 24/2006)
           </Text>
           <View style={S.checkRow}>
-            <View style={S.checkbox}><Text>{isYes('oa_cover_death') ? '✓' : ' '}</Text></View>
+            <View style={S.checkbox}><Text>{isYes('oa_cover_death') ? 'X' : ' '}</Text></View>
             <Text style={S.checkLabel}>Смърт и трайно намалена работоспособност от трудова злополука</Text>
           </View>
           <View style={S.checkRow}>
-            <View style={S.checkbox}><Text>{isYes('oa_cover_temporary_disability') ? '✓' : ' '}</Text></View>
+            <View style={S.checkbox}><Text>{isYes('oa_cover_temporary_disability') ? 'X' : ' '}</Text></View>
             <Text style={S.checkLabel}>Временна неработоспособност от трудова злополука</Text>
           </View>
           {has('oa_temp_disability_period') && (
@@ -124,7 +124,7 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
             </View>
           )}
           <View style={S.checkRow}>
-            <View style={S.checkbox}><Text>{isYes('oa_cover_domestic_accident') ? '✓' : ' '}</Text></View>
+            <View style={S.checkbox}><Text>{isYes('oa_cover_domestic_accident') ? 'X' : ' '}</Text></View>
             <Text style={S.checkLabel}>От битова злополука (избираемо покритие)</Text>
           </View>
           <View style={S.row2}>
@@ -141,18 +141,18 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
         {/* Package B */}
         <View style={[S.pkgBox, !isMandatory ? { borderColor: GREEN } : { borderColor: '#ddd' }]}>
           <Text style={S.pkgTitle}>
-            {!isMandatory ? '☑' : '☐'} ПАКЕТ Б — ДОБРОВОЛНА застраховка
+            {!isMandatory ? '[X]' : '[ ]'} ПАКЕТ Б — ДОБРОВОЛНА застраховка
           </Text>
           <View style={S.checkRow}>
-            <View style={S.checkbox}><Text>{isYes('oa_cover_death') ? '✓' : ' '}</Text></View>
+            <View style={S.checkbox}><Text>{isYes('oa_cover_death') ? 'X' : ' '}</Text></View>
             <Text style={S.checkLabel}>Смърт и трайно намалена работоспособност</Text>
           </View>
           <View style={S.checkRow}>
-            <View style={S.checkbox}><Text>{isYes('oa_cover_temporary_disability') ? '✓' : ' '}</Text></View>
+            <View style={S.checkbox}><Text>{isYes('oa_cover_temporary_disability') ? 'X' : ' '}</Text></View>
             <Text style={S.checkLabel}>Временна неработоспособност{has('oa_temp_disability_period') ? ` (${f('oa_temp_disability_period')})` : ''}</Text>
           </View>
           <View style={S.checkRow}>
-            <View style={S.checkbox}><Text>{isYes('oa_cover_domestic_accident') ? '✓' : ' '}</Text></View>
+            <View style={S.checkbox}><Text>{isYes('oa_cover_domestic_accident') ? 'X' : ' '}</Text></View>
             <Text style={S.checkLabel}>От битова злополука (избираемо)</Text>
           </View>
           {has('oa_si_per_person') && (
@@ -169,7 +169,7 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
         <View style={S.optGrid}>
           {OPTIONAL_COVERS.map((c) => (
             <View key={c.id} style={S.optItem}>
-              <View style={S.checkbox}><Text>{isYes(c.id) ? '✓' : ' '}</Text></View>
+              <View style={S.checkbox}><Text>{isYes(c.id) ? 'X' : ' '}</Text></View>
               <Text style={{ fontSize: 8, color: '#333' }}>{c.label}</Text>
             </View>
           ))}

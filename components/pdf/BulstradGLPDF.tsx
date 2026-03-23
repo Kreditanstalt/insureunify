@@ -41,9 +41,9 @@ const S = StyleSheet.create({
 function CurrencySelector({ value }: { value: string }) {
   return (
     <View style={S.currency}>
-      <View style={S.currBox}><Text>{value === 'BGN' ? '✓' : ' '}</Text></View>
+      <View style={S.currBox}><Text>{value === 'BGN' ? 'X' : ' '}</Text></View>
       <Text style={S.currLabel}>BGN</Text>
-      <View style={S.currBox}><Text>{value === 'EUR' ? '✓' : ' '}</Text></View>
+      <View style={S.currBox}><Text>{value === 'EUR' ? 'X' : ' '}</Text></View>
       <Text style={S.currLabel}>EUR</Text>
     </View>
   )

@@ -52,11 +52,11 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
     return (
       <View style={S.yesNo}>
         <View style={S.yesNoItem}>
-          <View style={S.checkbox}><Text>{val === 'yes' ? '✓' : ' '}</Text></View>
+          <View style={S.checkbox}><Text>{val === 'yes' ? 'X' : ' '}</Text></View>
           <Text style={{ fontSize: 8.5 }}>НЕ</Text>
         </View>
         <View style={S.yesNoItem}>
-          <View style={S.checkbox}><Text>{val === 'no' ? '✓' : ' '}</Text></View>
+          <View style={S.checkbox}><Text>{val === 'no' ? 'X' : ' '}</Text></View>
           <Text style={{ fontSize: 8.5 }}>ДА</Text>
         </View>
       </View>
@@ -139,7 +139,7 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
           <Text style={{ ...S.checkLabel, marginBottom: 3 }}>т.3 Временна неработоспособност:</Text>
           <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap' }}>
             <View style={S.checkRow}>
-              <View style={S.checkbox}><Text>{formData.oa_cover_temporary_disability === 'yes' ? '✓' : ' '}</Text></View>
+              <View style={S.checkbox}><Text>{formData.oa_cover_temporary_disability === 'yes' ? 'X' : ' '}</Text></View>
               <Text style={S.checkLabel}>Съгл. Наредбата</Text>
             </View>
             {has('oa_temp_disability_limit') && (

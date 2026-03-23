@@ -90,7 +90,7 @@ export function GeneraliGLPDF({ formData, clientName }: Props) {
         {CLAUSES.map((c) => (
           <View key={c.id} style={S.checkRow}>
             <View style={S.checkbox}>
-              <Text>{has(c.id) && f(c.id) === 'Да' ? '✓' : ' '}</Text>
+              <Text>{has(c.id) && f(c.id) === 'Да' ? 'X' : ' '}</Text>
             </View>
             <Text style={S.checkLabel}>{c.label}</Text>
             <Text style={{ fontSize: 8, color: '#666', width: 40 }}>
