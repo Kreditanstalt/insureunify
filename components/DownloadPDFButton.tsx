@@ -69,6 +69,9 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
   async function handleDownload() {
     if (loading) return
     setLoading(true)
+    console.log('[PDF] insuranceClass:', insuranceClass, 'insurerKey:', insurerKey)
+    console.log('[PDF] formData keys:', Object.keys(formData ?? {}))
+    console.log('[PDF] formData sample:', JSON.stringify(formData).slice(0, 300))
     try {
       const { pdf } = await import('@react-pdf/renderer')
       const React = (await import('react')).default
