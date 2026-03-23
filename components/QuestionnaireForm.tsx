@@ -588,6 +588,7 @@ export default function QuestionnaireForm() {
       const clientName = String(formData.company_name ?? 'Нов клиент')
       const submission: StoredSubmission = {
         id, clientName, selectedInsurers,
+        insuranceClass: 'property',
         formData: { ...formData, val_total: total },
         createdAt: new Date().toISOString(),
       }

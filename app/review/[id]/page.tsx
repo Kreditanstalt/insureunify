@@ -97,7 +97,7 @@ export default function ReviewPage() {
         representative: String(cls === 'general_liability' ? (fd.gl_representative ?? '') : (fd.representative ?? '')) || undefined,
         nkid_code:      String(cls === 'general_liability' ? (fd.gl_activity_code ?? fd.nkid_code ?? '') : cls === 'occupational_accident' ? (fd.oa_activity_code ?? fd.nkid_code ?? '') : (fd.nkid_code ?? '')) || undefined,
         employees_count:  Number(cls === 'general_liability' ? fd.gl_employees_count : cls === 'occupational_accident' ? fd.oa_persons_count : cls === 'professional_liability' ? fd.pl_employees_count : undefined) || undefined,
-        annual_wage_fund: Number(cls === 'general_liability' ? fd.gl_annual_wage_fund : cls === 'occupational_accident' ? fd.oa_monthly_wage_fund : undefined) || undefined,
+        annual_wage_fund: Number(cls === 'general_liability' ? fd.gl_annual_wage_fund : cls === 'occupational_accident' ? fd.oa_annual_wage_fund : undefined) || undefined,
         annual_revenue:   Number(cls === 'professional_liability' ? fd.pl_annual_revenue : undefined) || undefined,
         ...(cls === 'property' ? {
           property_address:  String(fd.property_address  ?? '') || undefined,
