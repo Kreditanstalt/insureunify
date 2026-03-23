@@ -39,7 +39,7 @@ export const OA_INSURERS: Record<OAInsurerKey, OAInsurerMeta> = {
     color:       '#00A94F',
     formCode:    'Групама-Злополука',
     description: 'Групова застраховка Злополука · Групама Застраховане ЕАД',
-    logo:        '/logos/groupama.svg',
+    logo:        '/logos/groupama.png',
   },
 }
 

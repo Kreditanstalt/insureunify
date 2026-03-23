@@ -22,7 +22,7 @@ const CLASS_LABELS: Record<string, { label: string; color: string; bg: string }>
   property:               { label: 'Имущество',         color: '#166534', bg: '#dcfce7' },
   general_liability:      { label: 'ОГО / Работодател', color: '#991b1b', bg: '#fee2e2' },
   occupational_accident:  { label: 'Трудова злополука', color: '#1e3a8a', bg: '#dbeafe' },
-  professional_liability: { label: 'Проф. отговорност', color: '#581c87', bg: '#f3e8ff' },
+  professional_liability: { label: 'Проф. отговорност', color: '#1E2D6B', bg: '#f3e8ff' },
   trade_credit:           { label: 'Търговски кредит',  color: '#92400e', bg: '#fef3c7' },
 }
 

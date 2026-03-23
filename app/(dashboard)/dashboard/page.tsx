@@ -27,13 +27,13 @@ const CLASS_LABELS: Record<string, { label: string; color: string; bg: string }>
   property:               { label: 'Имущество',         color: '#166534', bg: '#dcfce7' },
   general_liability:      { label: 'ОГО / Работодател', color: '#991b1b', bg: '#fee2e2' },
   occupational_accident:  { label: 'Трудова злополука', color: '#1e3a8a', bg: '#dbeafe' },
-  professional_liability: { label: 'Проф. отговорност', color: '#581c87', bg: '#f3e8ff' },
+  professional_liability: { label: 'Проф. отговорност', color: '#1E2D6B', bg: '#f3e8ff' },
   trade_credit:           { label: 'Търговски кредит',  color: '#92400e', bg: '#fef3c7' },
 }
 
 const QUICK_ACTIONS = [
   { icon: '🏢', label: 'Имущество',         desc: 'Сгради, машини, стоки',  href: '/dashboard/new/property',               accent: '#16a34a', light: '#f0fdf4' },
-  { icon: '⚖️', label: 'Проф. отговорност', desc: 'E&O · Аксиом, Булстрад', href: '/dashboard/new/professional-liability',  accent: '#7c3aed', light: '#faf5ff' },
+  { icon: '⚖️', label: 'Проф. отговорност', desc: 'E&O · Аксиом, Булстрад', href: '/dashboard/new/professional-liability',  accent: '#6B21A8', light: '#faf5ff' },
   { icon: '🔧', label: 'ОГО / Работодател', desc: 'Обща гражданска',        href: '/dashboard/new/general-liability',       accent: '#dc2626', light: '#fff1f2' },
   { icon: '⚡', label: 'Трудова злополука', desc: 'Алианц, Групама',        href: '/dashboard/new/occupational-accident',   accent: '#2563eb', light: '#eff6ff' },
   { icon: '💳', label: 'Търговски кредит',  desc: 'Атрадиус, Алианц Трейд', href: '/dashboard/new/trade-credit',           accent: '#92400e', light: '#fef3c7' },

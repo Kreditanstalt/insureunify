@@ -29,7 +29,7 @@ export const GL_INSURERS: Record<GLInsurerKey, GLInsurerMeta> = {
     color:       '#C8102E',
     formCode:    'ОГО-Дженерали',
     description: 'Въпросник-предложение ОГО · Дженерали Застраховане АД',
-    logo:        '/logos/generali.svg',
+    logo:        '/logos/generali.jpg',
   },
   bulstrad: {
     key:         'bulstrad',

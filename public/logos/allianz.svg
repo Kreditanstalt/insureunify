@@ -1,13 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50">
-  <!-- Allianz - dark blue eagle brand -->
-  <rect width="180" height="50" rx="4" fill="white"/>
-  <!-- Eagle simplified -->
-  <rect x="8" y="8" width="34" height="34" rx="17" fill="#003781"/>
-  <!-- Eagle wings simplified -->
-  <path d="M14 20 Q25 14 36 20 L30 28 Q25 24 20 28 Z" fill="white"/>
-  <path d="M20 28 Q25 32 30 28 L25 40 Z" fill="white"/>
-  <!-- Text -->
-  <text x="50" y="20" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#003781" letter-spacing="1">Allianz</text>
-  <text x="50" y="33" font-family="Arial,sans-serif" font-size="9" fill="#003781" font-weight="600">България</text>
-  <text x="50" y="43" font-family="Arial,sans-serif" font-size="7.5" fill="#555">ЗАД</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 56">
+  <rect width="200" height="56" fill="white"/>
+  <!-- Allianz eagle circle -->
+  <circle cx="28" cy="28" r="22" fill="#003781"/>
+  <!-- Eagle simplified wings -->
+  <path d="M10 22 Q28 12 46 22 L38 30 Q28 24 18 30 Z" fill="white"/>
+  <path d="M18 30 Q28 36 38 30 L28 46 Z" fill="white"/>
+  <circle cx="28" cy="22" r="3" fill="white"/>
+  <!-- Allianz text -->
+  <text x="58" y="24" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#003781" letter-spacing="0.5">Allianz</text>
+  <text x="58" y="40" font-family="Arial,sans-serif" font-size="10" fill="#003781" font-weight="600">България</text>
 </svg>

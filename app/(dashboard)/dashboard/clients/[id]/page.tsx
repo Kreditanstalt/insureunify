@@ -21,7 +21,7 @@ const CLASS_LABELS: Record<string, { label: string; color: string }> = {
   property:               { label: 'Имущество',         color: '#166534' },
   general_liability:      { label: 'ОГО / Работодател', color: '#991b1b' },
   occupational_accident:  { label: 'Трудова злополука', color: '#1e3a8a' },
-  professional_liability: { label: 'Проф. отговорност', color: '#581c87' },
+  professional_liability: { label: 'Проф. отговорност', color: '#1E2D6B' },
   trade_credit:           { label: 'Търговски кредит',  color: '#92400e' },
 }
 

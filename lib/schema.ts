@@ -48,10 +48,10 @@ export interface SchemaSection {
 
 export const INSURERS: Record<InsurerKey, { key: InsurerKey; name: string; color: string; formCode: string; logo: string }> = {
   bulstrad: { key: 'bulstrad', name: 'Булстрад',  color: '#0B3D91', formCode: '2200-26',        logo: '/logos/bulstrad.svg' },
-  generali: { key: 'generali', name: 'Дженерали', color: '#C8102E', formCode: 'ИМСБ 07.01.2026', logo: '/logos/generali.svg' },
-  instinct: { key: 'instinct', name: 'Инстинкт',  color: '#1B6B3A', formCode: 'AR-01082025',     logo: '/logos/instinct.svg' },
-  axiom:    { key: 'axiom',    name: 'Аксиом',    color: '#6B21A8', formCode: 'PL-Application',  logo: '/logos/axiom.svg' },
-  euroins:  { key: 'euroins',  name: 'Евроинс',   color: '#1E40AF', formCode: 'ПО-кл.08',        logo: '/logos/euroins.svg' },
+  generali: { key: 'generali', name: 'Дженерали', color: '#C8102E', formCode: 'ИМСБ 07.01.2026', logo: '/logos/generali.jpg' },
+  instinct: { key: 'instinct', name: 'Инстинкт',  color: '#6B21A8', formCode: 'AR-01082025',     logo: '/logos/instinct.jpg' },
+  axiom:    { key: 'axiom',    name: 'Аксиом',    color: '#1E2D6B', formCode: 'PL-Application',  logo: '/logos/axiom.jpg' },
+  euroins:  { key: 'euroins',  name: 'Евроинс',   color: '#1E3A8A', formCode: 'ПО-кл.08',        logo: '/logos/euroins.png' },
 }
 
 // Only these insurers appear in the Property questionnaire selector
