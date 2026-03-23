@@ -12,7 +12,7 @@ import type { InsurerMappedData } from '@/lib/mappings'
 import type { InsurerKey } from '@/lib/schema'
 import { INSURERS, MASTER_SCHEMA } from '@/lib/schema'
 
-// Roboto — local TTF files, Cyrillic support
+// Roboto -- local TTF files, Cyrillic support
 Font.register({
   family: 'Roboto',
   fonts: [
@@ -34,9 +34,9 @@ interface TemplateProps {
   clientName: string
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // БУЛСТРАД
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 
 const BS = StyleSheet.create({
   page: {
@@ -109,13 +109,13 @@ function BulstradTemplate({ mappedData, clientName }: TemplateProps) {
   const insurer = INSURERS.bulstrad
   const date = todayStr()
   return (
-    <Document title={`Булстрад — ${clientName}`} author="InsureUnify">
+    <Document title={`Булстрад -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={BS.page}>
         <View style={BS.topBand}>
           <View>
             <Text style={BS.bandTitle}>БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП</Text>
             <Text style={BS.bandSub}>Застрахователна декларация / Имущество</Text>
-            <Text style={BS.bandSub}>Формуляр № {insurer.formCode}</Text>
+            <Text style={BS.bandSub}>Формуляр No. {insurer.formCode}</Text>
           </View>
           <View style={BS.bandRight}>
             <Text style={BS.bandLabel}>Дата на изготвяне</Text>
@@ -165,9 +165,9 @@ function BulstradTemplate({ mappedData, clientName }: TemplateProps) {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // ЖЕНЕРАЛИ
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 
 const GN = StyleSheet.create({
   page: {
@@ -240,7 +240,7 @@ function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
   const insurer = INSURERS.generali
   const date = todayStr()
   return (
-    <Document title={`Женерали — ${clientName}`} author="InsureUnify">
+    <Document title={`Женерали -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={GN.page}>
         <View style={GN.header}>
           <View style={GN.headerLeft}>
@@ -293,9 +293,9 @@ function GeneraliTemplate({ mappedData, clientName }: TemplateProps) {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // ИНСТИНКТ
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 
 const IN = StyleSheet.create({
   page: {
@@ -366,7 +366,7 @@ function InstinctTemplate({ mappedData, clientName }: TemplateProps) {
   const insurer = INSURERS.instinct
   const date = todayStr()
   return (
-    <Document title={`Instinct — ${clientName}`} author="InsureUnify">
+    <Document title={`Instinct -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={IN.page}>
         <View style={IN.headerBox}>
           <View>
@@ -422,9 +422,9 @@ function InstinctTemplate({ mappedData, clientName }: TemplateProps) {
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 // Dispatcher
-// ═══════════════════════════════════════════════════════════════════════════════
+// ===============================================================================
 
 interface Props {
   insurerKey: InsurerKey

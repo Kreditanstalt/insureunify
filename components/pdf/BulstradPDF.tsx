@@ -49,9 +49,9 @@ interface Props {
 
 export function BulstradPDF({ formData, clientName }: Props) {
   const d = mapFormDataForInsurer(formData, 'bulstrad')
-  // f(id) → display value or '—'; skip(id) → true if empty
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '—')
-  const has = (id: string) => f(id) !== '—'
+  // f(id) -> display value or '--'; skip(id) -> true if empty
+  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
+  const has = (id: string) => f(id) !== '--'
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -59,27 +59,27 @@ export function BulstradPDF({ formData, clientName }: Props) {
   const propRows: Array<[string, string]> = [
     ['1.1. Сгради', 'val_buildings'],
     ['1.2. Машини, съоръжения и оборудване', 'val_machinery'],
-    ['1.3. Транспортни средства без ДК№', 'val_vehicles_no_reg'],
-    ['Клауза 017 — Електронна техника', 'val_electronics'],
+    ['1.3. Транспортни средства без ДКNo.', 'val_vehicles_no_reg'],
+    ['Клауза 017 -- Електронна техника', 'val_electronics'],
     ['1.4. Инвентар', 'val_inventory'],
     ['1.5. Разходи за придобиване на ДМА', 'val_other_dma'],
-    ['2.1–2.4 Материални запаси', 'val_stock'],
+    ['2.1-2.4 Материални запаси', 'val_stock'],
     ['3. Чужди имущества', 'val_third_party'],
-    ['Клауза 021 — Пари', 'val_cash'],
+    ['Клауза 021 -- Пари', 'val_cash'],
   ].filter(([, id]) => has(id)) as Array<[string, string]>
 
   return (
-    <Document title={`Булстрад Имущество — ${clientName}`} author="InsureUnify">
+    <Document title={`Булстрад Имущество -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
-        {/* ── Header ── */}
-        <Text style={S.companyLine}>ЗЕАД „БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
-        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. „Позитано" 5</Text>
+        {/* -- Header -- */}
+        <Text style={S.companyLine}>ЗЕАД "БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
+        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. "Позитано" 5</Text>
         <Text style={S.titleLine}>
-          ПРЕДЛОЖЕНИЕ за сключване на Комбинирана полица „Имущество"
+          ПРЕДЛОЖЕНИЕ за сключване на Комбинирана полица "Имущество"
         </Text>
 
-        {/* ── т.1 Данни за Кандидата ── */}
+        {/* -- т.1 Данни за Кандидата -- */}
         <Text style={S.sectionHead}>т.1  Данни за Кандидата за застраховане:</Text>
         <View style={S.row}>
           <Text style={S.lbl}>Наименование:</Text>
@@ -106,7 +106,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
           <Text style={S.val2}>{f('nkid_code')}</Text>
         </View>
 
-        {/* ── т.2 Период ── */}
+        {/* -- т.2 Период -- */}
         <Text style={S.sectionHead}>т.2  Период на застраховката:</Text>
         <View style={S.row2}>
           <Text style={S.lbl2}>от:</Text>
@@ -115,7 +115,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
           <Text style={S.val2}>{fmtDateBG(f('period_to'))}</Text>
         </View>
 
-        {/* ── т.3 Адрес на имуществото ── */}
+        {/* -- т.3 Адрес на имуществото -- */}
         <Text style={S.sectionHead}>т.3  Адрес на застрахованото имущество:</Text>
         <View style={S.row}>
           <Text style={S.lbl}>Адрес на имуществото:</Text>
@@ -140,7 +140,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
           </View>
         )}
 
-        {/* ── т.4 Имущество ── */}
+        {/* -- т.4 Имущество -- */}
         <Text style={S.sectionHead}>т.4  Имущество и застрахователни суми:</Text>
         <View style={S.table}>
           <View style={S.tHead}>
@@ -179,7 +179,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
           </View>
         )}
 
-        {/* ── т.5 Данни за сградата ── */}
+        {/* -- т.5 Данни за сградата -- */}
         <View style={S.divider} />
         <Text style={S.sectionHead}>т.5  Данни за сградата:</Text>
         {has('construction_type') && (
@@ -227,7 +227,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
           </View>
         )}
 
-        {/* ── Информация за оценка на риска ── */}
+        {/* -- Информация за оценка на риска -- */}
         <View style={S.divider} />
         <Text style={S.sectionHead}>Информация за оценка на риска:</Text>
 
@@ -254,7 +254,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
           <View style={S.row}><Text style={S.lbl}>CO/газови детектори:</Text><Text style={S.val}>{f('detectors')}</Text></View>
         )}
         {has('fire_station_distance') && (
-          <View style={S.row}><Text style={S.lbl}>Разстояние до пожарна (до 1/1–3/3–5/5–10/над 10 км):</Text><Text style={S.val}>{f('fire_station_distance')}</Text></View>
+          <View style={S.row}><Text style={S.lbl}>Разстояние до пожарна (до 1/1-3/3-5/5-10/над 10 км):</Text><Text style={S.val}>{f('fire_station_distance')}</Text></View>
         )}
         {has('last_inspection') && (
           <View style={S.row}><Text style={S.lbl}>Дата на последен преглед:</Text><Text style={S.val}>{f('last_inspection')}</Text></View>
@@ -325,7 +325,7 @@ export function BulstradPDF({ formData, clientName }: Props) {
 
         {/* Footer */}
         <View style={S.footer} fixed>
-          <Text>ЗЕАД „Булстрад Виена Иншурънс Груп" · Формуляр 2200-26</Text>
+          <Text>ЗЕАД "Булстрад Виена Иншурънс Груп" · Формуляр 2200-26</Text>
           <Text>InsureUnify · {date}</Text>
         </View>
       </Page>

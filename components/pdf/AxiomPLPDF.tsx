@@ -46,8 +46,8 @@ interface Props { formData: PLFormData; clientName: string }
 
 export function AxiomPLPDF({ formData, clientName }: Props) {
   const d = mapPLFormDataForInsurer(formData, 'axiom')
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '—')
-  const has = (id: string) => f(id) !== '—'
+  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '--')
+  const has = (id: string) => f(id) !== '--'
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -78,15 +78,15 @@ export function AxiomPLPDF({ formData, clientName }: Props) {
   }
 
   return (
-    <Document title={`Аксиом ПО — ${clientName}`} author="InsureUnify">
+    <Document title={`Аксиом ПО -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ЗК АКСИОМ АД</Text>
-          <Text style={S.companySubLine}>ЕИК 131039664 · бул. „Витоша" 150, бл. 70, ет. 1, 1408 София · www.axiom.bg</Text>
+          <Text style={S.companySubLine}>ЕИК 131039664 · бул. "Витоша" 150, бл. 70, ет. 1, 1408 София · www.axiom.bg</Text>
           <View style={S.titleBar}>
-            <Text style={S.titleText}>ПРЕДЛОЖЕНИЕ-ВЪПРОСНИК за застраховка „ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
+            <Text style={S.titleText}>ПРЕДЛОЖЕНИЕ-ВЪПРОСНИК за застраховка "ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
           </View>
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
             <Text style={{ fontSize: 8, color: '#666' }}>Дата: {date}</Text>
@@ -193,11 +193,11 @@ export function AxiomPLPDF({ formData, clientName }: Props) {
         <View style={S.row2}>
           <View style={S.half}>
             <Text style={S.lbl2}>12.1 Единичен лимит (за едно събитие):</Text>
-            <Text style={S.val2}>{has('pl_single_limit') ? `${f('pl_single_limit')} ${f('pl_currency')}` : '—'}</Text>
+            <Text style={S.val2}>{has('pl_single_limit') ? `${f('pl_single_limit')} ${f('pl_currency')}` : '--'}</Text>
           </View>
           <View style={S.half}>
             <Text style={S.lbl2}>12.2 Агрегатен лимит (за всички):</Text>
-            <Text style={S.val2}>{has('pl_aggregate_limit') ? `${f('pl_aggregate_limit')} ${f('pl_currency')}` : '—'}</Text>
+            <Text style={S.val2}>{has('pl_aggregate_limit') ? `${f('pl_aggregate_limit')} ${f('pl_currency')}` : '--'}</Text>
           </View>
         </View>
         <View style={S.row2}>

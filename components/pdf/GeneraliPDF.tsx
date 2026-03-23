@@ -61,12 +61,12 @@ interface Props {
 
 export function GeneraliPDF({ formData, clientName }: Props) {
   const d = mapFormDataForInsurer(formData, 'generali')
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '—')
-  const has = (id: string) => f(id) !== '—'
+  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
+  const has = (id: string) => f(id) !== '--'
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-  // Property table — only rows with values
+  // Property table -- only rows with values
   const propRows: Array<[string, string]> = [
     ['Недвижимо имущество', 'val_buildings'],
     ['МСО (Машини, съоръжения, оборудване)', 'val_machinery'],
@@ -101,14 +101,14 @@ export function GeneraliPDF({ formData, clientName }: Props) {
   ].filter(([, id]) => has(id)) as Array<[string, string]>
 
   return (
-    <Document title={`Женерали ИМСБ — ${clientName}`} author="InsureUnify">
+    <Document title={`Женерали ИМСБ -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
         <View style={S.headerRow}>
           <View>
             <Text style={S.logo}>Дженерали Застраховане АД</Text>
-            <Text style={S.logoSub}>ЕИК 030269049 · гр. София 1504, бул. „Кн. Ал. Дондуков" 68</Text>
+            <Text style={S.logoSub}>ЕИК 030269049 · гр. София 1504, бул. "Кн. Ал. Дондуков" 68</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={S.headerLabel}>Дата</Text>

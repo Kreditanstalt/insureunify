@@ -55,8 +55,8 @@ interface Props { formData: PLFormData; clientName: string }
 
 export function EuroinsPLPDF({ formData, clientName }: Props) {
   const d = mapPLFormDataForInsurer(formData, 'euroins')
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '—')
-  const has = (id: string) => f(id) !== '—'
+  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '--')
+  const has = (id: string) => f(id) !== '--'
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -87,15 +87,15 @@ export function EuroinsPLPDF({ formData, clientName }: Props) {
   }
 
   return (
-    <Document title={`Евроинс ПО — ${clientName}`} author="InsureUnify">
+    <Document title={`Евроинс ПО -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
         <View style={S.headerBar}>
           <Text style={S.headerTitle}>ЗД ЕВРОИНС АД</Text>
-          <Text style={S.headerSub}>ЕИК 121265113 · бул. „Христофор Колумб" 43, 1592 София · www.euroins.bg</Text>
+          <Text style={S.headerSub}>ЕИК 121265113 · бул. "Христофор Колумб" 43, 1592 София · www.euroins.bg</Text>
         </View>
-        <Text style={S.formTitle}>ВЪПРОСНИК-ПРЕДЛОЖЕНИЕ „ПРОФЕСИОНАЛНА ОТГОВОРНОСТ" · Клауза 08</Text>
+        <Text style={S.formTitle}>ВЪПРОСНИК-ПРЕДЛОЖЕНИЕ "ПРОФЕСИОНАЛНА ОТГОВОРНОСТ" · Клауза 08</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 8 }}>
           <Text style={{ fontSize: 8, color: '#666' }}>Дата: {date}</Text>
         </View>
@@ -213,7 +213,7 @@ export function EuroinsPLPDF({ formData, clientName }: Props) {
             ['Край', 'pl_period_to'],
             ['Ретроактивна дата', 'pl_retroactive_date'],
             ['Валута', 'pl_currency'],
-          ].filter(([, id]) => f(id) !== '—').map(([lbl, id]) => (
+          ].filter(([, id]) => f(id) !== '--').map(([lbl, id]) => (
             <View key={id} style={S.tRow}>
               <Text style={S.tLabel}>{lbl}</Text>
               <Text style={S.tVal}>{f(id)}</Text>

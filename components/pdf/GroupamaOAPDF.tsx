@@ -43,7 +43,7 @@ interface Props { formData: OAFormData; clientName: string }
 
 export function GroupamaOAPDF({ formData, clientName }: Props) {
   const d   = mapOAFormDataForInsurer(formData, 'groupama')
-  const f   = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '—')
+  const f   = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
   const has = (id: string) => formData[id] !== undefined && formData[id] !== ''
   const isYes = (id: string) => formData[id] === 'yes'
 
@@ -62,14 +62,14 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
   ]
 
   return (
-    <Document title={`Групама Трудова злополука — ${clientName}`} author="InsureUnify">
+    <Document title={`Групама Трудова злополука -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ГРУПАМА ЗАСТРАХОВАНЕ ЕАД</Text>
-          <Text style={S.subLine}>ЕИК 131421443 · бул. „Цариградско шосе" 47А, бл. В, ет. 3, 1124 София</Text>
-          <Text style={S.title}>ВЪПРОСНИК ЗА СКЛЮЧВАНЕ НА{'\n'}ГРУПОВА ЗАСТРАХОВКА „ЗЛОПОЛУКА"</Text>
+          <Text style={S.subLine}>ЕИК 131421443 · бул. "Цариградско шосе" 47А, бл. В, ет. 3, 1124 София</Text>
+          <Text style={S.title}>ВЪПРОСНИК ЗА СКЛЮЧВАНЕ НА{'\n'}ГРУПОВА ЗАСТРАХОВКА "ЗЛОПОЛУКА"</Text>
         </View>
 
         {/* Section I: Applicant */}
@@ -96,7 +96,7 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
           <Text style={S.lbl2}>Начало:</Text><Text style={S.val2}>{f('oa_period_from')}</Text>
         </View>
         <View style={S.row2}>
-          <Text style={S.lbl2}>Срок (месеци):</Text><Text style={S.val2}>{f('oa_period_months') !== '—' ? f('oa_period_months') : '12'}</Text>
+          <Text style={S.lbl2}>Срок (месеци):</Text><Text style={S.val2}>{f('oa_period_months') !== '--' ? f('oa_period_months') : '12'}</Text>
           <Text style={S.lbl2}>Валута:</Text><Text style={S.val2}>{f('oa_currency')}</Text>
         </View>
 
@@ -108,7 +108,7 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
         {/* Package A */}
         <View style={[S.pkgBox, isMandatory ? { borderColor: GREEN } : { borderColor: '#ddd' }]}>
           <Text style={S.pkgTitle}>
-            {isMandatory ? '[X]' : '[ ]'} ПАКЕТ А — ЗАДЪЛЖИТЕЛНА застраховка (по Наредба ПМС № 24/2006)
+            {isMandatory ? '[X]' : '[ ]'} ПАКЕТ А -- ЗАДЪЛЖИТЕЛНА застраховка (по Наредба ПМС No. 24/2006)
           </Text>
           <View style={S.checkRow}>
             <View style={S.checkbox}><Text>{isYes('oa_cover_death') ? 'X' : ' '}</Text></View>
@@ -141,7 +141,7 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
         {/* Package B */}
         <View style={[S.pkgBox, !isMandatory ? { borderColor: GREEN } : { borderColor: '#ddd' }]}>
           <Text style={S.pkgTitle}>
-            {!isMandatory ? '[X]' : '[ ]'} ПАКЕТ Б — ДОБРОВОЛНА застраховка
+            {!isMandatory ? '[X]' : '[ ]'} ПАКЕТ Б -- ДОБРОВОЛНА застраховка
           </Text>
           <View style={S.checkRow}>
             <View style={S.checkbox}><Text>{isYes('oa_cover_death') ? 'X' : ' '}</Text></View>

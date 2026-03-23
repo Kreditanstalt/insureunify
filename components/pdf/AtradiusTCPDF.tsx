@@ -65,7 +65,7 @@ export function AtradiusTCPDF({ formData: f, clientName }: Props) {
   ].filter(b => b.name)
 
   return (
-    <Document title={`Атрадиус — Заявка — ${clientName}`} author="InsureUnify">
+    <Document title={`Атрадиус -- Заявка -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         <Text style={S.formCode}>Формуляр: Proposal Form · Дата: {date}</Text>
@@ -113,10 +113,10 @@ export function AtradiusTCPDF({ formData: f, clientName }: Props) {
         ].map((row, i) => (
           <View key={i} style={S.tRow}>
             <Text style={[S.tCell, { flex: 1, fontWeight: 700 }]}>{row.year}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.t || '—'}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.l || '—'}</Text>
-            <Text style={[S.tCell, { flex: 1.5 }]}>{row.c || '—'}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.m || '—'}</Text>
+            <Text style={[S.tCell, { flex: 2 }]}>{row.t || '--'}</Text>
+            <Text style={[S.tCell, { flex: 2 }]}>{row.l || '--'}</Text>
+            <Text style={[S.tCell, { flex: 1.5 }]}>{row.c || '--'}</Text>
+            <Text style={[S.tCell, { flex: 2 }]}>{row.m || '--'}</Text>
           </View>
         ))}
         <View style={[S.row4, { marginTop: 6 }]}>
@@ -137,7 +137,7 @@ export function AtradiusTCPDF({ formData: f, clientName }: Props) {
             <Text style={[S.col4lbl, { flex: 2 }]}>Държава {i + 1} / Country:</Text>
             <Text style={[S.col4val, { flex: 2 }]}>{m.c}</Text>
             <Text style={S.col4lbl}>Оборот хил. EUR:</Text>
-            <Text style={[S.col4val, { flex: 1 }]}>{m.t || '—'}</Text>
+            <Text style={[S.col4val, { flex: 1 }]}>{m.t || '--'}</Text>
           </View>
         ))}
 
@@ -145,15 +145,15 @@ export function AtradiusTCPDF({ formData: f, clientName }: Props) {
         <Text style={S.sec}>4/ Структура на продажбите / Buyers Structure</Text>
         <View style={S.row4}>
           <Text style={S.col4lbl}>% Публичен сектор:</Text>
-          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_public_sector_pct ? `${f.tc_public_sector_pct}%` : '—'}</Text>
+          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_public_sector_pct ? `${f.tc_public_sector_pct}%` : '--'}</Text>
           <Text style={S.col4lbl}>% Вътрешногрупови:</Text>
-          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_intercompany_pct ? `${f.tc_intercompany_pct}%` : '—'}</Text>
+          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_intercompany_pct ? `${f.tc_intercompany_pct}%` : '--'}</Text>
         </View>
         {f.tc_buyer_sector1 && (
-          <R lbl={`Сектор 1: ${f.tc_buyer_sector1}`} val={f.tc_buyer_sector1_pct ? `${f.tc_buyer_sector1_pct}% от оборота` : '—'} />
+          <R lbl={`Сектор 1: ${f.tc_buyer_sector1}`} val={f.tc_buyer_sector1_pct ? `${f.tc_buyer_sector1_pct}% от оборота` : '--'} />
         )}
         {f.tc_buyer_sector2 && (
-          <R lbl={`Сектор 2: ${f.tc_buyer_sector2}`} val={f.tc_buyer_sector2_pct ? `${f.tc_buyer_sector2_pct}% от оборота` : '—'} />
+          <R lbl={`Сектор 2: ${f.tc_buyer_sector2}`} val={f.tc_buyer_sector2_pct ? `${f.tc_buyer_sector2_pct}% от оборота` : '--'} />
         )}
 
         {/* Footer p1 */}
@@ -170,15 +170,15 @@ export function AtradiusTCPDF({ formData: f, clientName }: Props) {
         <Text style={S.sec}>6/ Условия на плащане / Payment Terms</Text>
         <View style={S.row4}>
           <Text style={S.col4lbl}>% Аванси / Cash in advance:</Text>
-          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_cash_advance_pct ? `${f.tc_cash_advance_pct}%` : '—'}</Text>
+          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_cash_advance_pct ? `${f.tc_cash_advance_pct}%` : '--'}</Text>
           <Text style={S.col4lbl}>DSO (дни):</Text>
-          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_dso ? `${f.tc_dso} дни` : '—'}</Text>
+          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_dso ? `${f.tc_dso} дни` : '--'}</Text>
         </View>
         <View style={S.row4}>
           <Text style={S.col4lbl}>Стандартен срок / Standard terms:</Text>
-          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_standard_terms ? `${f.tc_standard_terms} дни` : '—'}</Text>
+          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_standard_terms ? `${f.tc_standard_terms} дни` : '--'}</Text>
           <Text style={S.col4lbl}>Макс. срок / Max terms:</Text>
-          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_max_terms ? `${f.tc_max_terms} дни` : '—'}</Text>
+          <Text style={[S.col4val, { flex: 1 }]}>{f.tc_max_terms ? `${f.tc_max_terms} дни` : '--'}</Text>
         </View>
 
         {/* 6. Top buyers */}
@@ -196,10 +196,10 @@ export function AtradiusTCPDF({ formData: f, clientName }: Props) {
             {buyers.map((b, i) => (
               <View key={i} style={S.tRow}>
                 <Text style={[S.tCell, { flex: 3 }]}>{b.name}</Text>
-                <Text style={[S.tCell, { flex: 1.5 }]}>{b.country || '—'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.id || '—'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.limit || '—'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.turnover || '—'}</Text>
+                <Text style={[S.tCell, { flex: 1.5 }]}>{b.country || '--'}</Text>
+                <Text style={[S.tCell, { flex: 2 }]}>{b.id || '--'}</Text>
+                <Text style={[S.tCell, { flex: 2 }]}>{b.limit || '--'}</Text>
+                <Text style={[S.tCell, { flex: 2 }]}>{b.turnover || '--'}</Text>
               </View>
             ))}
           </>

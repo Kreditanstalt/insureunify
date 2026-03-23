@@ -42,7 +42,7 @@ interface Props { formData: OAFormData; clientName: string }
 
 export function AllianzOAPDF({ formData, clientName }: Props) {
   const d   = mapOAFormDataForInsurer(formData, 'allianz')
-  const f   = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '—')
+  const f   = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
   const has = (id: string) => formData[id] !== undefined && formData[id] !== ''
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -64,14 +64,14 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
   }
 
   return (
-    <Document title={`Алианц Трудова злополука — ${clientName}`} author="InsureUnify">
+    <Document title={`Алианц Трудова злополука -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ЗАД АЛИАНЦ БЪЛГАРИЯ АД</Text>
-          <Text style={S.subLine}>ЕИК 040638060 · гр. София 1504, бул. „Кн. Ал. Дондуков" 59 · VAPROSNIK_0142</Text>
-          <Text style={S.title}>ВЪПРОСНИК-ЗАЯВЛЕНИЕ{'\n'}ЗАДЪЛЖИТЕЛНА ЗАСТРАХОВКА „ТРУДОВА ЗЛОПОЛУКА"</Text>
+          <Text style={S.subLine}>ЕИК 040638060 · гр. София 1504, бул. "Кн. Ал. Дондуков" 59 · VAPROSNIK_0142</Text>
+          <Text style={S.title}>ВЪПРОСНИК-ЗАЯВЛЕНИЕ{'\n'}ЗАДЪЛЖИТЕЛНА ЗАСТРАХОВКА "ТРУДОВА ЗЛОПОЛУКА"</Text>
         </View>
 
         {/* Section I: Applicant */}
@@ -80,7 +80,7 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
         <View style={S.row2}>
           <Text style={S.lbl2}>ЕИК:</Text><Text style={S.val2}>{f('oa_eik')}</Text>
         </View>
-        <View style={S.row}><Text style={S.lbl}>Адрес (гр./с., ул., №):</Text><Text style={S.val}>{f('oa_address')}</Text></View>
+        <View style={S.row}><Text style={S.lbl}>Адрес (гр./с., ул., No.):</Text><Text style={S.val}>{f('oa_address')}</Text></View>
         <View style={S.row2}>
           <Text style={S.lbl2}>Тел.:</Text><Text style={S.val2}>{f('oa_phone')}</Text>
         </View>
@@ -132,7 +132,7 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
           <YesNo id="oa_cover_death" />
         </View>
         <View style={S.row}>
-          <Text style={[S.lbl, { flex: 1 }]}>т.2 Трайно намалена работоспособност — ___% от з.с.:</Text>
+          <Text style={[S.lbl, { flex: 1 }]}>т.2 Трайно намалена работоспособност -- ___% от з.с.:</Text>
           <YesNo id="oa_cover_permanent_disability" />
         </View>
         <View style={{ marginBottom: 6 }}>
@@ -144,7 +144,7 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
             </View>
             {has('oa_temp_disability_limit') && (
               <View style={S.checkRow}>
-                <View style={S.checkbox}><Text>✓</Text></View>
+                <View style={S.checkbox}><Text>X</Text></View>
                 <Text style={S.checkLabel}>Доброволен лимит: {f('oa_temp_disability_limit')} лв.</Text>
               </View>
             )}

@@ -72,12 +72,12 @@ function BiHead({ bg, en }: { bg: string; en: string }) {
 
 export function InstinctPDF({ formData, clientName }: Props) {
   const d = mapFormDataForInsurer(formData, 'instinct')
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '—')
-  const has = (id: string) => f(id) !== '—'
+  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
+  const has = (id: string) => f(id) !== '--'
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
-  // Property table — only rows with values
+  // Property table -- only rows with values
   const propRows: Array<[string, string]> = [
     ['Building, Improvements', 'val_buildings'],
     ['Machinery and equipment', 'val_machinery'],
@@ -89,7 +89,7 @@ export function InstinctPDF({ formData, clientName }: Props) {
     ['Money/Cash', 'val_cash'],
   ].filter(([, id]) => has(id)) as Array<[string, string]>
 
-  // Building info grid — only filled fields
+  // Building info grid -- only filled fields
   const buildingFields: Array<[string, string]> = [
     ['Стоманобетонна/Метална/Тухлена:', 'construction_type'],
     ['reinforced concrete/metal/wooden (покрив):', 'roof_type'],
@@ -122,7 +122,7 @@ export function InstinctPDF({ formData, clientName }: Props) {
     ['armed/unarmed guards:', 'guard_type'],
     ['video surveillance:', 'cctv'],
     ['ефективна ограда / fence:', 'fence'],
-    ['≤50m / ≥50m (воден басейн):', 'water_basin_distance'],
+    ['<=50m / >=50m (воден басейн):', 'water_basin_distance'],
     ['свлачище / landslide:', 'landslide_area'],
     ['да/не (36 мес. щети):', 'previous_claims'],
     ['Year/Sum/Cause:', 'claims_details'],
@@ -133,7 +133,7 @@ export function InstinctPDF({ formData, clientName }: Props) {
   ].filter(([, id]) => has(id)) as Array<[string, string]>
 
   return (
-    <Document title={`Instinct All Risks — ${clientName}`} author="InsureUnify">
+    <Document title={`Instinct All Risks -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header box */}
@@ -141,13 +141,13 @@ export function InstinctPDF({ formData, clientName }: Props) {
           <View>
             <Text style={S.titleBg}>ПРЕДЛОЖЕНИЕ-ВЪПРОСНИК</Text>
             <Text style={S.titleEn}>INSURANCE QUESTIONNAIRE</Text>
-            <Text style={S.subtitleBg}>КОМБИНИРАНА ИМУЩЕСТВЕНА ЗАСТРАХОВКА „ВСИЧКИ РИСКОВЕ"</Text>
+            <Text style={S.subtitleBg}>КОМБИНИРАНА ИМУЩЕСТВЕНА ЗАСТРАХОВКА "ВСИЧКИ РИСКОВЕ"</Text>
             <Text style={S.subtitleEn}>ALL RISKS PROPERTY INSURANCE</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={S.companyName}>Инстинкт / Instinct</Text>
-            <Text style={S.companyEik}>ЗД „Инстинкт" АД · ЕИК 207335761</Text>
-            <Text style={S.companyEik}>бул. „Джавахарлал Неру" 28, 1324 София</Text>
+            <Text style={S.companyEik}>ЗД "Инстинкт" АД · ЕИК 207335761</Text>
+            <Text style={S.companyEik}>бул. "Джавахарлал Неру" 28, 1324 София</Text>
             <Text style={S.companyEik}>Формуляр AR-01082025</Text>
             <View style={S.badge}>
               <Text style={S.badgeText}>ALL RISKS · {date}</Text>
@@ -162,7 +162,7 @@ export function InstinctPDF({ formData, clientName }: Props) {
           <Text style={S.val}>{f('company_name')}</Text>
         </View>
         <View style={S.row2}>
-          <Text style={S.lbl2}>ЕИК/ЕГН / Company ID №:</Text>
+          <Text style={S.lbl2}>ЕИК/ЕГН / Company ID No.:</Text>
           <Text style={S.val2}>{f('eik')}</Text>
           {has('representative') && <>
             <Text style={S.lbl2}>Представител / Representative:</Text>

@@ -44,18 +44,18 @@ interface Props { formData: PLFormData; clientName: string }
 
 export function BulstradPLPDF({ formData, clientName }: Props) {
   const d = mapPLFormDataForInsurer(formData, 'bulstrad')
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '—')
+  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '--')
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
   return (
-    <Document title={`Булстрад ПО — ${clientName}`} author="InsureUnify">
+    <Document title={`Булстрад ПО -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
-        <Text style={S.companyLine}>ЗЕАД „БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
-        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. „Позитано" 5</Text>
-        <Text style={S.titleLine}>ЗАЯВЛЕНИЕ-ВЪПРОСНИК за сключване на застраховка „ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
+        <Text style={S.companyLine}>ЗЕАД "БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
+        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. "Позитано" 5</Text>
+        <Text style={S.titleLine}>ЗАЯВЛЕНИЕ-ВЪПРОСНИК за сключване на застраховка "ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
 
         {/* Данни за застрахования */}
         <Text style={S.sectionHead}>ДАННИ ЗА ЗАСТРАХОВАНИЯ</Text>
@@ -74,7 +74,7 @@ export function BulstradPLPDF({ formData, clientName }: Props) {
           <Text style={S.val}>{f('pl_address')}</Text>
         </View>
 
-        {/* Данни за договора — table */}
+        {/* Данни за договора -- table */}
         <Text style={[S.sectionHead, { marginTop: 14 }]}>ДАННИ ЗА ЗАСТРАХОВАТЕЛНИЯ ДОГОВОР</Text>
         <View style={S.table}>
           <View style={S.tHead}>
@@ -114,7 +114,7 @@ export function BulstradPLPDF({ formData, clientName }: Props) {
 
         {/* Footer */}
         <View style={S.footer}>
-          <Text>ЗЕАД „Булстрад ВИГ" · ЕИК 000694286</Text>
+          <Text>ЗЕАД "Булстрад ВИГ" · ЕИК 000694286</Text>
           <Text>{clientName} · {date}</Text>
           <Text>InsureUnify · БВ-ПО</Text>
         </View>

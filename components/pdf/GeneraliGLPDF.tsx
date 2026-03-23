@@ -40,8 +40,8 @@ interface Props { formData: GLFormData; clientName: string }
 
 export function GeneraliGLPDF({ formData, clientName }: Props) {
   const d  = mapGLFormDataForInsurer(formData, 'generali')
-  const f  = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '—')
-  const has = (id: string) => f(id) !== '—'
+  const f  = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
+  const has = (id: string) => f(id) !== '--'
 
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
@@ -55,13 +55,13 @@ export function GeneraliGLPDF({ formData, clientName }: Props) {
   ]
 
   return (
-    <Document title={`Дженерали ОГО — ${clientName}`} author="InsureUnify">
+    <Document title={`Дженерали ОГО -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ДЖЕНЕРАЛИ ЗАСТРАХОВАНЕ АД</Text>
-          <Text style={S.subLine}>ЕИК 030269049 · гр. София 1504, бул. „Кн. Ал. Дондуков" 68</Text>
+          <Text style={S.subLine}>ЕИК 030269049 · гр. София 1504, бул. "Кн. Ал. Дондуков" 68</Text>
           <Text style={S.title}>ВЪПРОСНИК-ПРЕДЛОЖЕНИЕ ЗА ЗАСТРАХОВКА{'\n'}ОБЩА ГРАЖДАНСКА ОТГОВОРНОСТ (ОГО)</Text>
         </View>
 
@@ -94,7 +94,7 @@ export function GeneraliGLPDF({ formData, clientName }: Props) {
             </View>
             <Text style={S.checkLabel}>{c.label}</Text>
             <Text style={{ fontSize: 8, color: '#666', width: 40 }}>
-              {has(c.id) ? f(c.id) : '—'}
+              {has(c.id) ? f(c.id) : '--'}
             </Text>
           </View>
         ))}

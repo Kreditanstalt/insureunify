@@ -67,16 +67,16 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
   ].filter(b => b.name)
 
   return (
-    <Document title={`Алианц Трейд — Въпросник — ${clientName}`} author="InsureUnify">
+    <Document title={`Алианц Трейд -- Въпросник -- ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
         <Text style={S.formCode}>Валута: EUR · Дата: {date}</Text>
 
         <View style={S.header}>
           <Text style={S.logo}>Allianz Trade</Text>
-          <Text style={S.subLine}>Allianz Trade Bulgaria · бул. „Тодор Александров" 12, ет. 1, 1000 София</Text>
+          <Text style={S.subLine}>Allianz Trade Bulgaria · бул. "Тодор Александров" 12, ет. 1, 1000 София</Text>
           <Text style={S.title}>
-            ВЪПРОСНИК ЗА ПРЕДЛОЖЕНИЕ — ЗАСТРАХОВКА ТЪРГОВСКИ КРЕДИТ{'\n'}
+            ВЪПРОСНИК ЗА ПРЕДЛОЖЕНИЕ -- ЗАСТРАХОВКА ТЪРГОВСКИ КРЕДИТ{'\n'}
             QUESTIONNAIRE FOR AN OFFER REGARDING TRADE CREDIT INSURANCE
           </Text>
         </View>
@@ -106,21 +106,21 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
         </View>
         <View style={S.tRow}>
           <Text style={[S.tCell, { flex: 3, fontSize: 8 }]}>Общ оборот / Total sales:</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_turnover_year1 || '—'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_turnover || '—'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_insurable_turnover || '—'}</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_turnover_year1 || '--'}</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_turnover || '--'}</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_insurable_turnover || '--'}</Text>
         </View>
         <View style={S.tRow}>
           <Text style={[S.tCell, { flex: 3, fontSize: 8 }]}>Вътрешен пазар / Domestic:</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>—</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_domestic || '—'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>—</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_domestic || '--'}</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
         </View>
         <View style={S.tRow}>
           <Text style={[S.tCell, { flex: 3, fontSize: 8 }]}>Експорт / Export:</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>—</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_export || '—'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>—</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_export || '--'}</Text>
+          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
         </View>
 
         {/* Loss history */}
@@ -139,10 +139,10 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
         ].map((row, i) => (
           <View key={i} style={S.tRow}>
             <Text style={[S.tCell, { flex: 1, fontWeight: 700 }]}>{row.y}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.t || '—'}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.l || '—'}</Text>
-            <Text style={[S.tCell, { flex: 1.5 }]}>{row.c || '—'}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.m || '—'}</Text>
+            <Text style={[S.tCell, { flex: 2 }]}>{row.t || '--'}</Text>
+            <Text style={[S.tCell, { flex: 2 }]}>{row.l || '--'}</Text>
+            <Text style={[S.tCell, { flex: 1.5 }]}>{row.c || '--'}</Text>
+            <Text style={[S.tCell, { flex: 2 }]}>{row.m || '--'}</Text>
           </View>
         ))}
 
@@ -166,7 +166,7 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
             <Text style={[S.c4lbl, { flex: 2 }]}>Държава {i + 1}:</Text>
             <Text style={[S.c4val, { flex: 2 }]}>{m.c}</Text>
             <Text style={S.c4lbl}>Оборот (хил. EUR):</Text>
-            <Text style={[S.c4val, { flex: 1 }]}>{m.t || '—'}</Text>
+            <Text style={[S.c4val, { flex: 1 }]}>{m.t || '--'}</Text>
           </View>
         ))}
 
@@ -174,15 +174,15 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
         <Text style={S.sec}>Условия на плащане / Payment Terms</Text>
         <View style={S.row4}>
           <Text style={S.c4lbl}>Стандартен срок (дни):</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_standard_terms || '—'}</Text>
+          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_standard_terms || '--'}</Text>
           <Text style={S.c4lbl}>Максимален срок (дни):</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_max_terms || '—'}</Text>
+          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_max_terms || '--'}</Text>
         </View>
         <View style={S.row4}>
           <Text style={S.c4lbl}>DSO (дни):</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_dso || '—'}</Text>
+          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_dso || '--'}</Text>
           <Text style={S.c4lbl}>% Аванси:</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_cash_advance_pct ? `${f.tc_cash_advance_pct}%` : '—'}</Text>
+          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_cash_advance_pct ? `${f.tc_cash_advance_pct}%` : '--'}</Text>
         </View>
 
         {/* Top buyers */}
@@ -199,10 +199,10 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
             {buyers.map((b, i) => (
               <View key={i} style={S.tRow}>
                 <Text style={[S.tCell, { flex: 3 }]}>{b.name}</Text>
-                <Text style={[S.tCell, { flex: 1.5 }]}>{b.country || '—'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.id || '—'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.limit || '—'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.turnover || '—'}</Text>
+                <Text style={[S.tCell, { flex: 1.5 }]}>{b.country || '--'}</Text>
+                <Text style={[S.tCell, { flex: 2 }]}>{b.id || '--'}</Text>
+                <Text style={[S.tCell, { flex: 2 }]}>{b.limit || '--'}</Text>
+                <Text style={[S.tCell, { flex: 2 }]}>{b.turnover || '--'}</Text>
               </View>
             ))}
           </>
