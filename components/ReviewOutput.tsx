@@ -45,8 +45,8 @@ interface OAProps {
 // ─── PL review ────────────────────────────────────────────────────────────────
 
 interface PLProps {
-  mappedData:       Record<InsurerKey, InsurerMappedData | PLInsurerMappedData>
-  selectedInsurers: InsurerKey[]
+  mappedData:       Record<string, PLInsurerMappedData>
+  selectedInsurers: PLInsurerKey[]
   clientName:       string
   formData:         PLFormData
   insuranceClass:   'professional_liability'

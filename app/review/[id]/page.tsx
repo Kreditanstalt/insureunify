@@ -69,7 +69,7 @@ export default function ReviewPage() {
   const [propertyMapped, setPropertyMapped] = useState<Record<InsurerKey, InsurerMappedData> | null>(null)
   const [glMapped,       setGlMapped]       = useState<Record<GLInsurerKey, GLInsurerMappedData> | null>(null)
   const [oaMapped,       setOaMapped]       = useState<Record<OAInsurerKey, OAInsurerMappedData> | null>(null)
-  const [plMapped,       setPlMapped]       = useState<Record<InsurerKey, InsurerMappedData | PLInsurerMappedData> | null>(null)
+  const [plMapped,       setPlMapped]       = useState<Record<string, PLInsurerMappedData> | null>(null)
   const [tcMapped,       setTcMapped]       = useState<Record<TCInsurerKey, TCInsurerMappedData> | null>(null)
 
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function ReviewPage() {
     } else if (found.insuranceClass === 'professional_liability') {
       const pl = found as PLSubmission
       setPlMapped(
-        mapPLFormDataForAllInsurers(pl.formData, pl.selectedInsurers) as Record<InsurerKey, PLInsurerMappedData>
+        mapPLFormDataForAllInsurers(pl.formData, pl.selectedInsurers) as Record<string, PLInsurerMappedData>
       )
     } else if (found.insuranceClass === 'trade_credit') {
       const tc = found as { selectedInsurers: TCInsurerKey[]; formData: TCFormData }
@@ -223,7 +223,7 @@ export default function ReviewPage() {
         ) : isPL ? (
           <ReviewOutput
             mappedData={plMapped!}
-            selectedInsurers={(submission as PLSubmission).selectedInsurers as InsurerKey[]}
+            selectedInsurers={(submission as PLSubmission).selectedInsurers}
             clientName={submission.clientName}
             formData={(submission as PLSubmission).formData}
             insuranceClass="professional_liability"
