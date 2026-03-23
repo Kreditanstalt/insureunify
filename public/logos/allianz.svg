@@ -1,13 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
-  <rect width="120" height="40" fill="#003781" rx="4"/>
-  <!-- Eagle symbol simplified -->
-  <circle cx="22" cy="20" r="10" fill="none" stroke="#FFFFFF" stroke-width="1.5"/>
-  <polygon points="22,12 25,20 22,18 19,20" fill="#FFFFFF"/>
-  <polygon points="17,15 22,18 22,20 16,22" fill="#FFFFFF" opacity="0.85"/>
-  <polygon points="27,15 22,18 22,20 28,22" fill="#FFFFFF" opacity="0.85"/>
-  <polygon points="22,22 25,28 22,26 19,28" fill="#FFFFFF"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50">
+  <!-- Allianz - dark blue eagle brand -->
+  <rect width="180" height="50" rx="4" fill="white"/>
+  <!-- Eagle simplified -->
+  <rect x="8" y="8" width="34" height="34" rx="17" fill="#003781"/>
+  <!-- Eagle wings simplified -->
+  <path d="M14 20 Q25 14 36 20 L30 28 Q25 24 20 28 Z" fill="white"/>
+  <path d="M20 28 Q25 32 30 28 L25 40 Z" fill="white"/>
   <!-- Text -->
-  <text x="38" y="15" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="#FFFFFF" letter-spacing="0.5">АЛИАНЦ</text>
-  <text x="38" y="27" font-family="Arial,sans-serif" font-size="6" fill="#7BAFD4" letter-spacing="0.3">БЪЛГАРИЯ</text>
-  <text x="38" y="36" font-family="Arial,sans-serif" font-size="5" fill="#FFFFFF" opacity="0.65">ЗАД · VAPROSNIK_0142</text>
+  <text x="50" y="20" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#003781" letter-spacing="1">Allianz</text>
+  <text x="50" y="33" font-family="Arial,sans-serif" font-size="9" fill="#003781" font-weight="600">България</text>
+  <text x="50" y="43" font-family="Arial,sans-serif" font-size="7.5" fill="#555">ЗАД</text>
 </svg>

@@ -16,6 +16,7 @@ import { TC_INSURERS, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema
 import { mapTCFormDataForAll, type TCInsurerMappedData } from '@/lib/tc-mappings'
 import ReviewOutput from '@/components/ReviewOutput'
 import { DownloadPDFButton } from '@/components/DownloadPDFButton'
+import Image from 'next/image'
 
 interface BaseSubmission {
   id:               string
@@ -272,6 +273,12 @@ function TCReviewOutput({
             {/* Header */}
             <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100"
               style={{ borderLeftWidth: 4, borderLeftColor: ins.color }}>
+              <div className="flex-shrink-0 h-10 w-14 rounded-lg border border-gray-100 bg-gray-50 flex items-center justify-center overflow-hidden p-1">
+                {ins.logo
+                  ? <Image src={ins.logo} alt={ins.name} width={52} height={36} className="object-contain w-full h-full" />
+                  : <div className="h-6 w-6 rounded-full" style={{ backgroundColor: ins.color }} />
+                }
+              </div>
               <div className="flex-1">
                 <p className="font-bold text-gray-900">{ins.name}</p>
                 <p className="text-xs text-gray-400">Търговски кредит · {clientName}</p>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 50">
+  <!-- Allianz Trade - dark blue brand -->
+  <rect width="180" height="50" rx="4" fill="white"/>
+  <rect x="8" y="8" width="32" height="34" rx="16" fill="#003781"/>
+  <path d="M13 20 Q24 14 35 20 L29 28 Q24 24 19 28 Z" fill="white"/>
+  <path d="M19 28 Q24 32 29 28 L24 40 Z" fill="white"/>
+  <!-- Text -->
+  <text x="48" y="19" font-family="Arial,sans-serif" font-size="13" font-weight="700" fill="#003781">Allianz</text>
+  <text x="48" y="32" font-family="Arial,sans-serif" font-size="10" font-weight="600" fill="#003781">Trade</text>
+  <text x="48" y="43" font-family="Arial,sans-serif" font-size="7" fill="#555">ТЪРГОВСКИ КРЕДИТ</text>
+</svg>

@@ -2,9 +2,9 @@
 
 export type TCInsurerKey = 'atradius' | 'allianz_trade'
 
-export const TC_INSURERS: Record<TCInsurerKey, { name: string; color: string }> = {
-  atradius:      { name: 'Атрадиус',     color: '#CC0000' },
-  allianz_trade: { name: 'Алианц Трейд', color: '#003781' },
+export const TC_INSURERS: Record<TCInsurerKey, { name: string; color: string; logo: string }> = {
+  atradius:      { name: 'Атрадиус',     color: '#CC0000', logo: '/logos/atradius.svg' },
+  allianz_trade: { name: 'Алианц Трейд', color: '#003781', logo: '/logos/allianz_trade.svg' },
 }
 
 export interface TCFormData {
