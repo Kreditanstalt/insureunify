@@ -1,54 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-function getServiceClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) return null
-  return createClient(url, key)
-}
+import { getServiceClient } from '@/lib/db'
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const supabase = getServiceClient()
+  const db = getServiceClient()
 
-  if (!supabase) {
-    // No Supabase — client handles localStorage persistence
+  if (!db) {
     return NextResponse.json({ ok: true, id: body.id })
   }
 
-  const { data, error } = await supabase
-    .from('submissions')
-    .insert({
-      id: body.id,
-      client_name: body.clientName,
-      selected_insurers: body.selectedInsurers,
-      form_data: body.formData,
-    })
-    .select('id')
-    .single()
+  const { error } = await db.from('submissions').upsert({
+    id:                body.id,
+    client_name:       body.clientName,
+    insurance_class:   body.insuranceClass,
+    selected_insurers: body.selectedInsurers ?? [],
+    form_data:         body.formData ?? {},
+    created_at:        body.createdAt ?? new Date().toISOString(),
+  }, { onConflict: 'id' })
 
   if (error) {
+    console.error('Submission save error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, id: data.id })
+  return NextResponse.json({ ok: true, id: body.id })
 }
 
-export async function GET() {
-  const supabase = getServiceClient()
-  if (!supabase) {
-    return NextResponse.json({ submissions: [] })
+export async function GET(req: NextRequest) {
+  const db = getServiceClient()
+  const id = req.nextUrl.searchParams.get('id')
+
+  if (!db) return NextResponse.json({ submissions: [] })
+
+  if (id) {
+    const { data, error } = await db
+      .from('submissions')
+      .select('*')
+      .eq('id', id)
+      .single()
+    if (error) return NextResponse.json({ error: error.message }, { status: 404 })
+    return NextResponse.json({ submission: data })
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await db
     .from('submissions')
-    .select('id, client_name, selected_insurers, created_at')
+    .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ submissions: data })
+}
+
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json()
+  const db = getServiceClient()
+  if (!db) return NextResponse.json({ ok: true })
+
+  const { error } = await db.from('submissions').delete().eq('id', id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
 }

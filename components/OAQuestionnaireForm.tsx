@@ -349,8 +349,15 @@ export default function OAQuestionnaireForm() {
         insuranceClass: 'occupational_accident',
         createdAt: new Date().toISOString(),
       }
+      // Save to localStorage (cache)
       const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]') as StoredSubmission[]
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))
+      // Save to Supabase (async, non-blocking)
+      fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submission),
+      }).catch(console.error)
       router.push(`/review/${id}`)
     } catch (err) {
       console.error(err)

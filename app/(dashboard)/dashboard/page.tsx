@@ -82,6 +82,8 @@ export default function DashboardPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [search,      setSearch]      = useState('')
   const [authChecked, setAuthChecked] = useState(false)
+  const [migrating, setMigrating] = useState(false)
+  const [migrated, setMigrated] = useState(false)
 
   useEffect(() => {
     const auth = localStorage.getItem('iu_auth')
@@ -90,16 +92,49 @@ export default function DashboardPage() {
     if (!rawProfile) { router.replace('/onboarding'); return }
     setProfile(JSON.parse(rawProfile))
     setAuthChecked(true)
+
+    // Load from localStorage immediately (cache)
     try {
       const raw = localStorage.getItem('iu_submissions')
       if (raw) setSubmissions(JSON.parse(raw))
     } catch { /* ignore */ }
+
+    // Then fetch from Supabase
+    fetch('/api/submissions')
+      .then((r) => r.json())
+      .then((d) => { if (d.submissions?.length) setSubmissions(d.submissions) })
+      .catch(() => {/* offline — localStorage is fine */})
+
+    // Auto-migrate localStorage data to Supabase once
+    const migrationDone = localStorage.getItem('iu_migrated_to_supabase')
+    if (!migrationDone) {
+      setMigrating(true)
+      const subs = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]')
+      const clients = JSON.parse(localStorage.getItem('iu_clients') ?? '[]')
+      const migrateBatch = async () => {
+        try {
+          // Migrate submissions
+          await Promise.all(subs.map((s: Record<string, unknown>) =>
+            fetch('/api/submissions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s) })
+          ))
+          // Migrate clients
+          await Promise.all(clients.map((c: Record<string, unknown>) =>
+            fetch('/api/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) })
+          ))
+          localStorage.setItem('iu_migrated_to_supabase', '1')
+          setMigrated(true)
+        } catch { /* ignore */ } finally { setMigrating(false) }
+      }
+      if (subs.length > 0 || clients.length > 0) migrateBatch()
+      else { localStorage.setItem('iu_migrated_to_supabase', '1'); setMigrating(false) }
+    }
   }, [router])
 
   function deleteSubmission(id: string) {
     const updated = submissions.filter((s) => s.id !== id)
     setSubmissions(updated)
     localStorage.setItem('iu_submissions', JSON.stringify(updated))
+    fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(console.error)
   }
 
   const stats = useMemo(() => {
@@ -131,6 +166,22 @@ export default function DashboardPage() {
   return (
     <div className="min-h-full bg-gray-50/60">
       <div className="px-6 py-8 max-w-6xl mx-auto space-y-7">
+
+        {/* Migration banner */}
+        {migrating && (
+          <div className="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800">
+            <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin flex-shrink-0" />
+            Синхронизиране на данни с облака…
+          </div>
+        )}
+        {migrated && !migrating && (
+          <div className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
+            <svg className="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Данните са успешно синхронизирани с облака.
+          </div>
+        )}
 
         {/* ── Hero header ── */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-7 py-7 text-white shadow-lg shadow-blue-200">

@@ -73,12 +73,26 @@ export default function ReviewPage() {
   const [tcMapped,       setTcMapped]       = useState<Record<TCInsurerKey, TCInsurerMappedData> | null>(null)
 
   useEffect(() => {
-    const raw = localStorage.getItem('iu_submissions')
-    if (!raw) { setNotFound(true); return }
+    async function loadSubmission() {
+      let found: StoredSubmission | null = null
 
-    const list: StoredSubmission[] = JSON.parse(raw)
-    const found = list.find((s) => s.id === id)
-    if (!found) { setNotFound(true); return }
+      // Try Supabase first
+      try {
+        const res = await fetch(`/api/submissions?id=${id}`)
+        const data = await res.json()
+        if (data.submission) found = data.submission
+      } catch { /* offline */ }
+
+      // Fallback to localStorage
+      if (!found) {
+        const raw = localStorage.getItem('iu_submissions')
+        if (raw) {
+          const list: StoredSubmission[] = JSON.parse(raw)
+          found = list.find((s) => s.id === id) ?? null
+        }
+      }
+
+      if (!found) { setNotFound(true); return }
 
     setSubmission(found)
 
@@ -144,6 +158,8 @@ export default function ReviewPage() {
       const prop = found as PropertySubmission
       setPropertyMapped(mapFormDataForAllInsurers(prop.formData, prop.selectedInsurers))
     }
+    }
+    loadSubmission()
   }, [id])
 
   if (notFound) {

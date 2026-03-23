@@ -222,6 +222,11 @@ export default function TCQuestionnaireForm() {
       }
       const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]')
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))
+      fetch('/api/submissions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submission),
+      }).catch(console.error)
       router.push(`/review/${id}`)
     } catch {
       setSubmitting(false)

@@ -43,9 +43,23 @@ export default function ClientsList() {
   const searchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    // Load from localStorage immediately
     syncClientsFromSubmissions()
     setClients(getClients())
     setSynced(true)
+    // Then fetch fresh data from Supabase
+    fetch('/api/clients')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.clients?.length) {
+          // Merge Supabase data into localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('iu_clients', JSON.stringify(d.clients))
+          }
+          setClients(d.clients)
+        }
+      })
+      .catch(() => {/* offline */})
   }, [])
 
   function handleDelete(id: string) {

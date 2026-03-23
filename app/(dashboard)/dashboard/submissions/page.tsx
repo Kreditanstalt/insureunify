@@ -68,6 +68,17 @@ export default function SubmissionsPage() {
   const [classFilter, setClassFilter] = useState<string>('all')
 
   useEffect(() => {
+    // Try Supabase first, fall back to localStorage
+    fetch('/api/submissions')
+      .then((r) => r.json())
+      .then((d) => { if (d.submissions?.length) setSubmissions(d.submissions) })
+      .catch(() => {
+        try {
+          const raw = localStorage.getItem('iu_submissions')
+          if (raw) setSubmissions(JSON.parse(raw))
+        } catch { /* ignore */ }
+      })
+    // Also load from localStorage immediately as cache
     try {
       const raw = localStorage.getItem('iu_submissions')
       if (raw) setSubmissions(JSON.parse(raw))
@@ -78,6 +89,11 @@ export default function SubmissionsPage() {
     const updated = submissions.filter((s) => s.id !== id)
     setSubmissions(updated)
     localStorage.setItem('iu_submissions', JSON.stringify(updated))
+    fetch('/api/submissions', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    }).catch(console.error)
   }
 
   const filtered = useMemo(() => {
