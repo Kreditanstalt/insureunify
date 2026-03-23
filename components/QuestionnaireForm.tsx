@@ -504,14 +504,23 @@ export default function QuestionnaireForm() {
       const p = JSON.parse(raw)
       setFormData((prev) => ({
         ...prev,
-        company_name:   p.company_name   ?? prev.company_name,
-        eik:            p.eik            ?? prev.eik,
-        address:        p.address        ?? prev.address,
-        phone:          p.phone          ?? prev.phone,
-        email:          p.email          ?? prev.email,
-        activity:       p.activity       ?? prev.activity,
-        nkid_code:      p.nkid_code      ?? prev.nkid_code,
-        representative: p.representative ?? prev.representative,
+        company_name:      p.company_name      ?? prev.company_name,
+        eik:               p.eik               ?? prev.eik,
+        address:           p.address           ?? prev.address,
+        phone:             p.phone             ?? prev.phone,
+        email:             p.email             ?? prev.email,
+        activity:          p.activity          ?? prev.activity,
+        nkid_code:         p.nkid_code         ?? prev.nkid_code,
+        representative:    p.representative    ?? prev.representative,
+        property_address:  p.property_address  ?? prev.property_address,
+        construction_type: p.construction_type ?? prev.construction_type,
+        roof_type:         p.roof_type         ?? prev.roof_type,
+        construction_year: p.construction_year ?? prev.construction_year,
+        floors:            p.floors            ?? prev.floors,
+        area_sqm:          p.area_sqm          ?? prev.area_sqm,
+        fire_alarm:        p.fire_alarm        ?? prev.fire_alarm,
+        sprinklers:        p.sprinklers        ?? prev.sprinklers,
+        security_system:   p.security_system   ?? prev.security_system,
       }))
       setPrefillBanner(p.company_name ?? null)
     } catch { /* ignore */ }

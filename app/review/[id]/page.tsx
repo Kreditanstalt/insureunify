@@ -90,12 +90,26 @@ export default function ReviewPage() {
       const client = upsertClient({
         company_name:   name,
         eik,
-        address:  String(cls === 'general_liability' ? (fd.gl_address ?? '') : cls === 'occupational_accident' ? (fd.oa_address ?? '') : cls === 'professional_liability' ? (fd.pl_address ?? '') : (fd.address ?? '')) || undefined,
-        phone:    String(cls === 'general_liability' ? (fd.gl_phone ?? '') : cls === 'occupational_accident' ? (fd.oa_phone ?? '') : cls === 'professional_liability' ? (fd.pl_phone ?? '') : (fd.phone ?? '')) || undefined,
-        email:    String(cls === 'general_liability' ? (fd.gl_email ?? '') : cls === 'professional_liability' ? (fd.pl_email ?? '') : (fd.email ?? '')) || undefined,
-        activity: String(cls === 'general_liability' ? (fd.gl_activity ?? '') : cls === 'occupational_accident' ? (fd.oa_activity ?? '') : cls === 'professional_liability' ? (fd.pl_activity ?? '') : (fd.activity ?? '')) || undefined,
+        address:        String(cls === 'general_liability' ? (fd.gl_address ?? '') : cls === 'occupational_accident' ? (fd.oa_address ?? '') : cls === 'professional_liability' ? (fd.pl_address ?? '') : (fd.address ?? '')) || undefined,
+        phone:          String(cls === 'general_liability' ? (fd.gl_phone ?? '') : cls === 'occupational_accident' ? (fd.oa_phone ?? '') : cls === 'professional_liability' ? (fd.pl_phone ?? '') : (fd.phone ?? '')) || undefined,
+        email:          String(cls === 'general_liability' ? (fd.gl_email ?? '') : cls === 'professional_liability' ? (fd.pl_email ?? '') : (fd.email ?? '')) || undefined,
+        activity:       String(cls === 'general_liability' ? (fd.gl_activity ?? '') : cls === 'occupational_accident' ? (fd.oa_activity ?? '') : cls === 'professional_liability' ? (fd.pl_activity ?? '') : (fd.activity ?? '')) || undefined,
         representative: String(cls === 'general_liability' ? (fd.gl_representative ?? '') : (fd.representative ?? '')) || undefined,
-        nkid_code: String(fd.nkid_code ?? '') || undefined,
+        nkid_code:      String(cls === 'general_liability' ? (fd.gl_activity_code ?? fd.nkid_code ?? '') : cls === 'occupational_accident' ? (fd.oa_activity_code ?? fd.nkid_code ?? '') : (fd.nkid_code ?? '')) || undefined,
+        employees_count:  Number(cls === 'general_liability' ? fd.gl_employees_count : cls === 'occupational_accident' ? fd.oa_persons_count : cls === 'professional_liability' ? fd.pl_employees_count : undefined) || undefined,
+        annual_wage_fund: Number(cls === 'general_liability' ? fd.gl_annual_wage_fund : cls === 'occupational_accident' ? fd.oa_monthly_wage_fund : undefined) || undefined,
+        annual_revenue:   Number(cls === 'professional_liability' ? fd.pl_annual_revenue : undefined) || undefined,
+        ...(cls === 'property' ? {
+          property_address:  String(fd.property_address  ?? '') || undefined,
+          construction_type: String(fd.construction_type ?? '') || undefined,
+          roof_type:         String(fd.roof_type         ?? '') || undefined,
+          construction_year: String(fd.construction_year ?? '') || undefined,
+          floors:            String(fd.floors            ?? '') || undefined,
+          area_sqm:          fd.area_sqm ? (Number(fd.area_sqm) || undefined) : undefined,
+          fire_alarm:        String(fd.fire_alarm        ?? '') || undefined,
+          sprinklers:        String(fd.sprinklers        ?? '') || undefined,
+          security_system:   String(fd.security_system   ?? '') || undefined,
+        } : {}),
       })
       recordSubmissionForClient(eik, name, found.createdAt)
       void client

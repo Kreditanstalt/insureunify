@@ -6,12 +6,14 @@ import Sidebar from '@/components/Sidebar'
 
 // ─── Breadcrumb label map ────────────────────────────────────────────────────
 
-const LABELS: Record<string, string> = {
-  '/dashboard': 'Начало',
-}
-
 function getLabel(pathname: string): string {
-  return LABELS[pathname] ?? 'Dashboard'
+  if (pathname === '/dashboard') return 'Начало'
+  if (pathname === '/dashboard/new') return 'Ново запитване'
+  if (pathname === '/dashboard/submissions') return 'Запитвания'
+  if (pathname.startsWith('/dashboard/clients/new')) return 'Нов клиент'
+  if (pathname.startsWith('/dashboard/clients/')) return 'Клиент'
+  if (pathname === '/dashboard/clients') return 'Клиенти'
+  return 'Dashboard'
 }
 
 // ─── Layout ──────────────────────────────────────────────────────────────────

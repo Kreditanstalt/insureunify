@@ -29,7 +29,7 @@ const MAIN_ITEMS: NavItem[] = [
 ]
 
 const CLASS_ITEMS: NavItem[] = [
-  { icon: '🏢', label: 'Имущество',            href: '/dashboard/new',                        exact: true },
+  { icon: '🏢', label: 'Имущество',            href: '/dashboard/new/property' },
   { icon: '⚖️', label: 'Проф. отговорност',    href: '/dashboard/new/professional-liability' },
   { icon: '🔧', label: 'ОГО / Работодател',    href: '/dashboard/new/general-liability'      },
   { icon: '⚡', label: 'Трудова злополука',    href: '/dashboard/new/occupational-accident'  },

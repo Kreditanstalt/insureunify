@@ -39,7 +39,7 @@ const QUICK_ACTIONS = [
     icon:   '🏢',
     label:  'Имущество',
     desc:   'Сгради, машини, стоки, оборудване',
-    href:   '/dashboard/new',
+    href:   '/dashboard/new/property',
     color:  '#1B6B3A',
     bg:     '#f0fdf4',
     border: '#bbf7d0',

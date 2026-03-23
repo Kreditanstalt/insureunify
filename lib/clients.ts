@@ -73,6 +73,16 @@ export interface ClientPrefillData {
   employees_count?: number
   annual_wage_fund?: number
   annual_revenue?: number
+  // Property-specific
+  property_address?: string
+  construction_type?: string
+  roof_type?: string
+  construction_year?: string
+  floors?: string
+  area_sqm?: number
+  fire_alarm?: string
+  sprinklers?: string
+  security_system?: string
 }
 
 // ─── Storage key ──────────────────────────────────────────────────────────────
@@ -126,9 +136,21 @@ export function upsertClient(data: Partial<ClientProfile> & { company_name: stri
     const fields: (keyof ClientProfile)[] = [
       'eik', 'address', 'city', 'phone', 'email', 'activity',
       'nkid_code', 'representative', 'legal_form',
+      'property_address', 'construction_type', 'roof_type', 'construction_year',
+      'floors', 'fire_alarm', 'sprinklers', 'security_system',
     ]
     for (const f of fields) {
       if (!existing[f] && data[f]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ;(updated as any)[f] = data[f]
+      }
+    }
+    // Numeric fields: fill only if currently unset
+    const numericFields: (keyof ClientProfile)[] = [
+      'area_sqm', 'annual_revenue', 'employees_count', 'annual_wage_fund',
+    ]
+    for (const f of numericFields) {
+      if (existing[f] == null && data[f] != null) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ;(updated as any)[f] = data[f]
       }
@@ -139,19 +161,10 @@ export function upsertClient(data: Partial<ClientProfile> & { company_name: stri
     return updated
   } else {
     const created: ClientProfile = {
-      id: uuidv4(),
-      company_name: data.company_name,
-      eik: data.eik,
-      address: data.address,
-      city: data.city,
-      phone: data.phone,
-      email: data.email,
-      activity: data.activity,
-      nkid_code: data.nkid_code,
-      representative: data.representative,
-      legal_form: data.legal_form,
       tags: [],
       submissions_count: 0,
+      ...data,
+      id: uuidv4(),
       created_at: now,
       updated_at: now,
     }
@@ -363,14 +376,23 @@ export function mapPrefillToFormFields(
     case 'property':
     default:
       return {
-        company_name:   prefill.company_name,
-        eik:            prefill.eik ?? '',
-        address:        prefill.address ?? '',
-        phone:          prefill.phone ?? '',
-        email:          prefill.email ?? '',
-        activity:       prefill.activity ?? '',
-        nkid_code:      prefill.nkid_code ?? '',
-        representative: prefill.representative ?? '',
+        company_name:      prefill.company_name,
+        eik:               prefill.eik ?? '',
+        address:           prefill.address ?? '',
+        phone:             prefill.phone ?? '',
+        email:             prefill.email ?? '',
+        activity:          prefill.activity ?? '',
+        nkid_code:         prefill.nkid_code ?? '',
+        representative:    prefill.representative ?? '',
+        property_address:  prefill.property_address ?? '',
+        construction_type: prefill.construction_type ?? '',
+        roof_type:         prefill.roof_type ?? '',
+        construction_year: prefill.construction_year ?? '',
+        floors:            prefill.floors ?? '',
+        area_sqm:          prefill.area_sqm != null ? String(prefill.area_sqm) : '',
+        fire_alarm:        prefill.fire_alarm ?? '',
+        sprinklers:        prefill.sprinklers ?? '',
+        security_system:   prefill.security_system ?? '',
       }
   }
 }
