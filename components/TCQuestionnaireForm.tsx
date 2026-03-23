@@ -5,9 +5,16 @@ import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import { TC_INSURERS, TC_INITIAL, TC_REQUIRED, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema'
 import AutoFillUploader from './AutoFillUploader'
+import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 
-function set<T>(setter: React.Dispatch<React.SetStateAction<T>>, field: keyof T, value: string) {
-  setter((prev) => ({ ...prev, [field]: value }))
+const TC_EIK_FIELD_MAP = {
+  eik:            'tc_eik',
+  company_name:   'tc_company_name',
+  address:        'tc_address',
+  email:          'tc_email',
+  phone:          'tc_phone',
+  activity:       'tc_activity',
+  representative: 'tc_contact_person',
 }
 
 function Field({
@@ -165,6 +172,12 @@ export default function TCQuestionnaireForm() {
     }))
   }, [])
 
+  const setFormGeneric = useCallback((updater: (prev: Record<string, unknown>) => Record<string, unknown>) => {
+    setForm((prev) => updater(prev as unknown as Record<string, unknown>) as unknown as TCFormData)
+  }, [])
+
+  const { eikStatus, handleEikChange, handleCompanySelect } = useEikLookup(setFormGeneric, TC_EIK_FIELD_MAP)
+
   function f(field: keyof TCFormData) {
     return (v: string) => setForm((prev) => ({ ...prev, [field]: v }))
   }
@@ -259,10 +272,25 @@ export default function TCQuestionnaireForm() {
         <Section title="Основни данни" icon="🏢">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Field label="Наименование на дружеството" id="tc_company_name" required
-                value={form.tc_company_name} onChange={f('tc_company_name')} />
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Наименование на дружеството<span className="text-red-400 ml-0.5">*</span>
+              </label>
+              <CompanyNameInput
+                value={form.tc_company_name}
+                onChange={f('tc_company_name')}
+                onSelect={handleCompanySelect}
+              />
             </div>
-            <Field label="ЕИК / National ID" id="tc_eik" required value={form.tc_eik} onChange={f('tc_eik')} />
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                ЕИК / National ID<span className="text-red-400 ml-0.5">*</span>
+              </label>
+              <EikInput
+                value={form.tc_eik}
+                onChange={handleEikChange}
+                status={eikStatus}
+              />
+            </div>
             <Field label="Адрес" id="tc_address" value={form.tc_address} onChange={f('tc_address')} />
             <Field label="Лице за контакт" id="tc_contact_person" required
               value={form.tc_contact_person} onChange={f('tc_contact_person')} />
