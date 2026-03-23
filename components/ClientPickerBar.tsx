@@ -19,13 +19,29 @@ export default function ClientPickerBar({ insuranceClass: _insuranceClass }: Pro
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // When arriving via ?client=<id> (navigated from client profile page):
-  // The client profile already stored prefill in localStorage before navigating.
-  // We just show the banner — no reload needed, form reads prefill on mount.
+  // Re-store the prefill so the form can read it on mount.
   useEffect(() => {
     const clientId = searchParams.get('client')
     if (!clientId) return
     const client = getClient(clientId)
-    if (client) setSelectedClient(client)
+    if (!client) return
+    setSelectedClient(client)
+    // Always re-store prefill in case it was consumed or not yet written
+    storePrefill({
+      clientId:          client.id,
+      company_name:      client.company_name,
+      eik:               client.eik,
+      address:           client.address,
+      city:              client.city,
+      phone:             client.phone,
+      email:             client.email,
+      activity:          client.activity,
+      nkid_code:         client.nkid_code,
+      representative:    client.representative,
+      employees_count:   client.employees_count,
+      annual_wage_fund:  client.annual_wage_fund,
+      annual_revenue:    client.annual_revenue,
+    })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
