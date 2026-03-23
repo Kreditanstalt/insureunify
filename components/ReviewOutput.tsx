@@ -7,8 +7,8 @@ import { OA_SCHEMA, OA_INSURERS, OAInsurerKey, OAFormData } from '@/lib/oa-schem
 import { InsurerMappedData } from '@/lib/mappings'
 import { GLInsurerMappedData } from '@/lib/gl-mappings'
 import { OAInsurerMappedData } from '@/lib/oa-mappings'
-import { PL_SCHEMA } from '@/lib/pl-schema'
-import type { PLFormData } from '@/lib/pl-schema'
+import { PL_SCHEMA, PL_INSURERS } from '@/lib/pl-schema'
+import type { PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import type { PLInsurerMappedData } from '@/lib/pl-mappings'
 import { DownloadPDFButton } from './DownloadPDFButton'
 
@@ -121,7 +121,9 @@ export default function ReviewOutput({ mappedData, selectedInsurers, clientName,
           ? OA_INSURERS[key as OAInsurerKey]
           : isGL
             ? GL_INSURERS[key as GLInsurerKey]
-            : INSURERS[key as InsurerKey]
+            : isPL
+              ? PL_INSURERS[key as PLInsurerKey]
+              : INSURERS[key as InsurerKey]
         const data     = (mappedData as Record<string, unknown>)[key] as Record<string, { originalLabel: string; displayValue: string }> ?? {}
         const schema   = isOA ? OA_SCHEMA : isGL ? GL_SCHEMA : isPL ? PL_SCHEMA : MASTER_SCHEMA
         const fieldCount = Object.keys(data).length

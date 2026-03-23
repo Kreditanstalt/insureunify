@@ -4,10 +4,10 @@ import type { InsurerKey, SchemaField, SchemaSection } from './schema'
 export type PLInsurerKey = 'axiom' | 'bulstrad' | 'euroins'
 export const PL_INSURER_KEYS: PLInsurerKey[] = ['axiom', 'bulstrad', 'euroins']
 
-export const PL_INSURERS: Record<PLInsurerKey, { key: InsurerKey; name: string; color: string; formCode: string; description: string }> = {
-  axiom:    { key: 'axiom',    name: 'Аксиом',  color: '#6B21A8', formCode: 'PL-Application', description: 'Предложение-въпросник ПО · ЗК Аксиом АД' },
-  bulstrad: { key: 'bulstrad', name: 'Булстрад', color: '#0B3D91', formCode: 'БВ-ПО',          description: 'Заявление-въпросник ПО · ЗЕАД Булстрад' },
-  euroins:  { key: 'euroins',  name: 'Евроинс', color: '#1E40AF', formCode: 'ПО-кл.08',        description: 'Въпросник-предложение ПО кл.08 · ЗД Евроинс' },
+export const PL_INSURERS: Record<PLInsurerKey, { key: InsurerKey; name: string; color: string; formCode: string; description: string; logo: string }> = {
+  axiom:    { key: 'axiom',    name: 'Аксиом',   color: '#1E2D6B', formCode: 'PL-Application', description: 'Предложение-въпросник ПО · ЗК Аксиом АД',  logo: '/logos/axiom.jpg' },
+  bulstrad: { key: 'bulstrad', name: 'Булстрад', color: '#0B3D91', formCode: 'БВ-ПО',          description: 'Заявление-въпросник ПО · ЗЕАД Булстрад',   logo: '/logos/bulstrad.svg' },
+  euroins:  { key: 'euroins',  name: 'Евроинс',  color: '#1E3A8A', formCode: 'ПО-кл.08',       description: 'Въпросник-предложение ПО кл.08 · ЗД Евроинс', logo: '/logos/euroins.png' },
 }
 
 export type PLFormData = Record<string, string | number | undefined>
