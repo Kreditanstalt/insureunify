@@ -37,16 +37,25 @@ export async function POST(req: NextRequest) {
 
   try {
     if (mimeType === 'application/pdf') {
-      // Extract text from PDF using pdf-parse
-      const { PDFParse } = await import('pdf-parse')
-      const parser = new PDFParse({ data: buffer })
-      const result = await parser.getText()
-      const extractedText = (result.text ?? '').slice(0, 20000)
-
+      // Send PDF directly to Claude using native document support
+      const base64 = buffer.toString('base64')
       messages = [
         {
           role: 'user',
-          content: buildTextPrompt(extractedText),
+          content: [
+            {
+              type: 'document',
+              source: {
+                type: 'base64',
+                media_type: 'application/pdf',
+                data: base64,
+              },
+            },
+            {
+              type: 'text',
+              text: buildVisionPrompt(),
+            },
+          ],
         },
       ]
     } else if (
