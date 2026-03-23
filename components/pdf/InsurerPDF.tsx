@@ -16,8 +16,8 @@ import { INSURERS, MASTER_SCHEMA } from '@/lib/schema'
 Font.register({
   family: 'Roboto',
   fonts: [
-    { src: '/fonts/Roboto-Regular.ttf', fontWeight: 'normal' },
-    { src: '/fonts/Roboto-Bold.ttf', fontWeight: 'bold' },
+    { src: `${typeof window !== 'undefined' ? window.location.origin : ''}/fonts/Roboto-Regular.ttf`, fontWeight: 'normal' },
+    { src: `${typeof window !== 'undefined' ? window.location.origin : ''}/fonts/Roboto-Bold.ttf`, fontWeight: 'bold' },
   ],
 })
 
