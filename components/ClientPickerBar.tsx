@@ -8,7 +8,7 @@ interface Props {
   insuranceClass: 'property' | 'general_liability' | 'occupational_accident' | 'professional_liability'
 }
 
-export default function ClientPickerBar({ insuranceClass }: Props) {
+export default function ClientPickerBar({ insuranceClass: _insuranceClass }: Props) {
   const searchParams = useSearchParams()
   const [selectedClient, setSelectedClient] = useState<ClientProfile | null>(null)
   const [query, setQuery] = useState('')
@@ -18,15 +18,14 @@ export default function ClientPickerBar({ insuranceClass }: Props) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Load client from URL param ?client=<id>
+  // When arriving via ?client=<id> (navigated from client profile page):
+  // The client profile already stored prefill in localStorage before navigating.
+  // We just show the banner — no reload needed, form reads prefill on mount.
   useEffect(() => {
     const clientId = searchParams.get('client')
     if (!clientId) return
     const client = getClient(clientId)
-    if (client) {
-      setSelectedClient(client)
-      applyPrefill(client)
-    }
+    if (client) setSelectedClient(client)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -38,31 +37,10 @@ export default function ClientPickerBar({ insuranceClass }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  function applyPrefill(client: ClientProfile) {
-    storePrefill({
-      clientId:       client.id,
-      company_name:   client.company_name,
-      eik:            client.eik,
-      address:        client.address,
-      city:           client.city,
-      phone:          client.phone,
-      email:          client.email,
-      activity:       client.activity,
-      nkid_code:      client.nkid_code,
-      representative: client.representative,
-      employees_count:  client.employees_count,
-      annual_wage_fund: client.annual_wage_fund,
-      annual_revenue:   client.annual_revenue,
-    })
-    // Reload the page so the form component can pick up the prefill from localStorage
-    window.location.reload()
-  }
-
   function doSearch(q: string) {
     if (!q.trim()) { setResults([]); setOpen(false); return }
     const lower = q.toLowerCase()
-    const all = getClients()
-    const found = all.filter(
+    const found = getClients().filter(
       (c) =>
         c.company_name.toLowerCase().includes(lower) ||
         (c.eik ?? '').includes(lower),
@@ -78,11 +56,28 @@ export default function ClientPickerBar({ insuranceClass }: Props) {
     timerRef.current = setTimeout(() => doSearch(v), 200)
   }
 
+  // Manual picker selection: store prefill then navigate to URL without ?client=
+  // so the page reloads once (form reads prefill on mount) without looping.
   function handleSelect(client: ClientProfile) {
-    setSelectedClient(client)
     setQuery('')
     setOpen(false)
-    applyPrefill(client)
+    storePrefill({
+      clientId:        client.id,
+      company_name:    client.company_name,
+      eik:             client.eik,
+      address:         client.address,
+      city:            client.city,
+      phone:           client.phone,
+      email:           client.email,
+      activity:        client.activity,
+      nkid_code:       client.nkid_code,
+      representative:  client.representative,
+      employees_count:  client.employees_count,
+      annual_wage_fund: client.annual_wage_fund,
+      annual_revenue:   client.annual_revenue,
+    })
+    // Navigate to the same path WITHOUT ?client= so there's no loop on reload
+    window.location.href = window.location.pathname
   }
 
   if (dismissed) return null
@@ -90,7 +85,6 @@ export default function ClientPickerBar({ insuranceClass }: Props) {
   return (
     <div className="sticky top-[57px] z-10 mx-auto max-w-2xl px-4">
       {selectedClient ? (
-        // Green banner: data loaded
         <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm shadow-sm">
           <div className="flex items-center gap-2 text-emerald-800">
             <svg className="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -99,7 +93,9 @@ export default function ClientPickerBar({ insuranceClass }: Props) {
             <span>
               Данни заредени от профил на{' '}
               <span className="font-semibold">{selectedClient.company_name}</span>
-              {selectedClient.eik && <span className="text-emerald-600 ml-1">(ЕИК: {selectedClient.eik})</span>}
+              {selectedClient.eik && (
+                <span className="text-emerald-600 ml-1">(ЕИК: {selectedClient.eik})</span>
+              )}
             </span>
           </div>
           <button
@@ -113,7 +109,6 @@ export default function ClientPickerBar({ insuranceClass }: Props) {
           </button>
         </div>
       ) : (
-        // Client picker
         <div ref={wrapRef} className="relative">
           <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 shadow-sm">
             <svg className="h-4 w-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
