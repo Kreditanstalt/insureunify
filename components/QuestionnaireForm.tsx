@@ -3,7 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
-import { INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
+import { INSURERS, PROPERTY_INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
 import { fmtDateBG } from '@/lib/utils'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import AutoFillUploader from './AutoFillUploader'
@@ -616,8 +616,8 @@ export default function QuestionnaireForm() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Застрахователи</p>
           <div className="flex flex-wrap gap-2">
-            {(Object.keys(INSURERS) as InsurerKey[]).map((key) => {
-              const ins = INSURERS[key]
+            {(Object.keys(PROPERTY_INSURERS) as InsurerKey[]).map((key) => {
+              const ins = PROPERTY_INSURERS[key]
               const selected = selectedInsurers.includes(key)
               return (
                 <button

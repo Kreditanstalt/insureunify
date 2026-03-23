@@ -1,5 +1,8 @@
 export type FieldType = 'text' | 'number' | 'date' | 'select' | 'textarea'
 export type InsurerKey = 'bulstrad' | 'generali' | 'instinct' | 'axiom' | 'euroins'
+
+// Property-specific insurers (shown in property questionnaire)
+export const PROPERTY_INSURER_KEYS: InsurerKey[] = ['bulstrad', 'generali', 'instinct']
 export type TransformType =
   | 'direct'
   | 'year_to_range'
@@ -49,6 +52,13 @@ export const INSURERS: Record<InsurerKey, { key: InsurerKey; name: string; color
   instinct: { key: 'instinct', name: 'Инстинкт',  color: '#1B6B3A', formCode: 'AR-01082025',     logo: '/logos/instinct.svg' },
   axiom:    { key: 'axiom',    name: 'Аксиом',    color: '#6B21A8', formCode: 'PL-Application',  logo: '/logos/axiom.svg' },
   euroins:  { key: 'euroins',  name: 'Евроинс',   color: '#1E40AF', formCode: 'ПО-кл.08',        logo: '/logos/euroins.svg' },
+}
+
+// Only these insurers appear in the Property questionnaire selector
+export const PROPERTY_INSURERS: Record<string, { key: InsurerKey; name: string; color: string; formCode: string; logo: string }> = {
+  bulstrad: INSURERS.bulstrad,
+  generali: INSURERS.generali,
+  instinct: INSURERS.instinct,
 }
 
 const YES_NO: FieldOption[] = [
