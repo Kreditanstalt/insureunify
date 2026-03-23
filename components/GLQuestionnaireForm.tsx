@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { GL_SCHEMA, GL_INSURERS, GL_INSURER_KEYS, GLFormData, GLInsurerKey } from '@/lib/gl-schema'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import type { SchemaField } from '@/lib/schema'
+import AutoFillUploader from './AutoFillUploader'
 
 // ─── EIK field map ────────────────────────────────────────────────────────────
 
@@ -302,6 +303,25 @@ export default function GLQuestionnaireForm() {
   function setNum(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value === '' ? undefined : Number(value) }))
   }
+
+  function handleAutoFill(extracted: Record<string, string | null>) {
+    setFormData((prev) => {
+      const next = { ...prev }
+      const s = (id: string, v: string | null | undefined) => { if (v) next[id] = v }
+      s('gl_company_name',  extracted.company_name)
+      s('gl_eik',           extracted.eik)
+      s('gl_address',       extracted.address)
+      s('gl_phone',         extracted.phone)
+      s('gl_email',         extracted.email)
+      s('gl_activity',      extracted.activity)
+      s('gl_activity_code', extracted.nkid_code)
+      s('gl_representative', extracted.representative)
+      s('gl_employees_count', extracted.employees_count)
+      s('gl_annual_wage_fund', extracted.annual_wage_fund)
+      return next
+    })
+  }
+
   function toggleInsurer(key: GLInsurerKey) {
     setSelectedInsurers((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
@@ -369,6 +389,8 @@ export default function GLQuestionnaireForm() {
             <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
           </div>
         )}
+
+        <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-6">
