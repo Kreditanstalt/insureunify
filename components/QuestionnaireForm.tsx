@@ -12,6 +12,7 @@ interface StoredSubmission {
   id: string
   clientName: string
   selectedInsurers: InsurerKey[]
+  insuranceClass: string
   formData: FormData
   createdAt: string
 }
