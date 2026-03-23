@@ -54,7 +54,7 @@ export function BulstradPLPDF({ formData, clientName }: Props) {
 
         {/* Header */}
         <Text style={S.companyLine}>ЗЕАД „БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
-        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. „Позитано" № 2</Text>
+        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. „Позитано" 5</Text>
         <Text style={S.titleLine}>ЗАЯВЛЕНИЕ-ВЪПРОСНИК за сключване на застраховка „ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
 
         {/* Данни за застрахования */}

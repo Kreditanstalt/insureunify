@@ -70,7 +70,7 @@ export function AllianzOAPDF({ formData, clientName }: Props) {
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ЗАД АЛИАНЦ БЪЛГАРИЯ АД</Text>
-          <Text style={S.subLine}>гр. София 1407, бул. „Черни връх" № 51 Г · VAPROSNIK_0142</Text>
+          <Text style={S.subLine}>ЕИК 040638060 · гр. София 1504, бул. „Кн. Ал. Дондуков" 59 · VAPROSNIK_0142</Text>
           <Text style={S.title}>ВЪПРОСНИК-ЗАЯВЛЕНИЕ{'\n'}ЗАДЪЛЖИТЕЛНА ЗАСТРАХОВКА „ТРУДОВА ЗЛОПОЛУКА"</Text>
         </View>
 

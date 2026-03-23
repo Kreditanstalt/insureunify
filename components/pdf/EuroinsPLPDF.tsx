@@ -93,7 +93,7 @@ export function EuroinsPLPDF({ formData, clientName }: Props) {
         {/* Header */}
         <View style={S.headerBar}>
           <Text style={S.headerTitle}>ЗД ЕВРОИНС АД</Text>
-          <Text style={S.headerSub}>ЕИК 121265177 · гр. София · www.euroins.bg</Text>
+          <Text style={S.headerSub}>ЕИК 121265113 · бул. „Христофор Колумб" 43, 1592 София · www.euroins.bg</Text>
         </View>
         <Text style={S.formTitle}>ВЪПРОСНИК-ПРЕДЛОЖЕНИЕ „ПРОФЕСИОНАЛНА ОТГОВОРНОСТ" · Клауза 08</Text>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 8 }}>
@@ -234,7 +234,7 @@ export function EuroinsPLPDF({ formData, clientName }: Props) {
 
         {/* Footer */}
         <View style={S.footer}>
-          <Text>ЗД Евроинс АД · ЕИК 121265177</Text>
+          <Text>ЗД Евроинс АД · ЕИК 121265113</Text>
           <Text>{clientName} · {date}</Text>
           <Text>InsureUnify · ПО-кл.08</Text>
         </View>

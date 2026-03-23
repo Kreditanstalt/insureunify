@@ -84,7 +84,7 @@ export function AxiomPLPDF({ formData, clientName }: Props) {
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ЗК АКСИОМ АД</Text>
-          <Text style={S.companySubLine}>ЕИК 131039664 · гр. София · www.axiominsurance.bg</Text>
+          <Text style={S.companySubLine}>ЕИК 131039664 · бул. „Витоша" 150, бл. 70, ет. 1, 1408 София · www.axiom.bg</Text>
           <View style={S.titleBar}>
             <Text style={S.titleText}>ПРЕДЛОЖЕНИЕ-ВЪПРОСНИК за застраховка „ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
           </View>

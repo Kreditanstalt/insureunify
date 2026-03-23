@@ -74,7 +74,7 @@ export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
 
         <View style={S.header}>
           <Text style={S.logo}>Allianz Trade</Text>
-          <Text style={S.subLine}>Застраховане на търговски кредит</Text>
+          <Text style={S.subLine}>Allianz Trade Bulgaria · бул. „Тодор Александров" 12, ет. 1, 1000 София</Text>
           <Text style={S.title}>
             ВЪПРОСНИК ЗА ПРЕДЛОЖЕНИЕ — ЗАСТРАХОВКА ТЪРГОВСКИ КРЕДИТ{'\n'}
             QUESTIONNAIRE FOR AN OFFER REGARDING TRADE CREDIT INSURANCE

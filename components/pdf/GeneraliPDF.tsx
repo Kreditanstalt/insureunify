@@ -108,7 +108,7 @@ export function GeneraliPDF({ formData, clientName }: Props) {
         <View style={S.headerRow}>
           <View>
             <Text style={S.logo}>Дженерали Застраховане АД</Text>
-            <Text style={S.logoSub}>ЕИК 030485684 · гр. София 1504, бул. „Г. М. Димитров" № 1</Text>
+            <Text style={S.logoSub}>ЕИК 030269049 · гр. София 1504, бул. „Кн. Ал. Дондуков" 68</Text>
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={S.headerLabel}>Дата</Text>

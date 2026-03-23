@@ -61,7 +61,7 @@ export function GeneraliGLPDF({ formData, clientName }: Props) {
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ДЖЕНЕРАЛИ ЗАСТРАХОВАНЕ АД</Text>
-          <Text style={S.subLine}>ЕИК 030485684 · гр. София 1784, бул. „Г.М. Димитров" № 1</Text>
+          <Text style={S.subLine}>ЕИК 030269049 · гр. София 1504, бул. „Кн. Ал. Дондуков" 68</Text>
           <Text style={S.title}>ВЪПРОСНИК-ПРЕДЛОЖЕНИЕ ЗА ЗАСТРАХОВКА{'\n'}ОБЩА ГРАЖДАНСКА ОТГОВОРНОСТ (ОГО)</Text>
         </View>
 

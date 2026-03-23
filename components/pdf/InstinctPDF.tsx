@@ -146,6 +146,8 @@ export function InstinctPDF({ formData, clientName }: Props) {
           </View>
           <View style={{ alignItems: 'flex-end' }}>
             <Text style={S.companyName}>Инстинкт / Instinct</Text>
+            <Text style={S.companyEik}>ЗД „Инстинкт" АД · ЕИК 207335761</Text>
+            <Text style={S.companyEik}>бул. „Джавахарлал Неру" 28, 1324 София</Text>
             <Text style={S.companyEik}>Формуляр AR-01082025</Text>
             <View style={S.badge}>
               <Text style={S.badgeText}>ALL RISKS · {date}</Text>

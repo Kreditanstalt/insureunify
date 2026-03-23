@@ -68,7 +68,7 @@ export function GroupamaOAPDF({ formData, clientName }: Props) {
         {/* Header */}
         <View style={S.header}>
           <Text style={S.companyLine}>ГРУПАМА ЗАСТРАХОВАНЕ ЕАД</Text>
-          <Text style={S.subLine}>гр. София, ул. „Г.С. Раковски" № 99 · Групама-Злополука</Text>
+          <Text style={S.subLine}>ЕИК 131421443 · бул. „Цариградско шосе" 47А, бл. В, ет. 3, 1124 София</Text>
           <Text style={S.title}>ВЪПРОСНИК ЗА СКЛЮЧВАНЕ НА{'\n'}ГРУПОВА ЗАСТРАХОВКА „ЗЛОПОЛУКА"</Text>
         </View>
 

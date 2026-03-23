@@ -67,7 +67,7 @@ export function BulstradGLPDF({ formData, clientName }: Props) {
         <View style={S.header}>
           <Text style={S.companyLine}>ЗЕАД „БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
           <Text style={S.subLine}>BULSTRAD VIENNA INSURANCE GROUP</Text>
-          <Text style={S.subLine}>ЕИК 831642181 · гр. София 1000, пл. „Позитано" № 2</Text>
+          <Text style={S.subLine}>ЕИК 000694286 · гр. София 1000, пл. „Позитано" 5</Text>
           <Text style={S.title}>
             ВЪПРОСНИК ЗА ЗАСТРАХОВКА „ОТГОВОРНОСТ НА РАБОТОДАТЕЛЯ"{'\n'}
             QUESTIONNAIRE — EMPLOYERS' LIABILITY INSURANCE
