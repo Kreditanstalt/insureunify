@@ -614,36 +614,6 @@ export default function PLQuestionnaireForm() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3.5 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-gray-600">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <div>
-              <div className="font-semibold text-gray-900 text-sm">Нов въпросник</div>
-              <div className="text-xs text-purple-600 font-medium">Професионална отговорност</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-gray-400 hidden sm:block">
-              {missing.length > 0 ? `${missing.length} задължителни полета` : 'Готово за изпращане'}
-            </span>
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="flex items-center gap-1.5 text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-sm bg-purple-600 hover:bg-purple-700 text-white disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {submitting ? 'Запазване…' : 'Генерирай документи'}
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-4">
         {prefillBanner && (
           <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
