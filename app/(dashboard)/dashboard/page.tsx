@@ -163,14 +163,14 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Stats row ── */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           <StatCard
             value={stats.total}
             label="Общо запитвания"
             sublabel={stats.thisMonth > 0 ? `+${stats.thisMonth} този месец` : 'Все още няма'}
             color="#2563eb"
             icon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             }
@@ -181,7 +181,7 @@ export default function DashboardPage() {
             sublabel={new Date().toLocaleDateString('bg-BG', { month: 'long', year: 'numeric' })}
             color="#7c3aed"
             icon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 9v7.5" />
               </svg>
             }
@@ -192,7 +192,7 @@ export default function DashboardPage() {
             sublabel="Уникални"
             color="#059669"
             icon={
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
               </svg>
             }
@@ -202,7 +202,7 @@ export default function DashboardPage() {
         {/* ── Quick actions ── */}
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Бързо запитване</h2>
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {QUICK_ACTIONS.map((action) => (
               <button
                 key={action.href}
@@ -216,16 +216,16 @@ export default function DashboardPage() {
                 />
                 <div className="relative">
                   <div
-                    className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl text-xl"
+                    className="mb-2.5 inline-flex h-9 w-9 items-center justify-center rounded-xl text-lg"
                     style={{ backgroundColor: action.light }}
                   >
                     {action.icon}
                   </div>
                   <p className="text-sm font-semibold text-gray-900 leading-tight">{action.label}</p>
-                  <p className="mt-0.5 text-xs text-gray-400">{action.desc}</p>
-                  <div className="mt-3 flex items-center gap-1 text-xs font-medium" style={{ color: action.accent }}>
+                  <p className="mt-0.5 text-xs text-gray-400 leading-snug">{action.desc}</p>
+                  <div className="mt-2.5 flex items-center gap-1 text-xs font-medium" style={{ color: action.accent }}>
                     Започни
-                    <svg className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <svg className="h-3 w-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                     </svg>
                   </div>
@@ -374,15 +374,15 @@ function StatCard({
   icon: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
+    <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3.5 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between">
         <div>
-          <p className="text-3xl font-bold text-gray-900 leading-none tabular-nums">{value}</p>
-          <p className="mt-1.5 text-sm font-medium text-gray-700">{label}</p>
-          <p className="mt-0.5 text-xs text-gray-400">{sublabel}</p>
+          <p className="text-2xl font-bold text-gray-900 leading-none tabular-nums">{value}</p>
+          <p className="mt-1 text-sm font-medium text-gray-700">{label}</p>
+          <p className="text-xs text-gray-400">{sublabel}</p>
         </div>
         <div
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
           style={{ backgroundColor: `${color}18`, color }}
         >
           {icon}
