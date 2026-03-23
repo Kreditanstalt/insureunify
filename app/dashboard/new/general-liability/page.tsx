@@ -1,9 +1,16 @@
-import GLQuestionnaireForm from '@/components/GLQuestionnaireForm'
+'use client'
 
-export const metadata = {
-  title: 'ОГО — Обща гражданска отговорност | InsureUnify',
-}
+import { Suspense } from 'react'
+import GLQuestionnaireForm from '@/components/GLQuestionnaireForm'
+import ClientPickerBar from '@/components/ClientPickerBar'
 
 export default function GeneralLiabilityPage() {
-  return <GLQuestionnaireForm />
+  return (
+    <>
+      <Suspense>
+        <ClientPickerBar insuranceClass="general_liability" />
+      </Suspense>
+      <GLQuestionnaireForm />
+    </>
+  )
 }

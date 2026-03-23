@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
@@ -263,6 +263,28 @@ export default function GLQuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<GLInsurerKey[]>(['generali', 'bulstrad'])
   const [formData, setFormData] = useState<GLFormData>({})
   const [submitting, setSubmitting] = useState(false)
+  const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('iu_client_prefill')
+      if (!raw) return
+      localStorage.removeItem('iu_client_prefill')
+      const p = JSON.parse(raw)
+      setFormData((prev) => ({
+        ...prev,
+        gl_company_name:  p.company_name   ?? prev.gl_company_name,
+        gl_eik:           p.eik            ?? prev.gl_eik,
+        gl_address:       p.address        ?? prev.gl_address,
+        gl_phone:         p.phone          ?? prev.gl_phone,
+        gl_email:         p.email          ?? prev.gl_email,
+        gl_activity:      p.activity       ?? prev.gl_activity,
+        gl_activity_code: p.nkid_code      ?? prev.gl_activity_code,
+        gl_representative: p.representative ?? prev.gl_representative,
+      }))
+      setPrefillBanner(p.company_name ?? null)
+    } catch { /* ignore */ }
+  }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setFormDataGeneric = useCallback((updater: (prev: any) => any) => {
@@ -335,6 +357,18 @@ export default function GLQuestionnaireForm() {
         <p className="text-gray-500 text-sm mb-6">
           Обща гражданска отговорност · Отговорност на работодателя
         </p>
+
+        {prefillBanner && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
+            <span className="flex items-center gap-2 text-emerald-800">
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Данни заредени от профил на <strong>{prefillBanner}</strong>
+            </span>
+            <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
+          </div>
+        )}
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-6">

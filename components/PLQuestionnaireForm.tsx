@@ -439,6 +439,27 @@ export default function PLQuestionnaireForm() {
   const abortRef = useRef<AbortController | null>(null)
   const [insuredEikStatus, setInsuredEikStatus] = useState<EikStatus>('idle')
   const insuredAbortRef = useRef<AbortController | null>(null)
+  const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('iu_client_prefill')
+      if (!raw) return
+      localStorage.removeItem('iu_client_prefill')
+      const p = JSON.parse(raw)
+      setFormData((prev) => ({
+        ...prev,
+        pl_company_name:   p.company_name    ?? prev.pl_company_name,
+        pl_eik:            p.eik             ?? prev.pl_eik,
+        pl_address:        p.address         ?? prev.pl_address,
+        pl_phone:          p.phone           ?? prev.pl_phone,
+        pl_email:          p.email           ?? prev.pl_email,
+        pl_activity:       p.activity        ?? prev.pl_activity,
+        pl_employees_count: p.employees_count ? String(p.employees_count) : prev.pl_employees_count,
+      }))
+      setPrefillBanner(p.company_name ?? null)
+    } catch { /* ignore */ }
+  }, [])
 
   function set(id: string, v: string) {
     setFormData((prev) => ({ ...prev, [id]: v === '' ? undefined : v }))
@@ -606,7 +627,20 @@ export default function PLQuestionnaireForm() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 flex gap-8">
+      <div className="max-w-5xl mx-auto px-6 py-8 flex flex-col gap-4">
+        {prefillBanner && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
+            <span className="flex items-center gap-2 text-emerald-800">
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Данни заредени от профил на <strong>{prefillBanner}</strong>
+            </span>
+            <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
+          </div>
+        )}
+
+        <div className="flex gap-8">
         {/* Sidebar */}
         <PLSidebar currentIndex={currentSection} formData={formData} onNavigate={setCurrentSection} />
 
@@ -731,6 +765,7 @@ export default function PLQuestionnaireForm() {
               </button>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { upsertClient, recordSubmissionForClient } from '@/lib/clients'
 import { InsurerKey, FormData } from '@/lib/schema'
 import { mapFormDataForAllInsurers, InsurerMappedData } from '@/lib/mappings'
 import { GLInsurerKey, GLFormData } from '@/lib/gl-schema'
@@ -69,6 +70,36 @@ export default function ReviewPage() {
     if (!found) { setNotFound(true); return }
 
     setSubmission(found)
+
+    // Auto-save client profile from submission data
+    try {
+      const fd = (found as { formData?: Record<string, unknown> }).formData ?? {}
+      const cls = found.insuranceClass ?? 'property'
+      const eik = String(
+        cls === 'general_liability'     ? (fd.gl_eik ?? '') :
+        cls === 'occupational_accident' ? (fd.oa_eik ?? '') :
+        cls === 'professional_liability'? (fd.pl_eik ?? fd.pl_insured_eik ?? '') :
+        (fd.eik ?? '')
+      ) || undefined
+      const name = String(
+        cls === 'general_liability'     ? (fd.gl_company_name ?? found.clientName) :
+        cls === 'occupational_accident' ? (fd.oa_company_name ?? found.clientName) :
+        cls === 'professional_liability'? (fd.pl_company_name ?? found.clientName) :
+        (fd.company_name ?? found.clientName)
+      )
+      const client = upsertClient({
+        company_name:   name,
+        eik,
+        address:  String(cls === 'general_liability' ? (fd.gl_address ?? '') : cls === 'occupational_accident' ? (fd.oa_address ?? '') : cls === 'professional_liability' ? (fd.pl_address ?? '') : (fd.address ?? '')) || undefined,
+        phone:    String(cls === 'general_liability' ? (fd.gl_phone ?? '') : cls === 'occupational_accident' ? (fd.oa_phone ?? '') : cls === 'professional_liability' ? (fd.pl_phone ?? '') : (fd.phone ?? '')) || undefined,
+        email:    String(cls === 'general_liability' ? (fd.gl_email ?? '') : cls === 'professional_liability' ? (fd.pl_email ?? '') : (fd.email ?? '')) || undefined,
+        activity: String(cls === 'general_liability' ? (fd.gl_activity ?? '') : cls === 'occupational_accident' ? (fd.oa_activity ?? '') : cls === 'professional_liability' ? (fd.pl_activity ?? '') : (fd.activity ?? '')) || undefined,
+        representative: String(cls === 'general_liability' ? (fd.gl_representative ?? '') : (fd.representative ?? '')) || undefined,
+        nkid_code: String(fd.nkid_code ?? '') || undefined,
+      })
+      recordSubmissionForClient(eik, name, found.createdAt)
+      void client
+    } catch { /* ignore */ }
 
     if (found.insuranceClass === 'occupational_accident') {
       const oa = found as OASubmission

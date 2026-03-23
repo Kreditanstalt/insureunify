@@ -22,10 +22,10 @@ interface Profile {
 // ─── Nav definitions ──────────────────────────────────────────────────────────
 
 const MAIN_ITEMS: NavItem[] = [
-  { icon: '🏠', label: 'Начало',         href: '/dashboard',   exact: true },
+  { icon: '🏠', label: 'Начало',         href: '/dashboard',          exact: true },
   { icon: '➕', label: 'Ново запитване', href: '/dashboard/new' },
-  { icon: '📋', label: 'Запитвания',     href: '/dashboard',   exact: true },
-  { icon: '👥', label: 'Клиенти',        href: '#',            soon: true  },
+  { icon: '📋', label: 'Запитвания',     href: '/dashboard/submissions' },
+  { icon: '👥', label: 'Клиенти',        href: '/dashboard/clients' },
 ]
 
 const CLASS_ITEMS: NavItem[] = [

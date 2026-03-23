@@ -492,6 +492,29 @@ export default function QuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct'])
   const [formData, setFormData] = useState<FormData>({})
   const [submitting, setSubmitting] = useState(false)
+  const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+
+  // Apply client prefill on mount
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('iu_client_prefill')
+      if (!raw) return
+      localStorage.removeItem('iu_client_prefill')
+      const p = JSON.parse(raw)
+      setFormData((prev) => ({
+        ...prev,
+        company_name:   p.company_name   ?? prev.company_name,
+        eik:            p.eik            ?? prev.eik,
+        address:        p.address        ?? prev.address,
+        phone:          p.phone          ?? prev.phone,
+        email:          p.email          ?? prev.email,
+        activity:       p.activity       ?? prev.activity,
+        nkid_code:      p.nkid_code      ?? prev.nkid_code,
+        representative: p.representative ?? prev.representative,
+      }))
+      setPrefillBanner(p.company_name ?? null)
+    } catch { /* ignore */ }
+  }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setFormDataGeneric = useCallback((updater: (prev: any) => any) => {
@@ -561,6 +584,19 @@ export default function QuestionnaireForm() {
         <p className="text-gray-500 text-sm mb-6">
           Попълнете информацията и генерирайте формулярите за застрахователите
         </p>
+
+        {/* Client prefill banner */}
+        {prefillBanner && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
+            <span className="flex items-center gap-2 text-emerald-800">
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Данни заредени от профил на <strong>{prefillBanner}</strong>
+            </span>
+            <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
+          </div>
+        )}
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">

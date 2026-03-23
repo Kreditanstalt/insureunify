@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
@@ -259,6 +259,28 @@ export default function OAQuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<OAInsurerKey[]>(['allianz', 'groupama'])
   const [formData, setFormData] = useState<OAFormData>({})
   const [submitting, setSubmitting] = useState(false)
+  const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('iu_client_prefill')
+      if (!raw) return
+      localStorage.removeItem('iu_client_prefill')
+      const p = JSON.parse(raw)
+      setFormData((prev) => ({
+        ...prev,
+        oa_company_name:  p.company_name    ?? prev.oa_company_name,
+        oa_eik:           p.eik             ?? prev.oa_eik,
+        oa_address:       p.address         ?? prev.oa_address,
+        oa_phone:         p.phone           ?? prev.oa_phone,
+        oa_activity:      p.activity        ?? prev.oa_activity,
+        oa_activity_code: p.nkid_code       ?? prev.oa_activity_code,
+        oa_employees_count: p.employees_count ? String(p.employees_count) : prev.oa_employees_count,
+        oa_annual_wage_fund: p.annual_wage_fund ? String(p.annual_wage_fund) : prev.oa_annual_wage_fund,
+      }))
+      setPrefillBanner(p.company_name ?? null)
+    } catch { /* ignore */ }
+  }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const setFormDataGeneric = useCallback((updater: (prev: any) => any) => {
@@ -330,6 +352,18 @@ export default function OAQuestionnaireForm() {
         <p className="text-gray-500 text-sm mb-6">
           Задължителна и доброволна застраховка злополука на работници и служители
         </p>
+
+        {prefillBanner && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
+            <span className="flex items-center gap-2 text-emerald-800">
+              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+              Данни заредени от профил на <strong>{prefillBanner}</strong>
+            </span>
+            <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
+          </div>
+        )}
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-6">
