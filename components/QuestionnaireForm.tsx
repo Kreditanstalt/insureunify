@@ -7,6 +7,9 @@ import { INSURERS, PROPERTY_INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, Ins
 import { fmtDateBG } from '@/lib/utils'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import AutoFillUploader from './AutoFillUploader'
+import StepperBar from './StepperBar'
+
+const PROPERTY_STEPS = MASTER_SCHEMA.map((s) => ({ id: s.id, label: s.label, icon: (s as { icon?: string }).icon }))
 
 interface StoredSubmission {
   id: string
@@ -493,6 +496,7 @@ export default function QuestionnaireForm() {
   const router = useRouter()
   const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct'])
   const [formData, setFormData] = useState<FormData>({})
+  const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
 
@@ -606,9 +610,21 @@ export default function QuestionnaireForm() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-20">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник</h1>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-4">
           Попълнете информацията и генерирайте формулярите за застрахователите
         </p>
+
+        {/* Stepper */}
+        <div className="mb-6 bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+          <StepperBar
+            steps={PROPERTY_STEPS}
+            activeId={MASTER_SCHEMA[currentSection].id}
+            completedIds={MASTER_SCHEMA
+              .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
+              .map((s) => s.id)}
+            onNavigate={(id) => setCurrentSection(MASTER_SCHEMA.findIndex((s) => s.id === id))}
+          />
+        </div>
 
         <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
@@ -638,8 +654,9 @@ export default function QuestionnaireForm() {
           </div>
         </div>
 
-        {/* All sections rendered from LAYOUT config */}
-        {MASTER_SCHEMA.map((section) => {
+        {/* Current section */}
+        {(() => {
+          const section = MASTER_SCHEMA[currentSection]
           const groups = LAYOUT[section.id]
           if (!groups) return null
           return (
@@ -662,24 +679,47 @@ export default function QuestionnaireForm() {
               </div>
             </div>
           )
-        })}
+        })()}
 
-        {/* Submit */}
-        <div className="mt-10">
-          {!canSubmit && totalMissing > 0 && (
-            <p className="text-xs text-amber-600 text-center mb-3">
-              Попълнете всички задължителни полета (*) — остават {totalMissing}
-            </p>
-          )}
+        {/* Navigation */}
+        <div className="mt-6 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm shadow-blue-200"
+            onClick={() => setCurrentSection((p) => Math.max(0, p - 1))}
+            disabled={currentSection === 0}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Запазване…' : `Генерирай формуляри за ${selectedInsurers.length} застрахователя`}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Назад
           </button>
+          <span className="text-xs text-gray-400">{currentSection + 1} / {MASTER_SCHEMA.length}</span>
+          {currentSection < MASTER_SCHEMA.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setCurrentSection((p) => Math.min(MASTER_SCHEMA.length - 1, p + 1))}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
+            >
+              Напред
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Запазване…' : `Генерирай за ${selectedInsurers.length} застрахователя`}
+            </button>
+          )}
         </div>
+        {!canSubmit && totalMissing > 0 && currentSection === MASTER_SCHEMA.length - 1 && (
+          <p className="text-xs text-amber-600 text-center mt-3">Остават {totalMissing} задължителни полета</p>
+        )}
       </div>
     </div>
   )

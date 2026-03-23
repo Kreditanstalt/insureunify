@@ -6,6 +6,16 @@ import { v4 as uuidv4 } from 'uuid'
 import { TC_INSURERS, TC_INITIAL, TC_REQUIRED, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema'
 import AutoFillUploader from './AutoFillUploader'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
+import StepperBar from './StepperBar'
+
+const TC_STEPS = [
+  { id: 'tc_basic',    label: 'Основни данни',    icon: '🏢' },
+  { id: 'tc_turnover', label: 'Оборот и загуби',  icon: '📊' },
+  { id: 'tc_markets',  label: 'Пазари',            icon: '🌍' },
+  { id: 'tc_sales',    label: 'Структура',         icon: '📈' },
+  { id: 'tc_payment',  label: 'Плащане',           icon: '💳' },
+  { id: 'tc_buyers',   label: 'Купувачи',          icon: '👥' },
+]
 
 const TC_EIK_FIELD_MAP = {
   eik:            'tc_eik',
@@ -138,6 +148,7 @@ export default function TCQuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<TCInsurerKey[]>([])
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+  const [currentStep, setCurrentStep] = useState(0)
 
   useEffect(() => {
     try {
@@ -221,6 +232,16 @@ export default function TCQuestionnaireForm() {
           <p className="text-sm text-gray-500 mt-1">Застраховка на търговски вземания · Атрадиус, Алианц Трейд</p>
         </div>
 
+        {/* Stepper */}
+        <div className="bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+          <StepperBar
+            steps={TC_STEPS}
+            activeId={TC_STEPS[currentStep].id}
+            completedIds={TC_STEPS.slice(0, currentStep).map((s) => s.id)}
+            onNavigate={(id) => setCurrentStep(TC_STEPS.findIndex((s) => s.id === id))}
+          />
+        </div>
+
         {/* Prefill banner */}
         {prefillBanner && (
           <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
@@ -234,9 +255,7 @@ export default function TCQuestionnaireForm() {
           </div>
         )}
 
-        <AutoFillUploader onFill={handleAutoFill} />
-
-        {/* Застрахователи */}
+        {/* Застрахователи — always visible */}
         <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Застрахователи</p>
           <div className="flex flex-wrap gap-2">
@@ -268,7 +287,11 @@ export default function TCQuestionnaireForm() {
           )}
         </div>
 
-        {/* Основни данни */}
+        {/* AutoFill — step 0 only */}
+        {currentStep === 0 && <AutoFillUploader onFill={handleAutoFill} />}
+
+        {/* Step 0: Основни данни */}
+        {currentStep === 0 && (
         <Section title="Основни данни" icon="🏢">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
@@ -309,8 +332,10 @@ export default function TCQuestionnaireForm() {
               value={form.tc_current_expiry} onChange={f('tc_current_expiry')} type="date" />
           </div>
         </Section>
+        )}
 
-        {/* Оборот и загуби */}
+        {/* Step 1: Оборот и загуби */}
+        {currentStep === 1 && (
         <Section title="Търговски оборот и загуби (хил. EUR с ДДС)" icon="📊">
           <p className="text-xs text-gray-400 -mt-2 mb-3">Попълнете данните за последните 3 финансови години</p>
           <div className="space-y-3">
@@ -345,8 +370,10 @@ export default function TCQuestionnaireForm() {
               value={form.tc_expected_export} onChange={f('tc_expected_export')} type="number" />
           </div>
         </Section>
+        )}
 
-        {/* Пазари */}
+        {/* Step 2: Пазари */}
+        {currentStep === 2 && (
         <Section title="Разпределение по пазари" icon="🌍">
           <div className="space-y-3">
             {([1, 2, 3] as const).map((n) => (
@@ -365,8 +392,10 @@ export default function TCQuestionnaireForm() {
             ))}
           </div>
         </Section>
+        )}
 
-        {/* Структура на продажбите */}
+        {/* Step 3: Структура */}
+        {currentStep === 3 && (
         <Section title="Структура на продажбите" icon="📈">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="% публичен сектор" id="tc_public_sector_pct"
@@ -388,8 +417,10 @@ export default function TCQuestionnaireForm() {
             </div>
           </div>
         </Section>
+        )}
 
-        {/* Условия на плащане */}
+        {/* Step 4: Плащане */}
+        {currentStep === 4 && (
         <Section title="Условия на плащане" icon="💳">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Field label="% аванси" id="tc_cash_advance_pct"
@@ -403,8 +434,10 @@ export default function TCQuestionnaireForm() {
               hint="Среден период на събиране" />
           </div>
         </Section>
+        )}
 
-        {/* Основни купувачи */}
+        {/* Step 5: Купувачи */}
+        {currentStep === 5 && (
         <Section title="Основни купувачи за застраховане (Топ 5)" icon="👥">
           <p className="text-xs text-gray-400 -mt-2">Атрадиус ще провери безплатно до 10 купувача</p>
           <div className="space-y-3">
@@ -424,19 +457,34 @@ export default function TCQuestionnaireForm() {
             ))}
           </div>
         </Section>
+        )}
 
-        {/* Submit */}
-        <div className="sticky bottom-4">
-          <div className="rounded-2xl border border-gray-200 bg-white/95 backdrop-blur p-4 shadow-lg flex items-center justify-between gap-4">
-            <div className="text-sm">
-              {missing.length > 0 ? (
-                <span className="text-amber-600 font-medium">{missing.length} задължителни полета</span>
-              ) : selectedInsurers.length === 0 ? (
-                <span className="text-amber-600 font-medium">Изберете застраховател</span>
-              ) : (
-                <span className="text-emerald-600 font-medium">✓ Готово за изпращане</span>
-              )}
-            </div>
+        {/* Navigation */}
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => setCurrentStep((p) => Math.max(0, p - 1))}
+            disabled={currentStep === 0}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Назад
+          </button>
+          <span className="text-xs text-gray-400">{currentStep + 1} / {TC_STEPS.length}</span>
+          {currentStep < TC_STEPS.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setCurrentStep((p) => Math.min(TC_STEPS.length - 1, p + 1))}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
+            >
+              Напред
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
             <button
               type="button"
               onClick={handleSubmit}
@@ -449,8 +497,13 @@ export default function TCQuestionnaireForm() {
                 <>Генерирай формуляри за {selectedInsurers.length} застрахователя</>
               )}
             </button>
-          </div>
+          )}
         </div>
+        {!canSubmit && currentStep === TC_STEPS.length - 1 && (
+          <p className="text-xs text-amber-600 text-center mt-2">
+            {missing.length > 0 ? `Остават ${missing.length} задължителни полета` : 'Изберете застраховател'}
+          </p>
+        )}
 
       </div>
     </div>

@@ -8,6 +8,9 @@ import { OA_SCHEMA, OA_INSURERS, OA_INSURER_KEYS, OAFormData, OAInsurerKey } fro
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
+import StepperBar from './StepperBar'
+
+const OA_STEPS = OA_SCHEMA.map((s) => ({ id: s.id, label: s.label, icon: s.icon }))
 
 // ─── EIK field map ────────────────────────────────────────────────────────────
 
@@ -261,6 +264,7 @@ export default function OAQuestionnaireForm() {
   const [formData, setFormData] = useState<OAFormData>({})
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+  const [currentSection, setCurrentSection] = useState(0)
 
   useEffect(() => {
     try {
@@ -353,9 +357,21 @@ export default function OAQuestionnaireForm() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник Трудова злополука</h1>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-4">
           Задължителна и доброволна застраховка злополука на работници и служители
         </p>
+
+        {/* Stepper */}
+        <div className="mb-6 bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+          <StepperBar
+            steps={OA_STEPS}
+            activeId={OA_SCHEMA[currentSection].id}
+            completedIds={OA_SCHEMA
+              .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
+              .map((s) => s.id)}
+            onNavigate={(id) => setCurrentSection(OA_SCHEMA.findIndex((s) => s.id === id))}
+          />
+        </div>
 
         <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
@@ -396,38 +412,57 @@ export default function OAQuestionnaireForm() {
           )}
         </div>
 
-        {/* Form sections */}
-        {OA_SCHEMA.map((section) => (
-          <RenderSection
-            key={section.id}
-            section={section}
-            formData={formData}
-            set={set}
-            setNum={setNum}
-            eikStatus={eikStatus}
-            onEikChange={handleEikChange}
-            onCompanySelect={handleCompanySelect}
-          />
-        ))}
+        {/* Current section */}
+        <RenderSection
+          key={OA_SCHEMA[currentSection].id}
+          section={OA_SCHEMA[currentSection]}
+          formData={formData}
+          set={set}
+          setNum={setNum}
+          eikStatus={eikStatus}
+          onEikChange={handleEikChange}
+          onCompanySelect={handleCompanySelect}
+        />
 
-        {/* Submit */}
-        <div className="mt-10">
-          {!canSubmit && missing.length > 0 && (
-            <p className="text-xs text-amber-600 text-center mb-3">
-              Попълнете всички задължителни полета (*) — остават {missing.length}
-            </p>
-          )}
+        {/* Navigation */}
+        <div className="mt-6 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm shadow-emerald-200"
+            onClick={() => setCurrentSection((p) => Math.max(0, p - 1))}
+            disabled={currentSection === 0}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {submitting
-              ? 'Запазване…'
-              : `Генерирай за ${selectedInsurers.length} застрахователя`}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Назад
           </button>
+          <span className="text-xs text-gray-400">{currentSection + 1} / {OA_SCHEMA.length}</span>
+          {currentSection < OA_SCHEMA.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setCurrentSection((p) => Math.min(OA_SCHEMA.length - 1, p + 1))}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
+            >
+              Напред
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition-colors hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Запазване…' : `Генерирай за ${selectedInsurers.length} застрахователя`}
+            </button>
+          )}
         </div>
+        {!canSubmit && missing.length > 0 && currentSection === OA_SCHEMA.length - 1 && (
+          <p className="text-xs text-amber-600 text-center mt-3">Остават {missing.length} задължителни полета</p>
+        )}
       </div>
     </div>
   )

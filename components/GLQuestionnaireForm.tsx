@@ -8,6 +8,9 @@ import { GL_SCHEMA, GL_INSURERS, GL_INSURER_KEYS, GLFormData, GLInsurerKey } fro
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
+import StepperBar from './StepperBar'
+
+const GL_STEPS = GL_SCHEMA.map((s) => ({ id: s.id, label: s.label, icon: s.icon }))
 
 // ─── EIK field map ────────────────────────────────────────────────────────────
 
@@ -265,6 +268,7 @@ export default function GLQuestionnaireForm() {
   const [formData, setFormData] = useState<GLFormData>({})
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+  const [currentSection, setCurrentSection] = useState(0)
 
   useEffect(() => {
     try {
@@ -356,15 +360,27 @@ export default function GLQuestionnaireForm() {
     }
   }
 
+  const completedSections = GL_SCHEMA
+    .filter((s) => s.fields.filter((f) => f.required).every((f) => formData[f.id] !== undefined && formData[f.id] !== ''))
+    .map((s) => s.id)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник ОГО</h1>
-        <p className="text-gray-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-4">
           Обща гражданска отговорност · Отговорност на работодателя
         </p>
 
-        <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
+        {/* Stepper */}
+        <div className="mb-6 bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
+          <StepperBar
+            steps={GL_STEPS}
+            activeId={GL_SCHEMA[currentSection].id}
+            completedIds={completedSections}
+            onNavigate={(id) => setCurrentSection(GL_SCHEMA.findIndex((s) => s.id === id))}
+          />
+        </div>
 
         {/* Insurer selector */}
         <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm mb-6">
@@ -403,38 +419,63 @@ export default function GLQuestionnaireForm() {
           )}
         </div>
 
-        {/* Form sections */}
-        {GL_SCHEMA.map((section) => (
-          <RenderSection
-            key={section.id}
-            section={section}
-            formData={formData}
-            set={set}
-            setNum={setNum}
-            eikStatus={eikStatus}
-            onEikChange={handleEikChange}
-            onCompanySelect={handleCompanySelect}
-          />
-        ))}
+        {/* Current section */}
+        <RenderSection
+          key={GL_SCHEMA[currentSection].id}
+          section={GL_SCHEMA[currentSection]}
+          formData={formData}
+          set={set}
+          setNum={setNum}
+          eikStatus={eikStatus}
+          onEikChange={handleEikChange}
+          onCompanySelect={handleCompanySelect}
+        />
 
-        {/* Submit */}
-        <div className="mt-10">
-          {!canSubmit && missing.length > 0 && (
-            <p className="text-xs text-amber-600 text-center mb-3">
-              Попълнете всички задължителни полета (*) — остават {missing.length}
-            </p>
-          )}
+        {/* Navigation */}
+        <div className="mt-6 flex items-center justify-between gap-3">
           <button
             type="button"
-            onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
-            className="w-full py-3.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold text-base transition-colors shadow-sm shadow-rose-200"
+            onClick={() => setCurrentSection((p) => Math.max(0, p - 1))}
+            disabled={currentSection === 0}
+            className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {submitting
-              ? 'Запазване…'
-              : `Генерирай за ${selectedInsurers.length} застрахователя`}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Назад
           </button>
+
+          <span className="text-xs text-gray-400">
+            {currentSection + 1} / {GL_SCHEMA.length}
+          </span>
+
+          {currentSection < GL_SCHEMA.length - 1 ? (
+            <button
+              type="button"
+              onClick={() => setCurrentSection((p) => Math.min(GL_SCHEMA.length - 1, p + 1))}
+              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
+            >
+              Напред
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={!canSubmit || submitting}
+              className="flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-200 transition-colors hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {submitting ? 'Запазване…' : `Генерирай за ${selectedInsurers.length} застрахователя`}
+            </button>
+          )}
         </div>
+        {!canSubmit && missing.length > 0 && currentSection === GL_SCHEMA.length - 1 && (
+          <p className="text-xs text-amber-600 text-center mt-3">
+            Остават {missing.length} задължителни полета
+          </p>
+        )}
       </div>
     </div>
   )
