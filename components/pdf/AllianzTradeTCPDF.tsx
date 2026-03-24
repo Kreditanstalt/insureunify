@@ -6,231 +6,354 @@ import type { TCFormData } from '@/lib/tc-schema'
 Font.register({
   family: 'Roboto',
   fonts: [
-    { src: 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf',       fontWeight: 'normal', fontStyle: 'normal' },
+    { src: 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf', fontWeight: 'normal', fontStyle: 'normal' },
     { src: 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-Oblique.ttf', fontWeight: 'normal', fontStyle: 'italic' },
-    { src: 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-Bold.ttf',  fontWeight: 'bold',   fontStyle: 'normal' },
+    { src: 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-Bold.ttf', fontWeight: 'bold', fontStyle: 'normal' },
     { src: 'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-BoldOblique.ttf', fontWeight: 'bold', fontStyle: 'italic' },
   ],
 })
 
 const BLUE = '#003781'
 
+// Usable width: 595 - 50 - 50 = 495pt
 const S = StyleSheet.create({
-  page:     { fontFamily: 'Roboto', fontSize: 9, color: '#111', backgroundColor: '#fff', paddingTop: 36, paddingBottom: 50, paddingHorizontal: 42 },
-  formCode: { fontSize: 7.5, color: '#888', textAlign: 'right', marginBottom: 4 },
-  header:   { marginBottom: 10 },
-  logo:     { fontSize: 13, fontWeight: 700, color: BLUE, marginBottom: 2 },
-  subLine:  { fontSize: 8, color: '#555', marginTop: 1 },
-  title:    { fontSize: 10, fontWeight: 700, textAlign: 'center', marginTop: 10, marginBottom: 12, borderTop: `1.5 solid ${BLUE}`, borderBottom: `1.5 solid ${BLUE}`, paddingVertical: 5 },
-  sec:      { fontSize: 9.5, fontWeight: 700, color: BLUE, marginTop: 10, marginBottom: 5, borderBottom: `0.5 solid ${BLUE}`, paddingBottom: 2, textTransform: 'uppercase' },
-  row:      { flexDirection: 'row', marginBottom: 4, alignItems: 'flex-end' },
-  lbl:      { fontSize: 8, color: '#555', width: '45%' },
-  lblBi:    { fontSize: 7.5, color: '#888', width: '45%', fontStyle: 'italic' },
-  val:      { fontSize: 9, fontWeight: 700, flex: 1, borderBottom: `0.5 solid #bbb`, paddingBottom: 1, minHeight: 12 },
-  row4:     { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  c4lbl:    { fontSize: 8, color: '#555', flex: 1 },
-  c4val:    { fontSize: 9, fontWeight: 700, flex: 1, borderBottom: `0.5 solid #bbb`, paddingBottom: 1, minHeight: 12 },
-  tHead:    { flexDirection: 'row', backgroundColor: '#eef2ff', paddingVertical: 3, paddingHorizontal: 4, marginBottom: 1, borderTop: `0.5 solid #c7d2fe`, borderBottom: `0.5 solid #c7d2fe` },
-  tRow:     { flexDirection: 'row', paddingVertical: 3, paddingHorizontal: 4, borderBottom: `0.3 solid #eee` },
-  tHdr:     { fontSize: 7.5, fontWeight: 700, color: BLUE },
-  tCell:    { fontSize: 8.5, color: '#111' },
-  footer:   { position: 'absolute', bottom: 18, left: 42, right: 42, borderTop: `0.5 solid ${BLUE}`, paddingTop: 4, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#888' },
-  sign:     { flexDirection: 'row', gap: 20, marginTop: 16 },
-  signBox:  { flex: 1, borderTop: `0.5 solid #999`, paddingTop: 3 },
-  signLbl:  { fontSize: 7.5, color: '#888' },
-  note:     { fontSize: 7.5, color: '#888', marginTop: 6, fontStyle: 'italic' },
-  box:      { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 3 },
-  checkbox: { width: 9, height: 9, border: `1 solid #aaa`, fontSize: 7, textAlign: 'center' },
+  page: {
+    fontFamily: 'Roboto',
+    fontSize: 9,
+    lineHeight: 1.4,
+    color: '#000',
+    backgroundColor: '#fff',
+    paddingTop: 40,
+    paddingBottom: 40,
+    paddingLeft: 50,
+    paddingRight: 50,
+  },
+  // Header
+  logo: { fontSize: 13, fontWeight: 'bold', color: BLUE, marginBottom: 2 },
+  currencyHeader: { fontSize: 9, fontWeight: 'bold', textAlign: 'right', marginBottom: 6 },
+  title: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+    paddingVertical: 6,
+  },
+  // Section headers
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    borderBottom: '1 solid #000',
+    paddingBottom: 3,
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  // Info rows
+  infoRow: { flexDirection: 'row', marginBottom: 3 },
+  infoLabel: { fontSize: 9, width: 200 },
+  infoValue: { fontSize: 9, fontWeight: 'bold', flex: 1, borderBottom: '0.5 solid #999', paddingBottom: 1, minHeight: 12 },
+  // Dual column info
+  dualRow: { flexDirection: 'row', marginBottom: 3, gap: 10 },
+  dualLabel: { fontSize: 9, width: 120 },
+  dualValue: { fontSize: 9, fontWeight: 'bold', flex: 1, borderBottom: '0.5 solid #999', paddingBottom: 1, minHeight: 12 },
+  // Table outer frame
+  tableOuter: { border: '1 solid #000', marginBottom: 6 },
+  // Table header row
+  tableHeadRow: { flexDirection: 'row', backgroundColor: '#E8E8E8', borderBottom: '0.5 solid #000' },
+  tableHeadCell: { fontSize: 8, fontWeight: 'bold', paddingVertical: 3, paddingHorizontal: 4 },
+  // Table body row
+  tableRow: { flexDirection: 'row', borderBottom: '0.5 solid #000' },
+  tableRowLast: { flexDirection: 'row' },
+  tableCell: { fontSize: 8, paddingVertical: 3, paddingHorizontal: 4 },
+  tableCellBold: { fontSize: 8, fontWeight: 'bold', paddingVertical: 3, paddingHorizontal: 4 },
+  // Signature
+  signatureRow: { flexDirection: 'row', gap: 20, marginTop: 24 },
+  signatureBox: { flex: 1 },
+  signatureLabel: { fontSize: 8, color: '#555', marginBottom: 20 },
+  signatureLine: { borderTop: '0.5 solid #000', paddingTop: 3, fontSize: 9 },
+  // Footer
+  footer: {
+    position: 'absolute',
+    bottom: 16,
+    left: 50,
+    right: 50,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTop: '0.5 solid #000',
+    paddingTop: 4,
+    fontSize: 7,
+    color: '#555',
+  },
+  footerCenter: { fontSize: 7, color: '#555', textAlign: 'center', flex: 1 },
+  footerRight: { fontSize: 7, color: '#555', textAlign: 'right' },
+  note: { fontSize: 8, color: '#555', marginTop: 6, fontStyle: 'italic' },
 })
 
-function R({ lbl, lblBi, val }: { lbl: string; lblBi?: string; val: string }) {
-  return (
-    <View style={S.row}>
-      <View style={{ width: '45%' }}>
-        <Text style={S.lbl}>{lbl}</Text>
-        {lblBi && <Text style={S.lblBi}>{lblBi}</Text>}
-      </View>
-      <Text style={S.val}>{val || ' '}</Text>
-    </View>
-  )
-}
+// Border helpers for cells
+const borderRight = { borderRight: '0.5 solid #000' as const }
 
-interface Props { formData: TCFormData; clientName: string }
+// Main financial table column widths: 200 + 80 + 80 + 135 = 495
+const COL_FIN = { label: 200, y2: 80, y1: 80, forecast: 135 }
+
+// Loss history column widths: 100 + 100 + 100 + 100 + 95 = 495
+const COL_LOSS = { year: 100, turnover: 100, losses: 100, count: 100, maxLoss: 95 }
+
+// Buyer table column widths: 150 + 80 + 80 + 100 + 85 = 495
+const COL_BUY = { name: 150, country: 80, pct: 80, limit: 100, terms: 85 }
+
+// Market distribution column widths: 40 + 180 + 275 = 495
+const COL_MKT = { num: 40, country: 180, turnover: 275 }
+
+interface Props {
+  formData: TCFormData
+  clientName: string
+}
 
 export function AllianzTradeTCPDF({ formData: f, clientName }: Props) {
   const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
   const buyers = [
-    { name: f.tc_buyer1_name, country: f.tc_buyer1_country, id: f.tc_buyer1_id, limit: f.tc_buyer1_limit, turnover: f.tc_buyer1_turnover },
-    { name: f.tc_buyer2_name, country: f.tc_buyer2_country, id: f.tc_buyer2_id, limit: f.tc_buyer2_limit, turnover: f.tc_buyer2_turnover },
-    { name: f.tc_buyer3_name, country: f.tc_buyer3_country, id: f.tc_buyer3_id, limit: f.tc_buyer3_limit, turnover: f.tc_buyer3_turnover },
-    { name: f.tc_buyer4_name, country: f.tc_buyer4_country, id: f.tc_buyer4_id, limit: f.tc_buyer4_limit, turnover: f.tc_buyer4_turnover },
-    { name: f.tc_buyer5_name, country: f.tc_buyer5_country, id: f.tc_buyer5_id, limit: f.tc_buyer5_limit, turnover: f.tc_buyer5_turnover },
-  ].filter(b => b.name)
+    { name: f.tc_buyer1_name, country: f.tc_buyer1_country, pct: f.tc_buyer1_turnover, limit: f.tc_buyer1_limit, terms: f.tc_buyer1_id },
+    { name: f.tc_buyer2_name, country: f.tc_buyer2_country, pct: f.tc_buyer2_turnover, limit: f.tc_buyer2_limit, terms: f.tc_buyer2_id },
+    { name: f.tc_buyer3_name, country: f.tc_buyer3_country, pct: f.tc_buyer3_turnover, limit: f.tc_buyer3_limit, terms: f.tc_buyer3_id },
+    { name: f.tc_buyer4_name, country: f.tc_buyer4_country, pct: f.tc_buyer4_turnover, limit: f.tc_buyer4_limit, terms: f.tc_buyer4_id },
+    { name: f.tc_buyer5_name, country: f.tc_buyer5_country, pct: f.tc_buyer5_turnover, limit: f.tc_buyer5_limit, terms: f.tc_buyer5_id },
+  ]
+
+  const lossRows = [
+    { y: f.tc_year1, t: f.tc_turnover_year1, l: f.tc_losses_year1, c: f.tc_losses_count_year1, m: f.tc_max_loss_year1 },
+    { y: f.tc_year2, t: f.tc_turnover_year2, l: f.tc_losses_year2, c: f.tc_losses_count_year2, m: f.tc_max_loss_year2 },
+    { y: f.tc_year3, t: f.tc_turnover_year3, l: f.tc_losses_year3, c: f.tc_losses_count_year3, m: f.tc_max_loss_year3 },
+  ]
+
+  const markets = [
+    { country: f.tc_market1_country, turnover: f.tc_market1_turnover },
+    { country: f.tc_market2_country, turnover: f.tc_market2_turnover },
+    { country: f.tc_market3_country, turnover: f.tc_market3_turnover },
+  ]
+
+  const v = (val: string | undefined) => val || ''
 
   return (
-    <Document title={`Алианц Трейд -- Въпросник -- ${clientName}`} author="InsureUnify">
+    <Document title={`Алианц Трейд - Търговски кредит - ${clientName}`} author="InsureUnify">
+      {/* ══════════ PAGE 1 ══════════ */}
       <Page size="A4" style={S.page}>
-
-        <Text style={S.formCode}>Валута: EUR · Дата: {date}</Text>
-
-        <View style={S.header}>
+        {/* Logo + Currency */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
           <Text style={S.logo}>Allianz Trade</Text>
-          <Text style={S.subLine}>Allianz Trade Bulgaria · бул. "Тодор Александров" 12, ет. 1, 1000 София</Text>
-          <Text style={S.title}>
-            ВЪПРОСНИК ЗА ПРЕДЛОЖЕНИЕ -- ЗАСТРАХОВКА ТЪРГОВСКИ КРЕДИТ{'\n'}
-            QUESTIONNAIRE FOR AN OFFER REGARDING TRADE CREDIT INSURANCE
-          </Text>
+          <Text style={S.currencyHeader}>Валута / Currency: EUR</Text>
         </View>
 
-        {/* 1. General info */}
-        <Text style={S.sec}>1. Основна информация / General Information</Text>
-        <R lbl="Наименование на компанията / Name:" lblBi="ЕИК / Main legal ID:" val={`${f.tc_company_name || ' '}${f.tc_eik ? `  ·  ${f.tc_eik}` : ''}`} />
-        <R lbl="Описание на дейността / Activity description:" val={f.tc_activity} />
-        <R lbl="Адрес / Address:" val={f.tc_address} />
-        <R lbl="Лице за контакт / Person in charge:" val={f.tc_contact_person} />
-        <View style={S.row4}>
-          <Text style={S.c4lbl}>Длъжност / Position:</Text>
-          <Text style={[S.c4val, { flex: 1.5 }]}>{f.tc_position || ' '}</Text>
-          <Text style={S.c4lbl}>Тел / Tel:</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_phone || ' '}</Text>
-          <Text style={S.c4lbl}>Email:</Text>
-          <Text style={[S.c4val, { flex: 1.5 }]}>{f.tc_email || ' '}</Text>
+        {/* Title */}
+        <Text style={S.title}>ВЪПРОСНИК ЗА ЗАСТРАХОВАНЕ НА ТЪРГОВСКИ КРЕДИТЕН РИСК</Text>
+
+        {/* Section 1: Company info */}
+        <Text style={S.sectionHeader}>1. ДАННИ ЗА КОМПАНИЯТА</Text>
+        <View style={S.infoRow}>
+          <Text style={S.infoLabel}>Наименование / Company name:</Text>
+          <Text style={S.infoValue}>{v(f.tc_company_name)}</Text>
+        </View>
+        <View style={S.infoRow}>
+          <Text style={S.infoLabel}>ЕИК / Registration No:</Text>
+          <Text style={S.infoValue}>{v(f.tc_eik)}</Text>
+        </View>
+        <View style={S.infoRow}>
+          <Text style={S.infoLabel}>Адрес / Address:</Text>
+          <Text style={S.infoValue}>{v(f.tc_address)}</Text>
+        </View>
+        <View style={S.infoRow}>
+          <Text style={S.infoLabel}>Дейност / Activity:</Text>
+          <Text style={S.infoValue}>{v(f.tc_activity)}</Text>
+        </View>
+        <View style={S.infoRow}>
+          <Text style={S.infoLabel}>Икономическа група / Group:</Text>
+          <Text style={S.infoValue}>{v(f.tc_group)}</Text>
+        </View>
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>Лице за контакт:</Text>
+          <Text style={S.dualValue}>{v(f.tc_contact_person)}</Text>
+          <Text style={[S.dualLabel, { width: 80 }]}>Длъжност:</Text>
+          <Text style={S.dualValue}>{v(f.tc_position)}</Text>
+        </View>
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>Тел. / Phone:</Text>
+          <Text style={S.dualValue}>{v(f.tc_phone)}</Text>
+          <Text style={[S.dualLabel, { width: 80 }]}>Email:</Text>
+          <Text style={S.dualValue}>{v(f.tc_email)}</Text>
+        </View>
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>Настоящ застраховател:</Text>
+          <Text style={S.dualValue}>{v(f.tc_current_insurer)}</Text>
+          <Text style={[S.dualLabel, { width: 80 }]}>Изтича:</Text>
+          <Text style={S.dualValue}>{v(f.tc_current_expiry)}</Text>
         </View>
 
-        {/* 2. Business structure */}
-        <Text style={S.sec}>2. Структура на продажбите / Business Structure</Text>
-        <View style={S.tHead}>
-          <Text style={[S.tHdr, { flex: 3 }]}> </Text>
-          <Text style={[S.tHdr, { flex: 2 }]}>Последни 12 мес.</Text>
-          <Text style={[S.tHdr, { flex: 2 }]}>Прогноза 12 мес.</Text>
-          <Text style={[S.tHdr, { flex: 2 }]}>Прогноза застрах.</Text>
-        </View>
-        <View style={S.tRow}>
-          <Text style={[S.tCell, { flex: 3, fontSize: 8 }]}>Общ оборот / Total sales:</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_turnover_year1 || '--'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_turnover || '--'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_insurable_turnover || '--'}</Text>
-        </View>
-        <View style={S.tRow}>
-          <Text style={[S.tCell, { flex: 3, fontSize: 8 }]}>Вътрешен пазар / Domestic:</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_domestic || '--'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
-        </View>
-        <View style={S.tRow}>
-          <Text style={[S.tCell, { flex: 3, fontSize: 8 }]}>Експорт / Export:</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>{f.tc_expected_export || '--'}</Text>
-          <Text style={[S.tCell, { flex: 2 }]}>--</Text>
-        </View>
-
-        {/* Loss history */}
-        <Text style={[S.sec, { marginTop: 10 }]}>История на загубите / Loss History</Text>
-        <View style={S.tHead}>
-          <Text style={[S.tHdr, { flex: 1 }]}>Година</Text>
-          <Text style={[S.tHdr, { flex: 2 }]}>Оборот (хил. EUR)</Text>
-          <Text style={[S.tHdr, { flex: 2 }]}>Щети (хил. EUR)</Text>
-          <Text style={[S.tHdr, { flex: 1.5 }]}>Брой</Text>
-          <Text style={[S.tHdr, { flex: 2 }]}>Макс. щета</Text>
-        </View>
-        {[
-          { y: f.tc_year1, t: f.tc_turnover_year1, l: f.tc_losses_year1, c: f.tc_losses_count_year1, m: f.tc_max_loss_year1 },
-          { y: f.tc_year2, t: f.tc_turnover_year2, l: f.tc_losses_year2, c: f.tc_losses_count_year2, m: f.tc_max_loss_year2 },
-          { y: f.tc_year3, t: f.tc_turnover_year3, l: f.tc_losses_year3, c: f.tc_losses_count_year3, m: f.tc_max_loss_year3 },
-        ].map((row, i) => (
-          <View key={i} style={S.tRow}>
-            <Text style={[S.tCell, { flex: 1, fontWeight: 700 }]}>{row.y}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.t || '--'}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.l || '--'}</Text>
-            <Text style={[S.tCell, { flex: 1.5 }]}>{row.c || '--'}</Text>
-            <Text style={[S.tCell, { flex: 2 }]}>{row.m || '--'}</Text>
+        {/* Section 2: Financial data table */}
+        <Text style={S.sectionHeader}>2. ФИНАНСОВИ ДАННИ / FINANCIAL DATA</Text>
+        <View style={S.tableOuter}>
+          {/* Header row */}
+          <View style={S.tableHeadRow}>
+            <Text style={[S.tableHeadCell, { width: COL_FIN.label }, borderRight]}>Въпросник</Text>
+            <Text style={[S.tableHeadCell, { width: COL_FIN.y2, textAlign: 'center' }, borderRight]}>Година -2</Text>
+            <Text style={[S.tableHeadCell, { width: COL_FIN.y1, textAlign: 'center' }, borderRight]}>Година -1</Text>
+            <Text style={[S.tableHeadCell, { width: COL_FIN.forecast, textAlign: 'center' }]}>Текуща година (прогноза)</Text>
           </View>
-        ))}
+          {/* Общ оборот */}
+          <View style={S.tableRow}>
+            <Text style={[S.tableCellBold, { width: COL_FIN.label }, borderRight]}>Общ оборот / Total turnover (EUR)</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y2, textAlign: 'center' }, borderRight]}>{v(f.tc_turnover_year2)}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y1, textAlign: 'center' }, borderRight]}>{v(f.tc_turnover_year1)}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.forecast, textAlign: 'center' }]}>{v(f.tc_expected_turnover)}</Text>
+          </View>
+          {/* Вътрешен оборот */}
+          <View style={S.tableRow}>
+            <Text style={[S.tableCellBold, { width: COL_FIN.label }, borderRight]}>Вътрешен оборот / Domestic turnover</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y2, textAlign: 'center' }, borderRight]}>{}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y1, textAlign: 'center' }, borderRight]}>{}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.forecast, textAlign: 'center' }]}>{v(f.tc_expected_domestic)}</Text>
+          </View>
+          {/* Износ */}
+          <View style={S.tableRow}>
+            <Text style={[S.tableCellBold, { width: COL_FIN.label }, borderRight]}>Износ / Export turnover</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y2, textAlign: 'center' }, borderRight]}>{}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y1, textAlign: 'center' }, borderRight]}>{}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.forecast, textAlign: 'center' }]}>{v(f.tc_expected_export)}</Text>
+          </View>
+          {/* Застрахователен оборот */}
+          <View style={S.tableRowLast}>
+            <Text style={[S.tableCellBold, { width: COL_FIN.label }, borderRight]}>Застрахователен оборот / Insurable turnover</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y2, textAlign: 'center' }, borderRight]}>{}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.y1, textAlign: 'center' }, borderRight]}>{}</Text>
+            <Text style={[S.tableCell, { width: COL_FIN.forecast, textAlign: 'center' }]}>{v(f.tc_expected_insurable_turnover)}</Text>
+          </View>
+        </View>
 
+        {/* Additional info */}
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>% Публичен сектор:</Text>
+          <Text style={S.dualValue}>{f.tc_public_sector_pct ? `${f.tc_public_sector_pct}%` : ''}</Text>
+          <Text style={[S.dualLabel, { width: 130 }]}>% Вътрешногрупови:</Text>
+          <Text style={S.dualValue}>{f.tc_intercompany_pct ? `${f.tc_intercompany_pct}%` : ''}</Text>
+        </View>
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>Сектор купувачи 1:</Text>
+          <Text style={S.dualValue}>{v(f.tc_buyer_sector1)} {f.tc_buyer_sector1_pct ? `(${f.tc_buyer_sector1_pct}%)` : ''}</Text>
+          <Text style={[S.dualLabel, { width: 130 }]}>Сектор купувачи 2:</Text>
+          <Text style={S.dualValue}>{v(f.tc_buyer_sector2)} {f.tc_buyer_sector2_pct ? `(${f.tc_buyer_sector2_pct}%)` : ''}</Text>
+        </View>
+
+        {/* Section 3: Loss history */}
+        <Text style={S.sectionHeader}>3. ИСТОРИЯ НА ЗАГУБИТЕ / LOSS HISTORY</Text>
+        <View style={S.tableOuter}>
+          <View style={S.tableHeadRow}>
+            <Text style={[S.tableHeadCell, { width: COL_LOSS.year, textAlign: 'center' }, borderRight]}>Година / Year</Text>
+            <Text style={[S.tableHeadCell, { width: COL_LOSS.turnover, textAlign: 'center' }, borderRight]}>Оборот (EUR)</Text>
+            <Text style={[S.tableHeadCell, { width: COL_LOSS.losses, textAlign: 'center' }, borderRight]}>Щети (EUR)</Text>
+            <Text style={[S.tableHeadCell, { width: COL_LOSS.count, textAlign: 'center' }, borderRight]}>Брой щети</Text>
+            <Text style={[S.tableHeadCell, { width: COL_LOSS.maxLoss, textAlign: 'center' }]}>Макс. щета (EUR)</Text>
+          </View>
+          {lossRows.map((row, i) => (
+            <View key={i} style={i < lossRows.length - 1 ? S.tableRow : S.tableRowLast}>
+              <Text style={[S.tableCellBold, { width: COL_LOSS.year, textAlign: 'center' }, borderRight]}>{v(row.y)}</Text>
+              <Text style={[S.tableCell, { width: COL_LOSS.turnover, textAlign: 'center' }, borderRight]}>{v(row.t)}</Text>
+              <Text style={[S.tableCell, { width: COL_LOSS.losses, textAlign: 'center' }, borderRight]}>{v(row.l)}</Text>
+              <Text style={[S.tableCell, { width: COL_LOSS.count, textAlign: 'center' }, borderRight]}>{v(row.c)}</Text>
+              <Text style={[S.tableCell, { width: COL_LOSS.maxLoss, textAlign: 'center' }]}>{v(row.m)}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Footer page 1 */}
         <View style={S.footer} fixed>
-          <Text>InsureUnify · Търговски кредит · Алианц Трейд</Text>
-          <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+          <Text>{' '}</Text>
+          <Text style={S.footerCenter}>Allianz Trade Bulgaria - Застраховане на търговски кредитен риск</Text>
+          <Text style={S.footerRight} render={({ pageNumber, totalPages }) => `Страница ${pageNumber} от ${totalPages}`} />
         </View>
       </Page>
 
+      {/* ══════════ PAGE 2 ══════════ */}
       <Page size="A4" style={S.page}>
-        <Text style={S.formCode}>Валута: EUR · Дата: {date}</Text>
-
-        {/* Market distribution */}
-        <Text style={S.sec}>Разпределение по пазари / Market Distribution</Text>
-        {[
-          { c: f.tc_market1_country, t: f.tc_market1_turnover },
-          { c: f.tc_market2_country, t: f.tc_market2_turnover },
-          { c: f.tc_market3_country, t: f.tc_market3_turnover },
-        ].filter(m => m.c).map((m, i) => (
-          <View key={i} style={S.row4}>
-            <Text style={[S.c4lbl, { flex: 2 }]}>Държава {i + 1}:</Text>
-            <Text style={[S.c4val, { flex: 2 }]}>{m.c}</Text>
-            <Text style={S.c4lbl}>Оборот (хил. EUR):</Text>
-            <Text style={[S.c4val, { flex: 1 }]}>{m.t || '--'}</Text>
+        {/* Section 4: Market distribution */}
+        <Text style={S.sectionHeader}>4. РАЗПРЕДЕЛЕНИЕ ПО ПАЗАРИ / MARKET DISTRIBUTION</Text>
+        <View style={S.tableOuter}>
+          <View style={S.tableHeadRow}>
+            <Text style={[S.tableHeadCell, { width: COL_MKT.num, textAlign: 'center' }, borderRight]}>№</Text>
+            <Text style={[S.tableHeadCell, { width: COL_MKT.country }, borderRight]}>Държава / Country</Text>
+            <Text style={[S.tableHeadCell, { width: COL_MKT.turnover, textAlign: 'center' }]}>Оборот (EUR) / Turnover</Text>
           </View>
-        ))}
-
-        {/* Payment terms */}
-        <Text style={S.sec}>Условия на плащане / Payment Terms</Text>
-        <View style={S.row4}>
-          <Text style={S.c4lbl}>Стандартен срок (дни):</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_standard_terms || '--'}</Text>
-          <Text style={S.c4lbl}>Максимален срок (дни):</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_max_terms || '--'}</Text>
-        </View>
-        <View style={S.row4}>
-          <Text style={S.c4lbl}>DSO (дни):</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_dso || '--'}</Text>
-          <Text style={S.c4lbl}>% Аванси:</Text>
-          <Text style={[S.c4val, { flex: 1 }]}>{f.tc_cash_advance_pct ? `${f.tc_cash_advance_pct}%` : '--'}</Text>
-        </View>
-
-        {/* Top buyers */}
-        <Text style={S.sec}>Основни купувачи / Top Buyers</Text>
-        {buyers.length > 0 ? (
-          <>
-            <View style={S.tHead}>
-              <Text style={[S.tHdr, { flex: 3 }]}>Наименование / Name</Text>
-              <Text style={[S.tHdr, { flex: 1.5 }]}>Държава</Text>
-              <Text style={[S.tHdr, { flex: 2 }]}>ЕИК / VAT</Text>
-              <Text style={[S.tHdr, { flex: 2 }]}>Лимит '000 EUR</Text>
-              <Text style={[S.tHdr, { flex: 2 }]}>Оборот '000 EUR</Text>
+          {markets.map((m, i) => (
+            <View key={i} style={i < markets.length - 1 ? S.tableRow : S.tableRowLast}>
+              <Text style={[S.tableCellBold, { width: COL_MKT.num, textAlign: 'center' }, borderRight]}>{i + 1}</Text>
+              <Text style={[S.tableCell, { width: COL_MKT.country }, borderRight]}>{v(m.country)}</Text>
+              <Text style={[S.tableCell, { width: COL_MKT.turnover, textAlign: 'center' }]}>{v(m.turnover)}</Text>
             </View>
-            {buyers.map((b, i) => (
-              <View key={i} style={S.tRow}>
-                <Text style={[S.tCell, { flex: 3 }]}>{b.name}</Text>
-                <Text style={[S.tCell, { flex: 1.5 }]}>{b.country || '--'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.id || '--'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.limit || '--'}</Text>
-                <Text style={[S.tCell, { flex: 2 }]}>{b.turnover || '--'}</Text>
-              </View>
-            ))}
-          </>
-        ) : (
-          <Text style={S.note}>Няма въведени купувачи.</Text>
-        )}
+          ))}
+        </View>
 
-        {/* Signature */}
-        <View style={[S.sign, { marginTop: 24 }]}>
-          <View style={S.signBox}>
-            <Text style={S.signLbl}>Подготвено от / Prepared by:</Text>
-            <Text style={{ fontSize: 9, marginTop: 2 }}>{f.tc_contact_person || ' '}</Text>
+        {/* Section 5: Payment terms */}
+        <Text style={S.sectionHeader}>5. УСЛОВИЯ НА ПЛАЩАНЕ / PAYMENT TERMS</Text>
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>Стандартен срок (дни):</Text>
+          <Text style={S.dualValue}>{v(f.tc_standard_terms)}</Text>
+          <Text style={[S.dualLabel, { width: 130 }]}>Максимален срок (дни):</Text>
+          <Text style={S.dualValue}>{v(f.tc_max_terms)}</Text>
+        </View>
+        <View style={S.dualRow}>
+          <Text style={S.dualLabel}>DSO (дни):</Text>
+          <Text style={S.dualValue}>{v(f.tc_dso)}</Text>
+          <Text style={[S.dualLabel, { width: 130 }]}>% Аванси / Cash advance %:</Text>
+          <Text style={S.dualValue}>{f.tc_cash_advance_pct ? `${f.tc_cash_advance_pct}%` : ''}</Text>
+        </View>
+
+        {/* Section 6: Top 5 buyers */}
+        <Text style={S.sectionHeader}>6. ОСНОВНИ КУПУВАЧИ / TOP 5 BUYERS</Text>
+        <View style={S.tableOuter}>
+          <View style={S.tableHeadRow}>
+            <Text style={[S.tableHeadCell, { width: COL_BUY.name }, borderRight]}>Клиент / Buyer</Text>
+            <Text style={[S.tableHeadCell, { width: COL_BUY.country, textAlign: 'center' }, borderRight]}>Държава / Country</Text>
+            <Text style={[S.tableHeadCell, { width: COL_BUY.pct, textAlign: 'center' }, borderRight]}>% от оборота</Text>
+            <Text style={[S.tableHeadCell, { width: COL_BUY.limit, textAlign: 'center' }, borderRight]}>Кредитен лимит EUR</Text>
+            <Text style={[S.tableHeadCell, { width: COL_BUY.terms, textAlign: 'center' }]}>Срок плащане дни</Text>
           </View>
-          <View style={S.signBox}>
-            <Text style={S.signLbl}>Подпис / Signature:</Text>
-            <Text style={{ fontSize: 9, marginTop: 2 }}> </Text>
+          {buyers.map((b, i) => (
+            <View key={i} style={i < buyers.length - 1 ? S.tableRow : S.tableRowLast}>
+              <Text style={[S.tableCell, { width: COL_BUY.name }, borderRight]}>{v(b.name)}</Text>
+              <Text style={[S.tableCell, { width: COL_BUY.country, textAlign: 'center' }, borderRight]}>{v(b.country)}</Text>
+              <Text style={[S.tableCell, { width: COL_BUY.pct, textAlign: 'center' }, borderRight]}>{v(b.pct)}</Text>
+              <Text style={[S.tableCell, { width: COL_BUY.limit, textAlign: 'center' }, borderRight]}>{v(b.limit)}</Text>
+              <Text style={[S.tableCell, { width: COL_BUY.terms, textAlign: 'center' }]}>{v(b.terms)}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Signature section */}
+        <Text style={[S.sectionHeader, { marginTop: 20 }]}>ПОДПИС / SIGNATURE</Text>
+        <View style={S.signatureRow}>
+          <View style={S.signatureBox}>
+            <Text style={S.signatureLabel}>Подготвено от / Prepared by:</Text>
+            <Text style={S.signatureLine}>{v(f.tc_contact_person)}</Text>
           </View>
-          <View style={S.signBox}>
-            <Text style={S.signLbl}>Дата / Date:</Text>
-            <Text style={{ fontSize: 9, marginTop: 2 }}>{date}</Text>
+          <View style={S.signatureBox}>
+            <Text style={S.signatureLabel}>Подпис / Signature:</Text>
+            <Text style={S.signatureLine}>{' '}</Text>
+          </View>
+          <View style={S.signatureBox}>
+            <Text style={S.signatureLabel}>Дата / Date:</Text>
+            <Text style={S.signatureLine}>{date}</Text>
           </View>
         </View>
 
+        <Text style={S.note}>
+          Декларирам, че предоставената информация е вярна и пълна. Наясно съм, че невярна или непълна информация може да доведе до отказ от покритие.
+        </Text>
+
+        {/* Footer page 2 */}
         <View style={S.footer} fixed>
-          <Text>InsureUnify · Търговски кредит · Алианц Трейд</Text>
-          <Text render={({ pageNumber, totalPages }) => `${pageNumber} / ${totalPages}`} />
+          <Text>{' '}</Text>
+          <Text style={S.footerCenter}>Allianz Trade Bulgaria - Застраховане на търговски кредитен риск</Text>
+          <Text style={S.footerRight} render={({ pageNumber, totalPages }) => `Страница ${pageNumber} от ${totalPages}`} />
         </View>
       </Page>
     </Document>

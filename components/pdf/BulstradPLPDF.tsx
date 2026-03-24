@@ -17,109 +17,281 @@ Font.register({
 const BLUE = '#0B3D91'
 
 const S = StyleSheet.create({
-  page: { fontFamily: 'Roboto', fontSize: 9, color: '#111', backgroundColor: '#fff', paddingTop: 36, paddingBottom: 50, paddingHorizontal: 42 },
-  companyLine: { fontSize: 13, fontWeight: 700, color: BLUE, textAlign: 'center' },
-  companySubLine: { fontSize: 8, color: '#555', textAlign: 'center', marginTop: 2 },
-  titleLine: { fontSize: 11, fontWeight: 700, textAlign: 'center', marginTop: 10, marginBottom: 14, borderTop: `1.5 solid ${BLUE}`, borderBottom: `1.5 solid ${BLUE}`, paddingVertical: 5 },
-  sectionHead: { fontSize: 9, fontWeight: 700, marginTop: 10, marginBottom: 5, color: BLUE },
-  row: { flexDirection: 'row', marginBottom: 3, alignItems: 'flex-end' },
-  lbl: { fontSize: 9, color: '#444', width: '44%' },
-  val: { fontSize: 9, fontWeight: 700, flex: 1, borderBottom: `0.5 solid #bbb`, paddingBottom: 1 },
-  row2: { flexDirection: 'row', gap: 8, marginBottom: 3, alignItems: 'flex-end' },
-  lbl2: { fontSize: 9, color: '#444', width: '28%' },
-  val2: { fontSize: 9, fontWeight: 700, flex: 1, borderBottom: `0.5 solid #bbb`, paddingBottom: 1 },
-  // Contract table
-  table: { marginTop: 8, border: `0.5 solid #999` },
-  tHead: { flexDirection: 'row', backgroundColor: '#dbe4f5', borderBottom: `0.5 solid #999` },
-  tRow: { flexDirection: 'row', borderBottom: `0.5 solid #ddd` },
-  tLabel: { flex: 1, padding: '3 6', fontSize: 9 },
-  tVal: { width: 140, padding: '3 6', fontSize: 9, fontWeight: 700, borderLeft: `0.5 solid #999`, textAlign: 'right' },
-  tHeadLabel: { flex: 1, padding: '3 6', fontSize: 8.5, fontWeight: 700, color: BLUE },
-  tHeadVal: { width: 140, padding: '3 6', fontSize: 8.5, fontWeight: 700, color: BLUE, borderLeft: `0.5 solid #999`, textAlign: 'right' },
-  footer: { position: 'absolute', bottom: 18, left: 42, right: 42, borderTop: `0.5 solid ${BLUE}`, paddingTop: 4, flexDirection: 'row', justifyContent: 'space-between', fontSize: 7, color: '#888' },
-  signRow: { flexDirection: 'row', gap: 20, marginTop: 24 },
-  signBlock: { flex: 1, borderTop: `0.5 solid #999`, paddingTop: 3 },
-  signLabel: { fontSize: 7.5, color: '#777', textAlign: 'center' },
+  page: {
+    fontFamily: 'Roboto',
+    fontSize: 9,
+    lineHeight: 1.4,
+    color: '#000',
+    backgroundColor: '#fff',
+    paddingTop: 40,
+    paddingBottom: 40,
+    paddingLeft: 50,
+    paddingRight: 50,
+  },
+
+  /* Header */
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  headerLogo: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: BLUE,
+  },
+  headerInsurer: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: BLUE,
+    textAlign: 'right',
+  },
+  headerHr: {
+    borderBottom: '1 solid #000',
+    marginBottom: 10,
+  },
+
+  /* Title */
+  titleBlock: {
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+  titleLine: {
+    fontSize: 13,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  formCode: {
+    fontSize: 8,
+    color: '#888',
+    textAlign: 'center',
+    marginTop: 3,
+  },
+
+  /* Section headers */
+  sectionHeader: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
+    borderBottom: '1 solid #000',
+    paddingBottom: 3,
+    marginTop: 12,
+    marginBottom: 8,
+  },
+
+  /* Table */
+  table: {
+    border: '1 solid #000',
+    marginBottom: 6,
+  },
+  tableRowHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#E8E8E8',
+    borderBottom: '0.5 solid #000',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    borderBottom: '0.5 solid #000',
+  },
+  tableRowLast: {
+    flexDirection: 'row',
+  },
+  cellLabel: {
+    fontSize: 8,
+    padding: 4,
+    width: '40%',
+    borderRight: '0.5 solid #000',
+  },
+  cellValue: {
+    fontSize: 8,
+    padding: 4,
+    flex: 1,
+    fontWeight: 'bold',
+  },
+  cellHeaderLabel: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    padding: 4,
+    width: '40%',
+    borderRight: '0.5 solid #000',
+  },
+  cellHeaderValue: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    padding: 4,
+    flex: 1,
+  },
+
+  /* Declaration */
+  declaration: {
+    fontSize: 8,
+    color: '#333',
+    marginTop: 14,
+    lineHeight: 1.5,
+  },
+
+  /* Signatures */
+  sigRow: {
+    flexDirection: 'row',
+    gap: 40,
+    marginTop: 20,
+  },
+  sigBlock: {
+    flex: 1,
+  },
+  sigLabel: {
+    fontSize: 8,
+    color: '#555',
+    marginBottom: 28,
+  },
+  sigLine: {
+    borderTop: '0.5 solid #000',
+    paddingTop: 3,
+  },
+  sigName: {
+    fontSize: 8,
+    color: '#666',
+  },
+
+  /* Footer */
+  footer: {
+    position: 'absolute',
+    bottom: 14,
+    left: 50,
+    right: 50,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    fontSize: 8,
+    color: '#888',
+    borderTop: '0.5 solid #ccc',
+    paddingTop: 4,
+  },
+  footerCenter: {
+    fontSize: 8,
+    color: '#888',
+    textAlign: 'center',
+  },
+  footerRight: {
+    fontSize: 8,
+    color: '#888',
+    textAlign: 'right',
+  },
 })
 
-interface Props { formData: PLFormData; clientName: string }
+/* Table row helper */
+function FieldRow({ label, value, isLast }: { label: string; value: string; isLast?: boolean }) {
+  return (
+    <View style={isLast ? S.tableRowLast : S.tableRow}>
+      <Text style={S.cellLabel}>{label}</Text>
+      <Text style={S.cellValue}>{value}</Text>
+    </View>
+  )
+}
+
+interface Props {
+  formData: PLFormData
+  clientName: string
+}
 
 export function BulstradPLPDF({ formData, clientName }: Props) {
   const d = mapPLFormDataForInsurer(formData, 'bulstrad')
-  const f = (id: string) => d[id]?.displayValue ?? (formData[id] !== undefined ? String(formData[id]) : '--')
+  const f = (id: string) =>
+    d[id]?.displayValue ?? (formData[id] !== undefined && formData[id] !== '' ? String(formData[id]) : '--')
 
-  const date = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const date = new Date().toLocaleDateString('bg-BG', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 
   return (
-    <Document title={`Булстрад ПО -- ${clientName}`} author="InsureUnify">
+    <Document title={`Булстрад ПО — ${clientName}`} author="InsureUnify">
       <Page size="A4" style={S.page}>
 
-        {/* Header */}
-        <Text style={S.companyLine}>ЗЕАД "БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
-        <Text style={S.companySubLine}>ЕИК 000694286 · гр. София 1000, пл. "Позитано" 5</Text>
-        <Text style={S.titleLine}>ЗАЯВЛЕНИЕ-ВЪПРОСНИК за сключване на застраховка "ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"</Text>
+        {/* -- HEADER -- */}
+        <View style={S.headerRow} fixed>
+          <Text style={S.headerLogo}>InsureUnify</Text>
+          <Text style={S.headerInsurer}>ЗЕАД "БУЛСТРАД ВИЕНА ИНШУРЪНС ГРУП"</Text>
+        </View>
+        <View style={S.headerHr} fixed />
 
-        {/* Данни за застрахования */}
-        <Text style={S.sectionHead}>ДАННИ ЗА ЗАСТРАХОВАНИЯ</Text>
-        <View style={S.row}>
-          <Text style={S.lbl}>Застрахован (пълно наименование):</Text>
-          <Text style={S.val}>{f('pl_company_name')}</Text>
-        </View>
-        <View style={S.row2}>
-          <Text style={S.lbl2}>Булстат / ЕГН:</Text>
-          <Text style={S.val2}>{f('pl_eik')}</Text>
-          <Text style={S.lbl2}>Тел./факс:</Text>
-          <Text style={S.val2}>{f('pl_phone')}</Text>
-        </View>
-        <View style={S.row}>
-          <Text style={S.lbl}>Адрес (по съдебна регистрация):</Text>
-          <Text style={S.val}>{f('pl_address')}</Text>
+        {/* -- TITLE -- */}
+        <View style={S.titleBlock}>
+          <Text style={S.titleLine}>
+            ЗАЯВЛЕНИЕ-ВЪПРОСНИК за сключване на застраховка "ПРОФЕСИОНАЛНА ОТГОВОРНОСТ"
+          </Text>
+          <Text style={S.formCode}>Формуляр: БВ-ПО · Дата: {date}</Text>
         </View>
 
-        {/* Данни за договора -- table */}
-        <Text style={[S.sectionHead, { marginTop: 14 }]}>ДАННИ ЗА ЗАСТРАХОВАТЕЛНИЯ ДОГОВОР</Text>
+        {/* -- SECTION: ДАННИ ЗА ЗАСТРАХОВАНИЯ -- */}
+        <Text style={S.sectionHeader}>ДАННИ ЗА ЗАСТРАХОВАНИЯ</Text>
+
         <View style={S.table}>
-          <View style={S.tHead}>
-            <Text style={S.tHeadLabel}>Параметър</Text>
-            <Text style={S.tHeadVal}>Стойност</Text>
+          <View style={S.tableRowHeader}>
+            <Text style={S.cellHeaderLabel}>Поле</Text>
+            <Text style={S.cellHeaderValue}>Стойност</Text>
           </View>
-          {[
-            ['Лимит единичен (за едно събитие)', 'pl_single_limit'],
-            ['Лимит агрегатен (за всички събития)', 'pl_aggregate_limit'],
-            ['Самоучастие', 'pl_deductible'],
-            ['Територия на валидност', 'pl_territory'],
-            ['Срок от', 'pl_period_from'],
-            ['Срок до', 'pl_period_to'],
-          ].map(([lbl, id]) => (
-            <View key={id} style={S.tRow}>
-              <Text style={S.tLabel}>{lbl}</Text>
-              <Text style={S.tVal}>{f(id)}</Text>
-            </View>
-          ))}
+          <FieldRow label="Застрахован (пълно наименование)" value={f('pl_company_name')} />
+          <FieldRow label="Булстат / ЕГН" value={f('pl_eik')} />
+          <FieldRow label="Тел. / факс" value={f('pl_phone')} />
+          <FieldRow label="Адрес (по съдебна регистрация)" value={f('pl_address')} isLast />
         </View>
 
-        {/* Declaration */}
-        <Text style={{ fontSize: 8, color: '#555', marginTop: 16, lineHeight: 1.4 }}>
+        {/* -- SECTION: ДАННИ ЗА ЗАСТРАХОВАТЕЛНИЯ ДОГОВОР -- */}
+        <Text style={S.sectionHeader}>ДАННИ ЗА ЗАСТРАХОВАТЕЛНИЯ ДОГОВОР</Text>
+
+        <View style={S.table}>
+          <View style={S.tableRowHeader}>
+            <Text style={S.cellHeaderLabel}>Параметър</Text>
+            <Text style={S.cellHeaderValue}>Стойност</Text>
+          </View>
+          <FieldRow label="Лимит единичен (за едно събитие)" value={f('pl_single_limit')} />
+          <FieldRow label="Лимит агрегатен (за всички събития)" value={f('pl_aggregate_limit')} />
+          <FieldRow label="Самоучастие" value={f('pl_deductible')} />
+          <FieldRow label="Територия на валидност" value={f('pl_territory')} />
+          <FieldRow label="Срок от" value={f('pl_period_from')} />
+          <FieldRow label="Срок до" value={f('pl_period_to')} isLast />
+        </View>
+
+        {/* -- DECLARATION -- */}
+        <Text style={S.declaration}>
           Заявявам, че всички обстоятелства в настоящото заявление са верни и пълни. Задължавам се при промяна в обстоятелствата незабавно да уведомя застрахователя.
         </Text>
 
-        {/* Signatures */}
-        <View style={S.signRow}>
-          <View style={S.signBlock}>
-            <Text style={S.signLabel}>Дата: {date}</Text>
-            <Text style={S.signLabel}>Подпис и печат на застрахования</Text>
+        {/* -- SIGNATURES -- */}
+        <View style={S.sigRow}>
+          <View style={S.sigBlock}>
+            <Text style={S.sigLabel}>Дата:</Text>
+            <View style={S.sigLine}>
+              <Text style={S.sigName}>{date}</Text>
+            </View>
           </View>
-          <View style={S.signBlock}>
-            <Text style={S.signLabel}>Подпис на брокер / агент</Text>
+          <View style={S.sigBlock}>
+            <Text style={S.sigLabel}>Подпис и печат на застрахования:</Text>
+            <View style={S.sigLine}>
+              <Text style={S.sigName}>{clientName}</Text>
+            </View>
+          </View>
+          <View style={S.sigBlock}>
+            <Text style={S.sigLabel}>Подпис на брокер / агент:</Text>
+            <View style={S.sigLine}>
+              <Text style={S.sigName}> </Text>
+            </View>
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={S.footer}>
-          <Text>ЗЕАД "Булстрад ВИГ" · ЕИК 000694286</Text>
-          <Text>{clientName} · {date}</Text>
-          <Text>InsureUnify · БВ-ПО</Text>
+        {/* -- FOOTER (fixed) -- */}
+        <View style={S.footer} fixed>
+          <Text> </Text>
+          <Text style={S.footerCenter}>ЕИК 000694286 · гр. София 1000, пл. "Позитано" 5</Text>
+          <Text
+            style={S.footerRight}
+            render={({ pageNumber, totalPages }) => `Страница ${pageNumber} от ${totalPages}`}
+          />
         </View>
+
       </Page>
     </Document>
   )
