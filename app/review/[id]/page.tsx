@@ -23,6 +23,7 @@ interface BaseSubmission {
   clientName:       string
   createdAt:        string
   insuranceClass?:  string
+  renewedFromId?:   string
 }
 
 interface PropertySubmission extends BaseSubmission {
@@ -101,6 +102,7 @@ export default function ReviewPage() {
               selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
               formData:         s.form_data ?? s.formData ?? {},
               createdAt:        s.created_at ?? s.createdAt,
+              renewedFromId:    s.renewed_from_id ?? s.renewedFromId ?? undefined,
             } as StoredSubmission
             console.log('[review] Supabase formData keys:', Object.keys((found.formData as Record<string,unknown>) ?? {}).length)
           }
@@ -222,6 +224,11 @@ export default function ReviewPage() {
               <p className="text-xs text-gray-400 mt-0.5">
                 {classLabel} ·{' '}
                 {new Date(submission.createdAt).toLocaleDateString('bg-BG', { day: '2-digit', month: 'long', year: 'numeric' })}
+                {submission.renewedFromId && (
+                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                    Подновена от #{submission.renewedFromId.slice(0, 8)}
+                  </span>
+                )}
               </p>
             </div>
           </div>

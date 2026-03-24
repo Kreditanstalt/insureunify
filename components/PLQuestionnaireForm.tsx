@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { INSURERS } from '@/lib/schema'
 import { PL_SCHEMA, PL_INSURERS, PL_INSURER_KEYS, PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import type { SchemaField } from '@/lib/schema'
+import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import AutoFillUploader from './AutoFillUploader'
 import StepperBar from './StepperBar'
 
@@ -451,6 +452,21 @@ export default function PLQuestionnaireForm() {
   const [insuredEikStatus, setInsuredEikStatus] = useState<EikStatus>('idle')
   const insuredAbortRef = useRef<AbortController | null>(null)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+  const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
+
+  // Apply renewal data on mount
+  useEffect(() => {
+    const renewal = readRenewalData()
+    if (!renewal || renewal.insuranceClass !== 'professional_liability') return
+    const fd = renewal.formData as PLFormData
+    const today = renewalToday()
+    fd.pl_period_from = today
+    fd.pl_period_to = addMonthsISO(today, 12)
+    setFormData(fd)
+    setSelectedInsurers(renewal.selectedInsurers as PLInsurerKey[])
+    setRenewedFromId(renewal.renewedFromId)
+    setPrefillBanner(String(fd.pl_company_name ?? ''))
+  }, [])
 
   useEffect(() => {
     try {
@@ -609,13 +625,14 @@ export default function PLQuestionnaireForm() {
     try {
       const id = uuidv4()
       const clientName = String(formData.pl_company_name ?? 'Нов клиент')
-      const submission: StoredSubmission = {
+      const submission: StoredSubmission & { renewedFromId?: string } = {
         id, clientName,
         selectedInsurers,
         formData,
         insuranceClass: 'professional_liability',
         createdAt: new Date().toISOString(),
       }
+      if (renewedFromId) submission.renewedFromId = renewedFromId
       // Save to localStorage (cache)
       const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]') as StoredSubmission[]
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))

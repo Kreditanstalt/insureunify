@@ -4,12 +4,14 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { INSURERS } from '@/lib/schema'
 import { OA_INSURERS } from '@/lib/oa-schema'
+import { storeRenewalData, classToFormUrl } from '@/lib/renewal'
 
 interface Submission {
   id:               string
   clientName:       string
   selectedInsurers: string[]
   insuranceClass?:  string
+  formData?:        Record<string, unknown>
   createdAt:        string
 }
 
@@ -147,6 +149,17 @@ export default function DashboardPage() {
     setSubmissions(updated)
     localStorage.setItem('iu_submissions', JSON.stringify(updated))
     fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(console.error)
+  }
+
+  function renewSubmission(sub: Submission) {
+    const cls = sub.insuranceClass ?? 'property'
+    storeRenewalData({
+      renewedFromId: sub.id,
+      insuranceClass: cls,
+      selectedInsurers: sub.selectedInsurers,
+      formData: sub.formData ?? {},
+    })
+    router.push(classToFormUrl(cls))
   }
 
   const stats = useMemo(() => {
@@ -387,6 +400,13 @@ export default function DashboardPage() {
                           {fmtDate(sub.createdAt)}
                         </span>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => renewSubmission(sub)}
+                            className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+                            title="Подновяване"
+                          >
+                            Обнови
+                          </button>
                           <button
                             onClick={() => router.push(`/review/${sub.id}`)}
                             className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"

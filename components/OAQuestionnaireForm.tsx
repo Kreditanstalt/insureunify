@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
 import { OA_SCHEMA, OA_INSURERS, OA_INSURER_KEYS, OAFormData, OAInsurerKey } from '@/lib/oa-schema'
+import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
@@ -270,6 +271,21 @@ export default function OAQuestionnaireForm() {
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
+  const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
+
+  // Apply renewal data on mount
+  useEffect(() => {
+    const renewal = readRenewalData()
+    if (!renewal || renewal.insuranceClass !== 'occupational_accident') return
+    const fd = renewal.formData as OAFormData
+    const today = renewalToday()
+    fd.oa_period_from = today
+    fd.oa_period_to = addMonthsISO(today, 12)
+    setFormData(fd)
+    setSelectedInsurers(renewal.selectedInsurers as OAInsurerKey[])
+    setRenewedFromId(renewal.renewedFromId)
+    setPrefillBanner(String(fd.oa_company_name ?? ''))
+  }, [])
 
   useEffect(() => {
     try {
@@ -343,12 +359,13 @@ export default function OAQuestionnaireForm() {
     try {
       const id         = uuidv4()
       const clientName = String(formData.oa_company_name ?? 'Нов клиент')
-      const submission: StoredSubmission = {
+      const submission: StoredSubmission & { renewedFromId?: string } = {
         id, clientName, selectedInsurers,
         formData,
         insuranceClass: 'occupational_accident',
         createdAt: new Date().toISOString(),
       }
+      if (renewedFromId) submission.renewedFromId = renewedFromId
       // Save to localStorage (cache)
       const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]') as StoredSubmission[]
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))

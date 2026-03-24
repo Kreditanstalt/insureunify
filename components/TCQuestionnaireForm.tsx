@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
 import { TC_INSURERS, TC_INITIAL, TC_REQUIRED, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema'
+import { readRenewalData } from '@/lib/renewal'
 import AutoFillUploader from './AutoFillUploader'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import StepperBar from './StepperBar'
@@ -155,6 +156,17 @@ export default function TCQuestionnaireForm() {
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
+  const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
+
+  // Apply renewal data on mount (TC has no period fields)
+  useEffect(() => {
+    const renewal = readRenewalData()
+    if (!renewal || renewal.insuranceClass !== 'trade_credit') return
+    setForm(renewal.formData as unknown as TCFormData)
+    setSelectedInsurers(renewal.selectedInsurers as TCInsurerKey[])
+    setRenewedFromId(renewal.renewedFromId)
+    setPrefillBanner(String((renewal.formData as unknown as TCFormData).tc_company_name ?? ''))
+  }, [])
 
   useEffect(() => {
     try {
@@ -213,7 +225,7 @@ export default function TCQuestionnaireForm() {
     setSubmitting(true)
     try {
       const id = uuidv4()
-      const submission = {
+      const submission: Record<string, unknown> = {
         id,
         clientName: form.tc_company_name || 'Нов клиент',
         selectedInsurers,
@@ -221,6 +233,7 @@ export default function TCQuestionnaireForm() {
         formData: { ...form },
         createdAt: new Date().toISOString(),
       }
+      if (renewedFromId) submission.renewedFromId = renewedFromId
       const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]')
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))
       fetch('/api/submissions', {

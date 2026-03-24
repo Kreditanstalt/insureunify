@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
 import { INSURERS, PROPERTY_INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
 import { fmtDateBG } from '@/lib/utils'
+import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import AutoFillUploader from './AutoFillUploader'
 import StepperBar from './StepperBar'
@@ -513,6 +514,22 @@ export default function QuestionnaireForm() {
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
+  const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
+
+  // Apply renewal data on mount (full form pre-fill from previous submission)
+  useEffect(() => {
+    const renewal = readRenewalData()
+    if (!renewal || renewal.insuranceClass !== 'property') return
+    const fd = renewal.formData as FormData
+    // Set new period dates
+    const today = renewalToday()
+    fd.period_from = today
+    fd.period_to = addMonthsISO(today, 12)
+    setFormData(fd)
+    setSelectedInsurers(renewal.selectedInsurers as InsurerKey[])
+    setRenewedFromId(renewal.renewedFromId)
+    setPrefillBanner(String(fd.company_name ?? ''))
+  }, [])
 
   // Apply client prefill on mount
   useEffect(() => {
@@ -605,12 +622,13 @@ export default function QuestionnaireForm() {
     try {
       const id = uuidv4()
       const clientName = String(formData.company_name ?? 'Нов клиент')
-      const submission: StoredSubmission = {
+      const submission: StoredSubmission & { renewedFromId?: string } = {
         id, clientName, selectedInsurers,
         insuranceClass: 'property',
         formData: { ...formData, val_total: total },
         createdAt: new Date().toISOString(),
       }
+      if (renewedFromId) submission.renewedFromId = renewedFromId
       // Save to localStorage (cache)
       const existing = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]') as StoredSubmission[]
       localStorage.setItem('iu_submissions', JSON.stringify([submission, ...existing]))

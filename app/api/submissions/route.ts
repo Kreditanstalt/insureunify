@@ -7,14 +7,17 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     if (!db) return NextResponse.json({ ok: true, id: body.id })
 
-    const { error } = await db.from('submissions').upsert({
+    const row: Record<string, unknown> = {
       id:                body.id,
       client_name:       body.clientName,
       insurance_class:   body.insuranceClass,
       selected_insurers: body.selectedInsurers ?? [],
       form_data:         body.formData ?? {},
       created_at:        body.createdAt ?? new Date().toISOString(),
-    }, { onConflict: 'id' })
+    }
+    if (body.renewedFromId) row.renewed_from_id = body.renewedFromId
+
+    const { error } = await db.from('submissions').upsert(row, { onConflict: 'id' })
 
     if (error) console.error('Submission save error:', error)
     return NextResponse.json({ ok: true, id: body.id })
