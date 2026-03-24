@@ -72,12 +72,20 @@ export default function SubmissionsPage() {
   const [comparisonSubmissionIds, setComparisonSubmissionIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
-    // Load comparison submission IDs
+    // Load comparison submission IDs from localStorage first
+    try {
+      const comps = JSON.parse(localStorage.getItem('iu_comparisons') ?? '[]')
+      const ids = new Set<string>(comps.map((c: { submission_id?: string }) => c.submission_id).filter(Boolean))
+      setComparisonSubmissionIds(ids)
+    } catch { /* ignore */ }
+    // Also try Supabase
     fetch('/api/comparisons')
       .then((r) => r.json())
       .then((d) => {
-        const ids = new Set<string>((d.comparisons ?? []).map((c: { submission_id?: string }) => c.submission_id).filter(Boolean))
-        setComparisonSubmissionIds(ids)
+        if (d.comparisons?.length) {
+          const ids = new Set<string>((d.comparisons).map((c: { submission_id?: string }) => c.submission_id).filter(Boolean))
+          setComparisonSubmissionIds(ids)
+        }
       })
       .catch(() => {})
 

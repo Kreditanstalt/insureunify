@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { v4 as uuidv4 } from 'uuid'
 import { upsertClient, recordSubmissionForClient } from '@/lib/clients'
 import { InsurerKey, FormData } from '@/lib/schema'
 import { mapFormDataForAllInsurers, InsurerMappedData } from '@/lib/mappings'
@@ -236,18 +237,28 @@ export default function ReviewPage() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="hidden sm:block text-xs text-gray-400">{submission.selectedInsurers.length} застрахователя</span>
             <button
-              onClick={async () => {
-                const res = await fetch('/api/comparisons', {
+              onClick={() => {
+                const newComp = {
+                  id: uuidv4(),
+                  submission_id: submission.id,
+                  client_name: submission.clientName,
+                  insurance_class: submission.insuranceClass ?? 'property',
+                  status: 'draft',
+                  created_at: new Date().toISOString(),
+                }
+                // Save to localStorage
+                try {
+                  const all = JSON.parse(localStorage.getItem('iu_comparisons') ?? '[]')
+                  all.unshift(newComp)
+                  localStorage.setItem('iu_comparisons', JSON.stringify(all))
+                } catch { /* ignore */ }
+                // Sync to Supabase in background
+                fetch('/api/comparisons', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    submission_id: submission.id,
-                    client_name: submission.clientName,
-                    insurance_class: submission.insuranceClass ?? 'property',
-                  }),
-                })
-                const data = await res.json()
-                if (data.comparison?.id) router.push(`/dashboard/comparisons/${data.comparison.id}`)
+                  body: JSON.stringify(newComp),
+                }).catch(() => {})
+                router.push(`/dashboard/comparisons/${newComp.id}`)
               }}
               className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors font-medium whitespace-nowrap hidden sm:block"
             >

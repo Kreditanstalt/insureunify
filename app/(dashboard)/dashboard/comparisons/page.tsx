@@ -2,14 +2,28 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { v4 as uuidv4 } from 'uuid'
 
 interface Comparison {
   id: string
+  submission_id?: string | null
   client_name: string
   insurance_class: string
   status: string
   created_at: string
   notes?: string
+}
+
+const LS_KEY = 'iu_comparisons'
+
+function loadComparisons(): Comparison[] {
+  try {
+    return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]')
+  } catch { return [] }
+}
+
+function saveComparisons(list: Comparison[]) {
+  localStorage.setItem(LS_KEY, JSON.stringify(list))
 }
 
 const CLASS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -32,23 +46,42 @@ export default function ComparisonsPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Load from localStorage immediately
+    setComparisons(loadComparisons())
+    setLoading(false)
+
+    // Then try Supabase in background
     fetch('/api/comparisons')
       .then((r) => r.json())
-      .then((d) => setComparisons(d.comparisons ?? []))
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      .then((d) => {
+        if (d.comparisons?.length) {
+          setComparisons(d.comparisons)
+          saveComparisons(d.comparisons)
+        }
+      })
+      .catch(() => {})
   }, [])
 
-  async function createNew() {
-    const res = await fetch('/api/comparisons', {
+  function createNew() {
+    const newComp: Comparison = {
+      id: uuidv4(),
+      client_name: '',
+      insurance_class: 'property',
+      status: 'draft',
+      created_at: new Date().toISOString(),
+    }
+    const updated = [newComp, ...comparisons]
+    setComparisons(updated)
+    saveComparisons(updated)
+
+    // Sync to Supabase in background
+    fetch('/api/comparisons', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_name: '', insurance_class: 'property' }),
-    })
-    const data = await res.json()
-    if (data.comparison?.id) {
-      router.push(`/dashboard/comparisons/${data.comparison.id}`)
-    }
+      body: JSON.stringify(newComp),
+    }).catch(() => {})
+
+    router.push(`/dashboard/comparisons/${newComp.id}`)
   }
 
   return (

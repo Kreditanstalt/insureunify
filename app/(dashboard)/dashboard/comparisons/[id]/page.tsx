@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { v4 as uuidv4 } from 'uuid'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -168,24 +169,57 @@ export default function ComparisonWorkspacePage() {
     setTimeout(() => setToast(null), 3000)
   }
 
-  // ── Load comparison & offers ──
-  const loadData = useCallback(async () => {
+  // ── localStorage helpers ──
+  function lsLoadComparison(): Comparison | null {
     try {
-      const [compRes, offersRes] = await Promise.all([
-        fetch(`/api/comparisons?id=${id}`).then((r) => r.json()),
-        fetch(`/api/offers?comparison_id=${id}`).then((r) => r.json()),
-      ])
-      const found = (compRes.comparisons ?? [])[0]
-      if (found) setComparison(found)
-      setOffers(offersRes.offers ?? [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
-  }, [id])
+      const all: Comparison[] = JSON.parse(localStorage.getItem('iu_comparisons') ?? '[]')
+      return all.find((c) => c.id === id) ?? null
+    } catch { return null }
+  }
 
-  useEffect(() => { loadData() }, [loadData])
+  function lsSaveComparison(comp: Comparison) {
+    try {
+      const all: Comparison[] = JSON.parse(localStorage.getItem('iu_comparisons') ?? '[]')
+      const idx = all.findIndex((c) => c.id === comp.id)
+      if (idx >= 0) all[idx] = comp; else all.unshift(comp)
+      localStorage.setItem('iu_comparisons', JSON.stringify(all))
+    } catch { /* ignore */ }
+  }
+
+  function lsLoadOffers(): Offer[] {
+    try {
+      const all: Record<string, Offer[]> = JSON.parse(localStorage.getItem('iu_offers') ?? '{}')
+      return all[id] ?? []
+    } catch { return [] }
+  }
+
+  function lsSaveOffers(list: Offer[]) {
+    try {
+      const all: Record<string, Offer[]> = JSON.parse(localStorage.getItem('iu_offers') ?? '{}')
+      all[id] = list
+      localStorage.setItem('iu_offers', JSON.stringify(all))
+    } catch { /* ignore */ }
+  }
+
+  // ── Load comparison & offers ──
+  useEffect(() => {
+    // Load from localStorage immediately
+    const lsComp = lsLoadComparison()
+    if (lsComp) setComparison(lsComp)
+    setOffers(lsLoadOffers())
+    setLoading(false)
+
+    // Then try Supabase in background
+    Promise.all([
+      fetch(`/api/comparisons?id=${id}`).then((r) => r.json()).catch(() => ({ comparisons: [] })),
+      fetch(`/api/offers?comparison_id=${id}`).then((r) => r.json()).catch(() => ({ offers: [] })),
+    ]).then(([compRes, offersRes]) => {
+      const found = (compRes.comparisons ?? [])[0]
+      if (found) { setComparison(found); lsSaveComparison(found) }
+      if (offersRes.offers?.length) { setOffers(offersRes.offers); lsSaveOffers(offersRes.offers) }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   // ── Upload & extract ──
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -209,7 +243,8 @@ export default function ComparisonWorkspacePage() {
       const data = await res.json()
 
       if (data.ok && data.offer) {
-        setOffers((prev) => [...prev, data.offer])
+        const newOffer = { ...data.offer, id: data.offer.id || uuidv4() }
+        setOffers((prev) => { const next = [...prev, newOffer]; lsSaveOffers(next); return next })
         setUploadInsurer('')
         showToast(data.extraction_succeeded ? 'Данните са извлечени успешно' : 'Файлът е качен — моля попълнете данните ръчно')
       } else {
@@ -225,38 +260,40 @@ export default function ComparisonWorkspacePage() {
 
   // ── Update offer field ──
   async function updateOfferField(offerId: string, fieldKey: string, value: string) {
-    setOffers((prev) =>
-      prev.map((o) => {
+    setOffers((prev) => {
+      const next = prev.map((o) => {
         if (o.id !== offerId) return o
         const newData = { ...o.extracted_data, [fieldKey]: value }
         return { ...o, extracted_data: newData, manually_edited: true }
-      }),
-    )
+      })
+      lsSaveOffers(next)
+      return next
+    })
 
     const offer = offers.find((o) => o.id === offerId)
     if (!offer) return
     const newData = { ...offer.extracted_data, [fieldKey]: value }
 
-    await fetch(`/api/offers/${offerId}`, {
+    fetch(`/api/offers/${offerId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ extracted_data: newData, manually_edited: true }),
-    }).catch(console.error)
+    }).catch(() => {})
   }
 
   // ── Toggle recommendation ──
   async function toggleRecommendation(offerId: string) {
     const isCurrentlyRecommended = offers.find((o) => o.id === offerId)?.is_recommended
 
-    // Unset all, then set the new one
     const updated = offers.map((o) => ({
       ...o,
       is_recommended: o.id === offerId ? !isCurrentlyRecommended : false,
     }))
     setOffers(updated)
+    lsSaveOffers(updated)
 
-    // Patch all
-    await Promise.all(
+    // Sync to Supabase in background
+    Promise.all(
       updated.map((o) =>
         fetch(`/api/offers/${o.id}`, {
           method: 'PATCH',
@@ -264,24 +301,29 @@ export default function ComparisonWorkspacePage() {
           body: JSON.stringify({ is_recommended: o.is_recommended }),
         }),
       ),
-    ).catch(console.error)
+    ).catch(() => {})
   }
 
   // ── Delete offer ──
   async function deleteOffer(offerId: string) {
-    setOffers((prev) => prev.filter((o) => o.id !== offerId))
-    await fetch(`/api/offers?id=${offerId}`, { method: 'DELETE' }).catch(console.error)
+    setOffers((prev) => { const next = prev.filter((o) => o.id !== offerId); lsSaveOffers(next); return next })
+    fetch(`/api/offers?id=${offerId}`, { method: 'DELETE' }).catch(() => {})
   }
 
   // ── Save comparison ──
   async function save() {
     if (!comparison) return
     setSaving(true)
-    await fetch(`/api/comparisons?id=${comparison.id}`, {
+    const updated = { ...comparison, status: offers.length > 0 ? 'ready' : 'draft', updated_at: new Date().toISOString() }
+    setComparison(updated)
+    lsSaveComparison(updated)
+    lsSaveOffers(offers)
+    // Sync to Supabase
+    fetch(`/api/comparisons?id=${comparison.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: offers.length > 0 ? 'ready' : 'draft', notes: comparison.notes }),
-    }).catch(console.error)
+      body: JSON.stringify({ status: updated.status, notes: comparison.notes }),
+    }).catch(() => {})
     setSaving(false)
     showToast('Запазено')
   }
