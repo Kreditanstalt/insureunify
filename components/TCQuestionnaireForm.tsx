@@ -157,6 +157,7 @@ export default function TCQuestionnaireForm() {
   const [form, setForm] = useState<TCFormData>(TC_INITIAL)
   const [selectedInsurers, setSelectedInsurers] = useState<TCInsurerKey[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(0)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
@@ -233,7 +234,20 @@ export default function TCQuestionnaireForm() {
   const canSubmit = selectedInsurers.length > 0 && missing.length === 0
 
   async function handleSubmit() {
-    if (!canSubmit || submitting) return
+    setAttemptedSubmit(true)
+    if (!canSubmit || submitting) {
+      // Navigate to first step with missing required fields
+      const stepWithError = TC_STEPS.findIndex((_step, i) => {
+        const stepRequired = TC_REQUIRED.filter((k) => {
+          // Map fields to steps: step 0 = company info, step 1 = financial, etc.
+          if (i === 0) return ['tc_company_name', 'tc_eik', 'tc_contact_person', 'tc_phone'].includes(k)
+          return true
+        })
+        return stepRequired.some((k) => !form[k]?.toString().trim())
+      })
+      if (stepWithError >= 0) setCurrentStep(stepWithError)
+      return
+    }
     setSubmitting(true)
     try {
       const id = uuidv4()
@@ -296,8 +310,7 @@ export default function TCQuestionnaireForm() {
             tc_buyers:   [],
           }
           const errorSteps = TC_STEPS
-            .slice(0, currentStep)
-            .filter((s) => (tcRequired[s.id] ?? []).some((f) => !form[f as keyof typeof form]))
+            .filter((s, i) => (attemptedSubmit || i < currentStep) && (tcRequired[s.id] ?? []).some((f) => !form[f as keyof typeof form]))
             .map((s) => s.id)
           return (
             <div className="bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
@@ -392,10 +405,10 @@ export default function TCQuestionnaireForm() {
               />
             </div>
             <Field label="Адрес" id="tc_address" value={form.tc_address} onChange={f('tc_address')} />
-            <Field label="Лице за контакт" id="tc_contact_person" required showError={currentStep > 0}
+            <Field label="Лице за контакт" id="tc_contact_person" required showError={currentStep > 0 || attemptedSubmit}
               value={form.tc_contact_person} onChange={f('tc_contact_person')} />
             <Field label="Длъжност" id="tc_position" value={form.tc_position} onChange={f('tc_position')} />
-            <Field label="Телефон" id="tc_phone" required showError={currentStep > 0} value={form.tc_phone} onChange={f('tc_phone')} />
+            <Field label="Телефон" id="tc_phone" required showError={currentStep > 0 || attemptedSubmit} value={form.tc_phone} onChange={f('tc_phone')} />
             <Field label="Ел. поща" id="tc_email" value={form.tc_email} onChange={f('tc_email')} type="email" />
             <div className="sm:col-span-2">
               <Field label="Описание на дейността / Trade sector"
@@ -438,7 +451,7 @@ export default function TCQuestionnaireForm() {
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-gray-100">
             <Field label="Прогнозен оборот (хил. EUR)" id="tc_expected_turnover"
               value={form.tc_expected_turnover} onChange={f('tc_expected_turnover')} type="number" />
-            <Field label="Застрах. оборот (хил. EUR)" id="tc_expected_insurable_turnover" required showError={currentStep > 1}
+            <Field label="Застрах. оборот (хил. EUR)" id="tc_expected_insurable_turnover" required showError={currentStep > 1 || attemptedSubmit}
               value={form.tc_expected_insurable_turnover} onChange={f('tc_expected_insurable_turnover')}
               type="number" hint="Застрахователен оборот" />
             <Field label="Вътрешен пазар (хил. EUR)" id="tc_expected_domestic"
@@ -565,8 +578,12 @@ export default function TCQuestionnaireForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-all hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={submitting}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all ${
+                !canSubmit && attemptedSubmit
+                  ? 'bg-red-500 shadow-red-200 hover:bg-red-600'
+                  : 'bg-blue-600 shadow-blue-200 hover:bg-blue-700'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {submitting ? (
                 <><div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />Запазване…</>
@@ -576,9 +593,9 @@ export default function TCQuestionnaireForm() {
             </button>
           )}
         </div>
-        {!canSubmit && currentStep === TC_STEPS.length - 1 && (
-          <p className="text-xs text-amber-600 text-center mt-2">
-            {missing.length > 0 ? `Остават ${missing.length} задължителни полета` : 'Изберете застраховател'}
+        {!canSubmit && attemptedSubmit && (
+          <p className="text-xs text-red-600 text-center mt-2">
+            {missing.length > 0 ? `Остават ${missing.length} задължителни ${missing.length === 1 ? 'поле' : 'полета'}` : 'Изберете застраховател'}
           </p>
         )}
 

@@ -516,6 +516,7 @@ export default function QuestionnaireForm() {
   const [formData, setFormData] = useState<FormData>({})
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
 
@@ -629,7 +630,15 @@ export default function QuestionnaireForm() {
   const canSubmit = selectedInsurers.length > 0 && totalMissing === 0
 
   async function handleSubmit() {
-    if (!canSubmit || submitting) return
+    setAttemptedSubmit(true)
+    if (!canSubmit || submitting) {
+      // Navigate to first section with missing required fields
+      const firstErrorSection = MASTER_SCHEMA.findIndex((s) =>
+        s.fields.some((f) => f.required && !f.computed && (formData[f.id] === undefined || formData[f.id] === ''))
+      )
+      if (firstErrorSection >= 0) setCurrentSection(firstErrorSection)
+      return
+    }
     setSubmitting(true)
     try {
       const id = uuidv4()
@@ -659,10 +668,9 @@ export default function QuestionnaireForm() {
   }
 
   const errorSectionsProp = MASTER_SCHEMA
-    .slice(0, currentSection)
-    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .filter((s, i) => (attemptedSubmit || i < currentSection) && s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
     .map((s) => s.id)
-  const showFieldErrorsProp = currentSection > 0
+  const showFieldErrorsProp = currentSection > 0 || attemptedSubmit
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -772,6 +780,7 @@ export default function QuestionnaireForm() {
                     eikStatus={eikStatus}
                     onEikChange={handleEikChange}
                     onCompanySelect={handleCompanySelect}
+                    showError={showFieldErrorsProp}
                   />
                 ))}
               </div>
@@ -808,15 +817,21 @@ export default function QuestionnaireForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={submitting}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${
+                !canSubmit && attemptedSubmit
+                  ? 'bg-red-500 shadow-red-200 hover:bg-red-600'
+                  : 'bg-blue-600 shadow-blue-200 hover:bg-blue-700'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {submitting ? 'Запазване…' : `Генерирай за ${selectedInsurers.length} застрахователя`}
             </button>
           )}
         </div>
-        {!canSubmit && totalMissing > 0 && currentSection === MASTER_SCHEMA.length - 1 && (
-          <p className="text-xs text-amber-600 text-center mt-3">Остават {totalMissing} задължителни полета</p>
+        {!canSubmit && attemptedSubmit && totalMissing > 0 && (
+          <p className="text-xs text-red-600 text-center mt-3">
+            Остават {totalMissing} задължителни {totalMissing === 1 ? 'поле' : 'полета'}
+          </p>
         )}
       </div>
     </div>

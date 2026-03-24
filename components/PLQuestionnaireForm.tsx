@@ -264,6 +264,7 @@ function PLFieldInput({
   field, formData, set, setNum,
   eikStatus, onEikChange, onCompanySelect,
   insuredEikStatus, onInsuredEikChange, onInsuredCompanySelect,
+  showError,
 }: {
   field: SchemaField
   formData: PLFormData
@@ -281,7 +282,11 @@ function PLFieldInput({
     company_name: string; eik: string; address?: string; email?: string;
     phone?: string; activity?: string;
   }) => void
+  showError?: boolean
 }) {
+  const isEmpty = formData[field.id] === undefined || formData[field.id] === ''
+  const hasError = showError && field.required && isEmpty
+  const ic = hasError ? inputClass.replace('border-gray-300', 'border-red-400 bg-red-50/30') : inputClass
   if (field.id === 'pl_company_name') {
     return (
       <CompanyNameInput
@@ -320,12 +325,12 @@ function PLFieldInput({
   }
   if (field.type === 'select' && field.options) {
     return field.options.length <= 3
-      ? <ToggleGroup options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} />
+      ? <div className={hasError ? 'rounded-lg ring-2 ring-red-400 ring-offset-1' : ''}><ToggleGroup options={field.options} value={formData[field.id]} onChange={(v) => set(field.id, v)} /></div>
       : (
         <select
           value={String(formData[field.id] ?? '')}
           onChange={(e) => set(field.id, e.target.value)}
-          className={inputClass}
+          className={ic}
         >
           <option value="">— Изберете —</option>
           {field.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -339,7 +344,7 @@ function PLFieldInput({
         onChange={(e) => set(field.id, e.target.value)}
         placeholder={field.placeholder}
         rows={3}
-        className={inputClass + ' resize-none'}
+        className={ic + ' resize-none'}
       />
     )
   }
@@ -350,7 +355,7 @@ function PLFieldInput({
         value={formData[field.id] ?? ''}
         onChange={(e) => setNum(field.id, e.target.value)}
         placeholder={field.placeholder ?? '0'}
-        className={inputClass}
+        className={ic}
       />
     )
   }
@@ -360,7 +365,7 @@ function PLFieldInput({
         type="date"
         value={String(formData[field.id] ?? '')}
         onChange={(e) => set(field.id, e.target.value)}
-        className={inputClass}
+        className={ic}
       />
     )
   }
@@ -370,7 +375,7 @@ function PLFieldInput({
       value={String(formData[field.id] ?? '')}
       onChange={(e) => set(field.id, e.target.value)}
       placeholder={field.placeholder}
-      className={inputClass}
+      className={ic}
     />
   )
 }
@@ -450,6 +455,7 @@ export default function PLQuestionnaireForm() {
   const [formData, setFormData] = useState<PLFormData>({})
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [eikStatus, setEikStatus] = useState<EikStatus>('idle')
   const abortRef = useRef<AbortController | null>(null)
   const [insuredEikStatus, setInsuredEikStatus] = useState<EikStatus>('idle')
@@ -624,7 +630,7 @@ export default function PLQuestionnaireForm() {
 
   const showFieldError = (fieldId: string) => {
     const sectionIdx = PL_SCHEMA.findIndex((s) => s.fields.some((f) => f.id === fieldId))
-    return sectionIdx < currentSection && (formData[fieldId] === undefined || formData[fieldId] === '')
+    return (attemptedSubmit || sectionIdx < currentSection) && (formData[fieldId] === undefined || formData[fieldId] === '')
   }
 
   const REQUIRED_IDS = PL_SCHEMA.flatMap((s) => s.fields.filter((f) => f.required).map((f) => f.id))
@@ -632,7 +638,14 @@ export default function PLQuestionnaireForm() {
   const canSubmit = selectedInsurers.length > 0 && missing.length === 0
 
   async function handleSubmit() {
-    if (!canSubmit || submitting) return
+    setAttemptedSubmit(true)
+    if (!canSubmit || submitting) {
+      const firstErrorSection = PL_SCHEMA.findIndex((s) =>
+        s.fields.some((f) => f.required && (formData[f.id] === undefined || formData[f.id] === ''))
+      )
+      if (firstErrorSection >= 0) setCurrentSection(firstErrorSection)
+      return
+    }
     setSubmitting(true)
     try {
       const id = uuidv4()
@@ -669,8 +682,7 @@ export default function PLQuestionnaireForm() {
     .map((s) => s.id)
 
   const errorSectionsPL = PL_SCHEMA
-    .slice(0, currentSection)
-    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .filter((s, i) => (attemptedSubmit || i < currentSection) && s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
     .map((s) => s.id)
 
   return (
@@ -788,6 +800,7 @@ export default function PLQuestionnaireForm() {
                   insuredEikStatus={insuredEikStatus}
                   onInsuredEikChange={handleInsuredEikChange}
                   onInsuredCompanySelect={handleInsuredCompanySelect}
+                  showError={showFieldError(field.id) || (attemptedSubmit && field.required && (formData[field.id] === undefined || formData[field.id] === ''))}
                 />
               </FieldLabel>
             ))}
@@ -823,15 +836,19 @@ export default function PLQuestionnaireForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-purple-200 transition-colors hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={submitting}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${
+                !canSubmit && attemptedSubmit
+                  ? 'bg-red-500 shadow-red-200 hover:bg-red-600'
+                  : 'bg-purple-600 shadow-purple-200 hover:bg-purple-700'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {submitting ? 'Запазване…' : 'Генерирай документи'}
             </button>
           )}
         </div>
-        {!canSubmit && missing.length > 0 && currentSection === PL_SCHEMA.length - 1 && (
-          <p className="text-xs text-amber-600 text-center mt-3">Остават {missing.length} задължителни полета</p>
+        {!canSubmit && attemptedSubmit && missing.length > 0 && (
+          <p className="text-xs text-red-600 text-center mt-3">Остават {missing.length} задължителни {missing.length === 1 ? 'поле' : 'полета'}</p>
         )}
       </div>
     </div>

@@ -278,6 +278,7 @@ export default function GLQuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<GLInsurerKey[]>(['generali', 'bulstrad', 'ozk'])
   const [formData, setFormData] = useState<GLFormData>({})
   const [submitting, setSubmitting] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
@@ -375,7 +376,14 @@ export default function GLQuestionnaireForm() {
   const canSubmit   = selectedInsurers.length > 0 && missing.length === 0
 
   async function handleSubmit() {
-    if (!canSubmit || submitting) return
+    setAttemptedSubmit(true)
+    if (!canSubmit || submitting) {
+      const firstErrorSection = GL_SCHEMA.findIndex((s) =>
+        s.fields.some((f) => f.required && (!formData[f.id] && formData[f.id] !== 0))
+      )
+      if (firstErrorSection >= 0) setCurrentSection(firstErrorSection)
+      return
+    }
     setSubmitting(true)
     try {
       const id         = uuidv4()
@@ -410,12 +418,11 @@ export default function GLQuestionnaireForm() {
 
   // Sections that have been visited (idx <= currentSection) but have missing required fields
   const errorSections = GL_SCHEMA
-    .slice(0, currentSection)
-    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .filter((s, i) => (attemptedSubmit || i < currentSection) && s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
     .map((s) => s.id)
 
   // Show red border on required fields that are empty (only after user has moved past that section)
-  const showFieldErrors = currentSection > 0
+  const showFieldErrors = currentSection > 0 || attemptedSubmit
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -551,16 +558,20 @@ export default function GLQuestionnaireForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-200 transition-colors hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={submitting}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${
+                !canSubmit && attemptedSubmit
+                  ? 'bg-red-500 shadow-red-200 hover:bg-red-600'
+                  : 'bg-rose-600 shadow-rose-200 hover:bg-rose-700'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {submitting ? 'Запазване…' : `Генерирай за ${selectedInsurers.length} застрахователя`}
             </button>
           )}
         </div>
-        {!canSubmit && missing.length > 0 && currentSection === GL_SCHEMA.length - 1 && (
-          <p className="text-xs text-amber-600 text-center mt-3">
-            Остават {missing.length} задължителни полета
+        {!canSubmit && attemptedSubmit && missing.length > 0 && (
+          <p className="text-xs text-red-600 text-center mt-3">
+            Остават {missing.length} задължителни {missing.length === 1 ? 'поле' : 'полета'}
           </p>
         )}
       </div>

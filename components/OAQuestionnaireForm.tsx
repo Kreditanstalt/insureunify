@@ -272,6 +272,7 @@ export default function OAQuestionnaireForm() {
   const [selectedInsurers, setSelectedInsurers] = useState<OAInsurerKey[]>(['allianz', 'groupama', 'ozk'])
   const [formData, setFormData] = useState<OAFormData>({})
   const [submitting, setSubmitting] = useState(false)
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [currentSection, setCurrentSection] = useState(0)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
@@ -366,7 +367,14 @@ export default function OAQuestionnaireForm() {
   const canSubmit = selectedInsurers.length > 0 && missing.length === 0
 
   async function handleSubmit() {
-    if (!canSubmit || submitting) return
+    setAttemptedSubmit(true)
+    if (!canSubmit || submitting) {
+      const firstErrorSection = OA_SCHEMA.findIndex((s) =>
+        s.fields.some((f) => f.required && (!formData[f.id] && formData[f.id] !== 0))
+      )
+      if (firstErrorSection >= 0) setCurrentSection(firstErrorSection)
+      return
+    }
     setSubmitting(true)
     try {
       const id         = uuidv4()
@@ -396,10 +404,9 @@ export default function OAQuestionnaireForm() {
   }
 
   const errorSectionsOA = OA_SCHEMA
-    .slice(0, currentSection)
-    .filter((s) => s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
+    .filter((s, i) => (attemptedSubmit || i < currentSection) && s.fields.filter((f) => f.required).some((f) => !formData[f.id] && formData[f.id] !== 0))
     .map((s) => s.id)
-  const showFieldErrorsOA = currentSection > 0
+  const showFieldErrorsOA = currentSection > 0 || attemptedSubmit
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -535,15 +542,19 @@ export default function OAQuestionnaireForm() {
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-emerald-200 transition-colors hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={submitting}
+              className={`flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors ${
+                !canSubmit && attemptedSubmit
+                  ? 'bg-red-500 shadow-red-200 hover:bg-red-600'
+                  : 'bg-emerald-600 shadow-emerald-200 hover:bg-emerald-700'
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
               {submitting ? 'Запазване…' : `Генерирай за ${selectedInsurers.length} застрахователя`}
             </button>
           )}
         </div>
-        {!canSubmit && missing.length > 0 && currentSection === OA_SCHEMA.length - 1 && (
-          <p className="text-xs text-amber-600 text-center mt-3">Остават {missing.length} задължителни полета</p>
+        {!canSubmit && attemptedSubmit && missing.length > 0 && (
+          <p className="text-xs text-red-600 text-center mt-3">Остават {missing.length} задължителни {missing.length === 1 ? 'поле' : 'полета'}</p>
         )}
       </div>
     </div>
