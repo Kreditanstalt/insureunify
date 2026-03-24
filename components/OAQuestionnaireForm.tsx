@@ -10,6 +10,9 @@ import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
 import StepperBar from './StepperBar'
+import DraftRecoveryBanner from './DraftRecoveryBanner'
+import DraftStatusIndicator from './DraftStatusIndicator'
+import { useDraftAutoSave } from '@/hooks/useDraftAutoSave'
 
 const OA_STEPS = OA_SCHEMA.map((s) => ({ id: s.id, label: s.label, icon: s.icon }))
 
@@ -273,6 +276,15 @@ export default function OAQuestionnaireForm() {
   const [currentSection, setCurrentSection] = useState(0)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
 
+  const draft = useDraftAutoSave({
+    insuranceClass: 'occupational_accident',
+    formData: formData as Record<string, unknown>,
+    selectedInsurers,
+    currentSection,
+    eikField: 'oa_eik',
+    clientNameField: 'oa_company_name',
+  })
+
   // Apply renewal data on mount
   useEffect(() => {
     const renewal = readRenewalData()
@@ -375,6 +387,7 @@ export default function OAQuestionnaireForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submission),
       }).catch(console.error)
+      draft.clearDraft()
       router.push(`/review/${id}`)
     } catch (err) {
       console.error(err)
@@ -392,9 +405,24 @@ export default function OAQuestionnaireForm() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">Нов въпросник Трудова злополука</h1>
-        <p className="text-gray-500 text-sm mb-4">
+        <p className="text-gray-500 text-sm">
           Задължителна и доброволна застраховка злополука на работници и служители
         </p>
+        <DraftStatusIndicator status={draft.saveStatus} />
+        <div className="mb-4" />
+
+        {draft.pendingDraft && (
+          <DraftRecoveryBanner
+            draft={draft.pendingDraft}
+            onRestore={() => {
+              const restored = draft.restoreDraft()
+              setFormData(restored.formData as OAFormData)
+              setSelectedInsurers(restored.selectedInsurers as OAInsurerKey[])
+              setCurrentSection(restored.currentSection)
+            }}
+            onDismiss={() => draft.dismissDraft()}
+          />
+        )}
 
         {/* Stepper */}
         <div className="mb-6 bg-white rounded-2xl border border-gray-200 px-4 py-3 shadow-sm">
@@ -482,7 +510,7 @@ export default function OAQuestionnaireForm() {
         <div className="mt-6 flex items-center justify-between gap-3 sm:relative fixed bottom-0 left-0 right-0 sm:left-auto sm:right-auto sm:bottom-auto bg-white sm:bg-transparent border-t sm:border-t-0 border-gray-200 p-4 sm:p-0 z-30">
           <button
             type="button"
-            onClick={() => setCurrentSection((p) => Math.max(0, p - 1))}
+            onClick={() => { draft.saveNow(); setCurrentSection((p) => Math.max(0, p - 1)) }}
             disabled={currentSection === 0}
             className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
           >
@@ -495,7 +523,7 @@ export default function OAQuestionnaireForm() {
           {currentSection < OA_SCHEMA.length - 1 ? (
             <button
               type="button"
-              onClick={() => setCurrentSection((p) => Math.min(OA_SCHEMA.length - 1, p + 1))}
+              onClick={() => { draft.saveNow(); setCurrentSection((p) => Math.min(OA_SCHEMA.length - 1, p + 1)) }}
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
             >
               Напред

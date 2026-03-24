@@ -9,6 +9,9 @@ import { readRenewalData } from '@/lib/renewal'
 import AutoFillUploader from './AutoFillUploader'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
 import StepperBar from './StepperBar'
+import DraftRecoveryBanner from './DraftRecoveryBanner'
+import DraftStatusIndicator from './DraftStatusIndicator'
+import { useDraftAutoSave } from '@/hooks/useDraftAutoSave'
 
 const TC_STEPS = [
   { id: 'tc_basic',    label: 'Основни данни',    icon: '🏢' },
@@ -158,6 +161,15 @@ export default function TCQuestionnaireForm() {
   const [currentStep, setCurrentStep] = useState(0)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
 
+  const draft = useDraftAutoSave({
+    insuranceClass: 'trade_credit',
+    formData: form as unknown as Record<string, unknown>,
+    selectedInsurers,
+    currentSection: currentStep,
+    eikField: 'tc_eik',
+    clientNameField: 'tc_company_name',
+  })
+
   // Apply renewal data on mount (TC has no period fields)
   useEffect(() => {
     const renewal = readRenewalData()
@@ -241,6 +253,7 @@ export default function TCQuestionnaireForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submission),
       }).catch(console.error)
+      draft.clearDraft()
       router.push(`/review/${id}`)
     } catch {
       setSubmitting(false)
@@ -255,6 +268,21 @@ export default function TCQuestionnaireForm() {
           <h1 className="text-2xl font-bold text-gray-900">Търговски кредит</h1>
           <p className="text-sm text-gray-500 mt-1">Застраховка на търговски вземания · Атрадиус, Алианц Трейд</p>
         </div>
+        <DraftStatusIndicator status={draft.saveStatus} />
+        <div className="mb-4" />
+
+        {draft.pendingDraft && (
+          <DraftRecoveryBanner
+            draft={draft.pendingDraft}
+            onRestore={() => {
+              const restored = draft.restoreDraft()
+              setForm(restored.formData as unknown as TCFormData)
+              setSelectedInsurers(restored.selectedInsurers as TCInsurerKey[])
+              setCurrentStep(restored.currentSection)
+            }}
+            onDismiss={() => draft.dismissDraft()}
+          />
+        )}
 
         {/* Stepper */}
         {(() => {
@@ -512,7 +540,7 @@ export default function TCQuestionnaireForm() {
         <div className="mt-2 flex items-center justify-between gap-3 sm:relative fixed bottom-0 left-0 right-0 sm:left-auto sm:right-auto sm:bottom-auto bg-white sm:bg-transparent border-t sm:border-t-0 border-gray-200 p-4 sm:p-0 z-30">
           <button
             type="button"
-            onClick={() => setCurrentStep((p) => Math.max(0, p - 1))}
+            onClick={() => { draft.saveNow(); setCurrentStep((p) => Math.max(0, p - 1)) }}
             disabled={currentStep === 0}
             className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
           >
@@ -525,7 +553,7 @@ export default function TCQuestionnaireForm() {
           {currentStep < TC_STEPS.length - 1 ? (
             <button
               type="button"
-              onClick={() => setCurrentStep((p) => Math.min(TC_STEPS.length - 1, p + 1))}
+              onClick={() => { draft.saveNow(); setCurrentStep((p) => Math.min(TC_STEPS.length - 1, p + 1)) }}
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
             >
               Напред
