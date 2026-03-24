@@ -4,6 +4,20 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 
+const INSURER_OPTIONS = [
+  { value: 'Булстрад', label: 'Булстрад' },
+  { value: 'Дженерали', label: 'Дженерали' },
+  { value: 'Инстинкт', label: 'Инстинкт' },
+  { value: 'ОЗК', label: 'ОЗК' },
+  { value: 'Алианц', label: 'Алианц' },
+  { value: 'Групама', label: 'Групама' },
+  { value: 'Аксиом', label: 'Аксиом' },
+  { value: 'Евроинс', label: 'Евроинс' },
+  { value: 'Атрадиус', label: 'Атрадиус' },
+  { value: 'Алианц Трейд', label: 'Алианц Трейд' },
+  { value: '__custom', label: 'Друг...' },
+]
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface ExtractedData {
@@ -156,6 +170,9 @@ export default function ComparisonWorkspacePage() {
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [uploadInsurer, setUploadInsurer] = useState('')
+  const [customInsurer, setCustomInsurer] = useState('')
+  const isCustom = uploadInsurer === '__custom'
+  const effectiveInsurer = isCustom ? customInsurer : uploadInsurer
   const [showSendModal, setShowSendModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
@@ -237,7 +254,7 @@ export default function ComparisonWorkspacePage() {
   // ── Upload & extract ──
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !uploadInsurer.trim()) return
+    if (!file || !effectiveInsurer.trim()) return
 
     const ext = file.name.split('.').pop()?.toLowerCase()
     if (!['pdf', 'docx', 'doc', 'eml', 'png', 'jpg', 'jpeg'].includes(ext ?? '')) {
@@ -249,7 +266,7 @@ export default function ComparisonWorkspacePage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      fd.append('insurer_name', uploadInsurer.trim())
+      fd.append('insurer_name', effectiveInsurer.trim())
       fd.append('comparison_id', id)
 
       const res = await fetch('/api/offers/extract', { method: 'POST', body: fd })
@@ -259,6 +276,7 @@ export default function ComparisonWorkspacePage() {
         const newOffer = { ...data.offer, id: data.offer.id || uuidv4() }
         setOffers((prev) => { const next = [...prev, newOffer]; lsSaveOffers(next); return next })
         setUploadInsurer('')
+        setCustomInsurer('')
         showToast(data.extraction_succeeded ? 'Данните са извлечени успешно' : 'Файлът е качен — моля попълнете данните ръчно')
       } else {
         showToast('Грешка при качване')
@@ -446,7 +464,7 @@ export default function ComparisonWorkspacePage() {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap flex-shrink-0">
-          <button onClick={() => fileInputRef.current?.click()} disabled={!uploadInsurer.trim() || uploading}
+          <button onClick={() => fileInputRef.current?.click()} disabled={!effectiveInsurer.trim() || uploading}
             className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -477,13 +495,26 @@ export default function ComparisonWorkspacePage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3">
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-700 mb-1">Застраховател</label>
-            <input
-              type="text"
+            <select
               value={uploadInsurer}
-              onChange={(e) => setUploadInsurer(e.target.value)}
-              placeholder="Напр. Булстрад, Дженерали..."
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 outline-none"
-            />
+              onChange={(e) => { setUploadInsurer(e.target.value); if (e.target.value !== '__custom') setCustomInsurer('') }}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 outline-none bg-white"
+            >
+              <option value="">— Изберете застраховател —</option>
+              {INSURER_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+            {isCustom && (
+              <input
+                type="text"
+                value={customInsurer}
+                onChange={(e) => setCustomInsurer(e.target.value)}
+                placeholder="Въведете име на застраховател..."
+                className="w-full mt-2 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 outline-none"
+                autoFocus
+              />
+            )}
           </div>
           <div className="flex-shrink-0">
             <input
@@ -495,7 +526,7 @@ export default function ComparisonWorkspacePage() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={!uploadInsurer.trim() || uploading}
+              disabled={!effectiveInsurer.trim() || uploading}
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50 transition-colors min-h-[38px]"
             >
               {uploading ? (
