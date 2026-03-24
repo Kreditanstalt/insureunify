@@ -235,6 +235,24 @@ export default function ReviewPage() {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span className="hidden sm:block text-xs text-gray-400">{submission.selectedInsurers.length} застрахователя</span>
+            <button
+              onClick={async () => {
+                const res = await fetch('/api/comparisons', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    submission_id: submission.id,
+                    client_name: submission.clientName,
+                    insurance_class: submission.insuranceClass ?? 'property',
+                  }),
+                })
+                const data = await res.json()
+                if (data.comparison?.id) router.push(`/dashboard/comparisons/${data.comparison.id}`)
+              }}
+              className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors font-medium whitespace-nowrap hidden sm:block"
+            >
+              Сравни оферти
+            </button>
             <Link href="/dashboard/new" className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors font-medium whitespace-nowrap">
               + Нов
             </Link>

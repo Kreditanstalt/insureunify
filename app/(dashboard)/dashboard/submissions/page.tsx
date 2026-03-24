@@ -69,7 +69,18 @@ export default function SubmissionsPage() {
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState<string>('all')
 
+  const [comparisonSubmissionIds, setComparisonSubmissionIds] = useState<Set<string>>(new Set())
+
   useEffect(() => {
+    // Load comparison submission IDs
+    fetch('/api/comparisons')
+      .then((r) => r.json())
+      .then((d) => {
+        const ids = new Set<string>((d.comparisons ?? []).map((c: { submission_id?: string }) => c.submission_id).filter(Boolean))
+        setComparisonSubmissionIds(ids)
+      })
+      .catch(() => {})
+
     // Try Supabase first, fall back to localStorage
     fetch('/api/submissions')
       .then((r) => r.json())
@@ -264,6 +275,13 @@ export default function SubmissionsPage() {
                           >
                             {cls.label}
                           </span>
+                          {comparisonSubmissionIds.has(sub.id) && (
+                            <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600" title="Има сравнение на оферти">
+                              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                              </svg>
+                            </span>
+                          )}
                         </div>
                         <div className="mt-0.5 flex items-center gap-2 flex-wrap">
                           <span className="text-xs text-gray-400 sm:hidden" title={fmtDateFull(sub.createdAt)}>

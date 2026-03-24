@@ -43,6 +43,10 @@ const MAIN_ITEMS: NavItem[] = [
     label: 'Нови формуляри', href: '/dashboard/form-requests',
     icon: <Icon d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />,
   },
+  {
+    label: 'Сравнения', href: '/dashboard/comparisons',
+    icon: <Icon d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />,
+  },
 ]
 
 const CLASS_ITEMS: NavItem[] = [
