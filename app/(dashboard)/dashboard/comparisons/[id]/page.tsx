@@ -205,7 +205,20 @@ export default function ComparisonWorkspacePage() {
   useEffect(() => {
     // Load from localStorage immediately
     const lsComp = lsLoadComparison()
-    if (lsComp) setComparison(lsComp)
+    if (lsComp) {
+      setComparison(lsComp)
+    } else {
+      // Fallback: create a new comparison object so the page always renders
+      const fallback: Comparison = {
+        id,
+        client_name: '',
+        insurance_class: 'property',
+        status: 'draft',
+        created_at: new Date().toISOString(),
+      }
+      setComparison(fallback)
+      lsSaveComparison(fallback)
+    }
     setOffers(lsLoadOffers())
     setLoading(false)
 

@@ -260,7 +260,7 @@ export default function ReviewPage() {
                 }).catch(() => {})
                 router.push(`/dashboard/comparisons/${newComp.id}`)
               }}
-              className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors font-medium whitespace-nowrap hidden sm:block"
+              className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors font-medium whitespace-nowrap"
             >
               Сравни оферти
             </button>
