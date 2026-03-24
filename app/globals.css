@@ -25,4 +25,21 @@
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-gray-400;
   }
+
+  /* Touch-friendly form controls on mobile */
+  @media (max-width: 639px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="date"],
+    input[type="url"],
+    input[type="search"],
+    input[type="password"],
+    select,
+    textarea {
+      min-height: 44px;
+      font-size: 16px; /* prevents iOS zoom on focus */
+    }
+  }
 }

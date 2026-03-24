@@ -210,7 +210,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
       onClick={handleDownload}
       disabled={loading}
       style={{ borderColor: loading ? undefined : color + '66' }}
-      className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="flex items-center gap-1.5 text-xs px-3 py-2 sm:py-1.5 rounded-lg border text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[36px] sm:min-h-0"
     >
       {loading ? (
         <>

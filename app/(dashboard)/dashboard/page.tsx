@@ -190,7 +190,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-full bg-gray-50/60">
-      <div className="px-6 py-8 max-w-6xl mx-auto space-y-7">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto space-y-5 sm:space-y-7">
 
         {/* Migration banner */}
         {migrating && (
@@ -239,7 +239,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Stats row ── */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <StatCard
             value={stats.total}
             label="Общо запитвания"
@@ -278,7 +278,7 @@ export default function DashboardPage() {
         {/* ── Quick actions ── */}
         <section>
           <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">Бързо запитване</h2>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {QUICK_ACTIONS.map((action) => (
               <button
                 key={action.href}
@@ -362,67 +362,96 @@ export default function DashboardPage() {
                   const cls = CLASS_LABELS[sub.insuranceClass ?? 'property'] ?? CLASS_LABELS.property
                   const initials = getInitials(sub.clientName)
                   return (
-                    <div key={sub.id} className="group flex items-center gap-4 px-5 py-3.5 hover:bg-gray-50/80 transition-colors">
-                      <div
-                        className="flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: cls.bg, color: cls.color }}
-                      >
-                        {initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <button
-                            onClick={() => router.push(`/review/${sub.id}`)}
-                            className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors"
-                          >
-                            {sub.clientName}
-                          </button>
-                          <span
-                            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                            style={{ backgroundColor: cls.bg, color: cls.color }}
-                          >
-                            {cls.label}
+                    <div key={sub.id} className="group px-4 sm:px-5 py-3 sm:py-3.5 hover:bg-gray-50/80 transition-colors">
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <div
+                          className="flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ backgroundColor: cls.bg, color: cls.color }}
+                        >
+                          {initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => router.push(`/review/${sub.id}`)}
+                              className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors truncate"
+                            >
+                              {sub.clientName}
+                            </button>
+                            <span
+                              className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                              style={{ backgroundColor: cls.bg, color: cls.color }}
+                            >
+                              {cls.label}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+                            <span className="text-xs text-gray-400 sm:hidden" title={fmtDateFull(sub.createdAt)}>
+                              {fmtDate(sub.createdAt)}
+                            </span>
+                            {sub.selectedInsurers.slice(0, 4).map((key) => {
+                              const ins = ALL_INSURERS[key]
+                              if (!ins) return null
+                              return <span key={key} className="hidden sm:inline text-[11px] text-gray-400">{ins.name}</span>
+                            })}
+                            {sub.selectedInsurers.length > 4 && (
+                              <span className="hidden sm:inline text-[11px] text-gray-400">+{sub.selectedInsurers.length - 4}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex-shrink-0 flex items-center gap-3">
+                          <span className="hidden text-xs text-gray-400 sm:block" title={fmtDateFull(sub.createdAt)}>
+                            {fmtDate(sub.createdAt)}
                           </span>
-                        </div>
-                        <div className="mt-0.5 flex items-center gap-2 flex-wrap">
-                          {sub.selectedInsurers.slice(0, 4).map((key) => {
-                            const ins = ALL_INSURERS[key]
-                            if (!ins) return null
-                            return <span key={key} className="text-[11px] text-gray-400">{ins.name}</span>
-                          })}
-                          {sub.selectedInsurers.length > 4 && (
-                            <span className="text-[11px] text-gray-400">+{sub.selectedInsurers.length - 4}</span>
-                          )}
+                          <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => renewSubmission(sub)}
+                              className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
+                              title="Подновяване"
+                            >
+                              Обнови
+                            </button>
+                            <button
+                              onClick={() => router.push(`/review/${sub.id}`)}
+                              className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                            >
+                              Преглед
+                            </button>
+                            <button
+                              onClick={() => deleteSubmission(sub.id)}
+                              className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                              title="Изтрий"
+                            >
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex-shrink-0 flex items-center gap-3">
-                        <span className="hidden text-xs text-gray-400 sm:block" title={fmtDateFull(sub.createdAt)}>
-                          {fmtDate(sub.createdAt)}
-                        </span>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => renewSubmission(sub)}
-                            className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-100 transition-colors"
-                            title="Подновяване"
-                          >
-                            Обнови
-                          </button>
-                          <button
-                            onClick={() => router.push(`/review/${sub.id}`)}
-                            className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
-                          >
-                            Преглед
-                          </button>
-                          <button
-                            onClick={() => deleteSubmission(sub.id)}
-                            className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
-                            title="Изтрий"
-                          >
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </button>
-                        </div>
+                      {/* Mobile action buttons */}
+                      <div className="flex sm:hidden items-center gap-2 mt-2 ml-12">
+                        <button
+                          onClick={() => renewSubmission(sub)}
+                          className="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 active:bg-emerald-100 min-h-[36px]"
+                        >
+                          Обнови
+                        </button>
+                        <button
+                          onClick={() => router.push(`/review/${sub.id}`)}
+                          className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 active:bg-blue-100 min-h-[36px]"
+                        >
+                          Преглед
+                        </button>
+                        <button
+                          onClick={() => deleteSubmission(sub.id)}
+                          className="rounded-lg p-1.5 text-gray-400 active:bg-red-50 active:text-red-500 ml-auto min-h-[36px]"
+                          title="Изтрий"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
                   )

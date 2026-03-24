@@ -68,30 +68,32 @@ function InsurerHeader({
 }) {
   return (
     <div
-      className="px-5 py-4 flex items-center justify-between"
+      className="px-4 sm:px-5 py-3 sm:py-4"
       style={{ backgroundColor: color + '10', borderBottom: `2px solid ${color}` }}
     >
-      <div className="flex items-center gap-3">
-        <div
-          className="w-14 h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-white"
-          style={{ border: `1px solid ${color}40` }}
-        >
-          {logo ? (
-            <Image src={logo} alt={name} width={56} height={44} className="object-contain p-1" />
-          ) : (
-            <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: color }}>
-              {name[0]}
-            </div>
-          )}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div
+            className="w-10 h-8 sm:w-14 sm:h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-white"
+            style={{ border: `1px solid ${color}40` }}
+          >
+            {logo ? (
+              <Image src={logo} alt={name} width={56} height={44} className="object-contain p-0.5 sm:p-1" />
+            ) : (
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm" style={{ backgroundColor: color }}>
+                {name[0]}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold text-gray-900 text-sm sm:text-base truncate">{name}</div>
+            <div className="text-[10px] sm:text-xs text-gray-500">{formCode}</div>
+          </div>
         </div>
-        <div>
-          <div className="font-semibold text-gray-900">{name}</div>
-          <div className="text-xs text-gray-500">{formCode}</div>
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          <span className="hidden sm:inline text-xs text-gray-400">{fieldCount} полета</span>
+          {downloadButton}
         </div>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="text-xs text-gray-400">{fieldCount} полета</span>
-        {downloadButton}
       </div>
     </div>
   )
@@ -174,7 +176,7 @@ export default function ReviewOutput({ mappedData, selectedInsurers, clientName,
                 const sectionFields = section.fields.filter((f) => data[f.id])
                 if (sectionFields.length === 0) return null
                 return (
-                  <div key={section.id} className="px-5 py-4">
+                  <div key={section.id} className="px-4 sm:px-5 py-3 sm:py-4">
                     <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
                       {section.label}
                     </div>

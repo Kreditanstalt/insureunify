@@ -211,37 +211,38 @@ export default function ReviewPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-gray-600 transition-colors">
+      <header className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button onClick={() => router.push('/dashboard')} className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 p-1">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <div>
-              <h1 className="text-base font-semibold text-gray-900 leading-none">{submission.clientName}</h1>
-              <p className="text-xs text-gray-400 mt-0.5">
-                {classLabel} ·{' '}
-                {new Date(submission.createdAt).toLocaleDateString('bg-BG', { day: '2-digit', month: 'long', year: 'numeric' })}
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-semibold text-gray-900 leading-none truncate">{submission.clientName}</h1>
+              <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 truncate">
+                <span className="hidden sm:inline">{classLabel} · </span>
+                <span className="sm:hidden">{isOA ? 'Трудова зл.' : isGL ? 'ОГО' : isPL ? 'Проф. отг.' : isTC ? 'Търг. кредит' : 'Имущество'} · </span>
+                {new Date(submission.createdAt).toLocaleDateString('bg-BG', { day: '2-digit', month: 'short', year: 'numeric' })}
                 {submission.renewedFromId && (
-                  <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                  <span className="ml-1 sm:ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-medium text-emerald-700">
                     Подновена от #{submission.renewedFromId.slice(0, 8)}
                   </span>
                 )}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <span className="hidden sm:block text-xs text-gray-400">{submission.selectedInsurers.length} застрахователя</span>
-            <Link href="/dashboard/new" className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors font-medium">
+            <Link href="/dashboard/new" className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 hover:text-gray-900 transition-colors font-medium whitespace-nowrap">
               + Нов
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {isOA ? (
           <ReviewOutput
             mappedData={oaMapped!}

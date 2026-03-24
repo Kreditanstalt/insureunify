@@ -81,7 +81,7 @@ export default function ClientsList() {
 
   return (
     <div className="min-h-full bg-gray-50/60">
-      <div className="px-6 py-8 max-w-6xl mx-auto space-y-6">
+      <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto space-y-5 sm:space-y-6">
 
         {/* ── Header ── */}
         <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -138,68 +138,97 @@ export default function ClientsList() {
                 const av = avatarColor(client.company_name)
                 const initials = getInitials(client.company_name)
                 return (
-                  <div key={client.id} className="group flex items-center gap-4 px-5 py-4 hover:bg-gray-50/80 transition-colors">
-
-                    {/* Avatar */}
-                    <div
-                      className="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-xs font-bold"
-                      style={{ backgroundColor: av.bg, color: av.color }}
-                    >
-                      {initials}
-                    </div>
-
-                    {/* Main info */}
-                    <div className="flex-1 min-w-0">
-                      <button
-                        onClick={() => router.push(`/dashboard/clients/${client.id}`)}
-                        className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left"
+                  <div key={client.id} className="group px-4 sm:px-5 py-3 sm:py-4 hover:bg-gray-50/80 transition-colors">
+                    <div className="flex items-center gap-3 sm:gap-4">
+                      {/* Avatar */}
+                      <div
+                        className="flex-shrink-0 h-9 w-9 sm:h-10 sm:w-10 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ backgroundColor: av.bg, color: av.color }}
                       >
-                        {client.company_name}
-                      </button>
-                      <div className="mt-0.5 flex items-center gap-3 flex-wrap">
-                        {client.eik && (
-                          <span className="text-xs text-gray-400 font-mono">ЕИК {client.eik}</span>
-                        )}
-                        {client.activity && (
-                          <span className="text-xs text-gray-400 truncate max-w-[200px]">{client.activity}</span>
-                        )}
-                        {client.tags && client.tags.length > 0 && client.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
-                            {tag}
-                          </span>
-                        ))}
+                        {initials}
+                      </div>
+
+                      {/* Main info */}
+                      <div className="flex-1 min-w-0">
+                        <button
+                          onClick={() => router.push(`/dashboard/clients/${client.id}`)}
+                          className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors text-left truncate block"
+                        >
+                          {client.company_name}
+                        </button>
+                        <div className="mt-0.5 flex items-center gap-2 sm:gap-3 flex-wrap">
+                          {client.eik && (
+                            <span className="text-xs text-gray-400 font-mono">ЕИК {client.eik}</span>
+                          )}
+                          {client.activity && (
+                            <span className="hidden sm:inline text-xs text-gray-400 truncate max-w-[200px]">{client.activity}</span>
+                          )}
+                          {client.tags && client.tags.length > 0 && client.tags.slice(0, 2).map((tag) => (
+                            <span key={tag} className="hidden sm:inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-medium text-blue-700">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Stats (desktop) */}
+                      <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
+                        <div className="text-center">
+                          <p className="text-sm font-bold text-gray-900 tabular-nums">{client.submissions_count ?? 0}</p>
+                          <p className="text-[10px] text-gray-400">запитвания</p>
+                        </div>
+                        <div className="text-center hidden lg:block">
+                          <p className="text-xs font-medium text-gray-700">{fmtDate(client.last_submission_at)}</p>
+                          <p className="text-[10px] text-gray-400">последно</p>
+                        </div>
+                      </div>
+
+                      {/* Actions (desktop) */}
+                      <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button
+                          onClick={() => router.push(`/dashboard/new?client=${client.id}`)}
+                          className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                        >
+                          + Запитване
+                        </button>
+                        <button
+                          onClick={() => router.push(`/dashboard/clients/${client.id}`)}
+                          className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                        >
+                          Отвори
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(client.id)}
+                          className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                          title="Изтрий"
+                        >
+                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Stats */}
-                    <div className="hidden sm:flex items-center gap-6 flex-shrink-0">
-                      <div className="text-center">
-                        <p className="text-sm font-bold text-gray-900 tabular-nums">{client.submissions_count ?? 0}</p>
-                        <p className="text-[10px] text-gray-400">запитвания</p>
-                      </div>
-                      <div className="text-center hidden lg:block">
-                        <p className="text-xs font-medium text-gray-700">{fmtDate(client.last_submission_at)}</p>
-                        <p className="text-[10px] text-gray-400">последно</p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    {/* Mobile actions + stats */}
+                    <div className="flex sm:hidden items-center gap-2 mt-2 ml-12">
+                      {(client.submissions_count ?? 0) > 0 && (
+                        <span className="text-[10px] text-gray-400 mr-1">{client.submissions_count} запитв.</span>
+                      )}
                       <button
                         onClick={() => router.push(`/dashboard/new?client=${client.id}`)}
-                        className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                        className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 active:bg-green-100 min-h-[36px]"
                       >
                         + Запитване
                       </button>
                       <button
                         onClick={() => router.push(`/dashboard/clients/${client.id}`)}
-                        className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
+                        className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 active:bg-blue-100 min-h-[36px]"
                       >
                         Отвори
                       </button>
                       <button
                         onClick={() => setDeleteConfirmId(client.id)}
-                        className="rounded-lg p-1.5 text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                        className="rounded-lg p-1.5 text-gray-400 active:bg-red-50 active:text-red-500 ml-auto min-h-[36px]"
                         title="Изтрий"
                       >
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -207,7 +236,6 @@ export default function ClientsList() {
                         </svg>
                       </button>
                     </div>
-
                   </div>
                 )
               })}

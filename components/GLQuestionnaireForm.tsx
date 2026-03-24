@@ -474,7 +474,7 @@ export default function GLQuestionnaireForm() {
         />
 
         {/* Navigation */}
-        <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="mt-6 flex items-center justify-between gap-3 sm:relative fixed bottom-0 left-0 right-0 sm:left-auto sm:right-auto sm:bottom-auto bg-white sm:bg-transparent border-t sm:border-t-0 border-gray-200 p-4 sm:p-0 z-30">
           <button
             type="button"
             onClick={() => setCurrentSection((p) => Math.max(0, p - 1))}
