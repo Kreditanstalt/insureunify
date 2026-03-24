@@ -51,7 +51,6 @@ const YES_NO = [
 ]
 
 const CURRENCY_OPTS = [
-  { value: 'BGN', label: 'BGN — Лева' },
   { value: 'EUR', label: 'EUR — Евро' },
 ]
 
@@ -213,7 +212,7 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_wage_currency', label: 'Валута на фонда',
         type: 'select', required: false, options: CURRENCY_OPTS,
-        mapping: { bulstrad: '☐ BGN ☐ EUR (фонд)' },
+        mapping: { bulstrad: '☐ EUR (фонд)' },
       } satisfies SchemaField,
       {
         id: 'gl_work_accidents_5y', label: 'Трудови злополуки (последните 5 год.)?',
@@ -285,7 +284,7 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_revenue_currency', label: 'Валута на приходите',
         type: 'select', required: false, options: CURRENCY_OPTS,
-        mapping: { bulstrad: '☐ BGN ☐ EUR (приходи)' },
+        mapping: { bulstrad: '☐ EUR (приходи)' },
       } satisfies SchemaField,
       {
         id: 'gl_premises_address', label: 'Адрес на помещенията',
@@ -356,13 +355,13 @@ export const GL_SCHEMA: SchemaSection[] = [
       } satisfies SchemaField,
       {
         id: 'gl_deductible', label: 'Самоучастие',
-        type: 'text', required: false, placeholder: '500 BGN или 5%',
+        type: 'text', required: false, placeholder: '500 EUR или 5%',
         mapping: { generali: 'Самоучастие', bulstrad: 'Самоучастие / Deductible' },
       } satisfies SchemaField,
       {
         id: 'gl_currency', label: 'Валута',
         type: 'select', required: true, options: CURRENCY_OPTS,
-        mapping: { generali: 'Валута', bulstrad: '☐ BGN ☐ EUR (лимити)' },
+        mapping: { generali: 'Валута', bulstrad: '☐ EUR (лимити)' },
       } satisfies SchemaField,
       {
         id: 'gl_territory', label: 'Териториална валидност',

@@ -40,12 +40,10 @@ const S = StyleSheet.create({
   note:       { fontSize: 7.5, color: '#888', marginTop: 4, fontStyle: 'italic' },
 })
 
-function CurrencySelector({ value }: { value: string }) {
+function CurrencySelector() {
   return (
     <View style={S.currency}>
-      <View style={S.currBox}><Text>{value === 'BGN' ? 'X' : ' '}</Text></View>
-      <Text style={S.currLabel}>BGN</Text>
-      <View style={S.currBox}><Text>{value === 'EUR' ? 'X' : ' '}</Text></View>
+      <View style={S.currBox}><Text>X</Text></View>
       <Text style={S.currLabel}>EUR</Text>
     </View>
   )
@@ -153,7 +151,7 @@ export function BulstradGLPDF({ formData, clientName }: Props) {
           <Text style={S.lbl}>Годишен фонд РЗ / Annual wage fund:</Text>
           <Text style={S.val}>{f('gl_annual_wage_fund')}</Text>
         </View>
-        <CurrencySelector value={f('gl_wage_currency') === '--' ? 'BGN' : f('gl_wage_currency')} />
+        <CurrencySelector />
 
         {/* B.5 Revenue */}
         <Text style={S.secLabel}>В.5 Годишен приход / Total annual turnover</Text>
@@ -165,7 +163,7 @@ export function BulstradGLPDF({ formData, clientName }: Props) {
         {has('gl_annual_turnover') && (
           <View style={S.row}><Text style={S.lbl}>Годишен приход / Total turnover:</Text><Text style={S.val}>{f('gl_annual_turnover')}</Text></View>
         )}
-        <CurrencySelector value={f('gl_revenue_currency') === '--' ? 'BGN' : f('gl_revenue_currency')} />
+        <CurrencySelector />
 
         {has('gl_prev_insurer') && (
           <View style={S.row}><Text style={S.lbl}>Предишен застраховател / Previous insurer:</Text><Text style={S.val}>{f('gl_prev_insurer')}</Text></View>
@@ -186,7 +184,7 @@ export function BulstradGLPDF({ formData, clientName }: Props) {
         {has('gl_deductible') && (
           <View style={S.row}><Text style={S.lbl}>Самоучастие / Deductible:</Text><Text style={S.val}>{f('gl_deductible')}</Text></View>
         )}
-        <CurrencySelector value={f('gl_currency') === '--' ? 'BGN' : f('gl_currency')} />
+        <CurrencySelector />
         {has('gl_territory') && (
           <View style={S.row}><Text style={S.lbl}>Тер. валидност / Territorial validity:</Text><Text style={S.val}>{f('gl_territory')}</Text></View>
         )}

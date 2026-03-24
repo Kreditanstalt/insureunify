@@ -215,11 +215,9 @@ export const MASTER_SCHEMA: SchemaSection[] = [
         type: 'select',
         required: true,
         options: [
-          { value: 'BGN', label: 'BGN (лв.)' },
           { value: 'EUR', label: 'EUR (€)' },
-          { value: 'USD', label: 'USD ($)' },
         ],
-        mapping: { bulstrad: 'Валута', generali: 'Евро', instinct: 'BGN/EUR/USD' },
+        mapping: { bulstrad: 'Валута', generali: 'Евро', instinct: 'EUR' },
       },
       {
         id: 'val_buildings',

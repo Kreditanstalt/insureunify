@@ -23,9 +23,7 @@ const PAYMENT_OPTS = [
 ]
 
 const CURRENCY_OPTS = [
-  { value: 'BGN', label: 'BGN — Лева' },
   { value: 'EUR', label: 'EUR — Евро' },
-  { value: 'USD', label: 'USD — Долари' },
 ]
 
 // ─── Helper to cast FieldMapping keys ───────────────────────────────────────
@@ -197,7 +195,7 @@ export const PL_SCHEMA: SchemaSection[] = [
       } satisfies SchemaField,
       {
         id: 'pl_annual_revenue',
-        label: 'Годишен оборот (BGN)',
+        label: 'Годишен оборот (EUR)',
         type: 'number',
         required: false,
         placeholder: '100000',
@@ -403,7 +401,7 @@ export const PL_SCHEMA: SchemaSection[] = [
         label: 'Самоучастие',
         type: 'text',
         required: false,
-        placeholder: 'напр. 1 000 BGN или 10%',
+        placeholder: 'напр. 1 000 EUR или 10%',
         mapping: {
           axiom:    'Самоучастие',
           bulstrad: 'Самоучастие',

@@ -53,7 +53,6 @@ const YES_NO = [
 ]
 
 const CURRENCY_OPTS = [
-  { value: 'BGN', label: 'BGN — Лева' },
   { value: 'EUR', label: 'EUR — Евро' },
 ]
 
