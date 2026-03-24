@@ -4,9 +4,13 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { INSURERS } from '@/lib/schema'
 import { OA_INSURERS } from '@/lib/oa-schema'
+import { TC_INSURERS } from '@/lib/tc-schema'
 import { storeRenewalData, classToFormUrl } from '@/lib/renewal'
 import { getAllDrafts, deleteDraft, CLASS_META, timeAgo } from '@/lib/drafts'
 import type { Draft } from '@/lib/drafts'
+import dynamic from 'next/dynamic'
+
+const DashboardAnalytics = dynamic(() => import('@/components/DashboardAnalytics'), { ssr: false })
 
 interface Submission {
   id:               string
@@ -25,6 +29,7 @@ interface Profile {
 const ALL_INSURERS: Record<string, { color: string; name: string }> = {
   ...INSURERS,
   ...OA_INSURERS,
+  ...TC_INSURERS,
 }
 
 const CLASS_LABELS: Record<string, { label: string; color: string; bg: string }> = {
@@ -280,6 +285,9 @@ export default function DashboardPage() {
             }
           />
         </div>
+
+        {/* ── Analytics ── */}
+        <DashboardAnalytics submissions={submissions} allInsurers={ALL_INSURERS} />
 
         {/* ── Quick actions ── */}
         <section>
