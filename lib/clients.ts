@@ -288,7 +288,7 @@ export function readPrefill(): ClientPrefillData | null {
 
 export function mapPrefillToFormFields(
   prefill: ClientPrefillData,
-  insuranceClass: 'property' | 'general_liability' | 'occupational_accident' | 'professional_liability',
+  insuranceClass: 'property' | 'general_liability' | 'occupational_accident' | 'professional_liability' | 'trade_credit',
 ): Record<string, string> {
   switch (insuranceClass) {
     case 'general_liability': return {

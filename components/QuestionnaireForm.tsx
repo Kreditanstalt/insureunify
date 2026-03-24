@@ -672,6 +672,23 @@ export default function QuestionnaireForm() {
           />
         </div>
 
+        {/* Prefill banner */}
+        {prefillBanner && (
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-sm mb-4">
+            <span className="flex items-center gap-2 text-blue-800">
+              <svg className="h-4 w-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Данните са заредени от клиентски профил на <strong>{prefillBanner}</strong>. Може да ги редактирате.
+            </span>
+            <button onClick={() => setPrefillBanner(null)} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        )}
+
         <AutoFillUploader onFill={handleAutoFill} className="mb-4" />
 
         {/* Insurer selector */}

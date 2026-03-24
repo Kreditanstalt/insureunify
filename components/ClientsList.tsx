@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getClients, deleteClient, syncClientsFromSubmissions, type ClientProfile } from '@/lib/clients'
+import QuickStartMenu from './QuickStartMenu'
 
 function fmtDate(iso?: string): string {
   if (!iso) return '—'
@@ -185,12 +186,17 @@ export default function ClientsList() {
 
                       {/* Actions (desktop) */}
                       <div className="hidden sm:flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button
-                          onClick={() => router.push(`/dashboard/new?client=${client.id}`)}
-                          className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
-                        >
-                          + Запитване
-                        </button>
+                        <QuickStartMenu clientId={client.id}>
+                          {({ onClick, ref }) => (
+                            <button
+                              ref={ref}
+                              onClick={onClick}
+                              className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 hover:bg-green-100 transition-colors"
+                            >
+                              + Запитване
+                            </button>
+                          )}
+                        </QuickStartMenu>
                         <button
                           onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                           className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100 transition-colors"
@@ -214,12 +220,17 @@ export default function ClientsList() {
                       {(client.submissions_count ?? 0) > 0 && (
                         <span className="text-[10px] text-gray-400 mr-1">{client.submissions_count} запитв.</span>
                       )}
-                      <button
-                        onClick={() => router.push(`/dashboard/new?client=${client.id}`)}
-                        className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 active:bg-green-100 min-h-[36px]"
-                      >
-                        + Запитване
-                      </button>
+                      <QuickStartMenu clientId={client.id}>
+                        {({ onClick, ref }) => (
+                          <button
+                            ref={ref}
+                            onClick={onClick}
+                            className="rounded-lg bg-green-50 px-3 py-1.5 text-xs font-medium text-green-700 active:bg-green-100 min-h-[36px]"
+                          >
+                            + Запитване
+                          </button>
+                        )}
+                      </QuickStartMenu>
                       <button
                         onClick={() => router.push(`/dashboard/clients/${client.id}`)}
                         className="rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 active:bg-blue-100 min-h-[36px]"

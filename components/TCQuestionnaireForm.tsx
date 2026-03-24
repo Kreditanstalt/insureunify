@@ -286,14 +286,18 @@ export default function TCQuestionnaireForm() {
 
         {/* Prefill banner */}
         {prefillBanner && (
-          <div className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-2.5 text-sm">
-            <span className="flex items-center gap-2 text-emerald-800">
-              <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          <div className="flex items-center justify-between gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-2.5 text-sm">
+            <span className="flex items-center gap-2 text-blue-800">
+              <svg className="h-4 w-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Данни заредени от профил на <strong>{prefillBanner}</strong>
+              Данните са заредени от клиентски профил на <strong>{prefillBanner}</strong>. Може да ги редактирате.
             </span>
-            <button onClick={() => setPrefillBanner(null)} className="text-emerald-500 hover:text-emerald-700">✕</button>
+            <button onClick={() => setPrefillBanner(null)} className="text-blue-400 hover:text-blue-600 flex-shrink-0">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
 

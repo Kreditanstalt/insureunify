@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { getClient, updateClient, storePrefill, type ClientProfile } from '@/lib/clients'
+import QuickStartMenu from '@/components/QuickStartMenu'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -398,15 +399,22 @@ export default function ClientProfilePage() {
               Запазено
             </span>
           )}
-          <button
-            onClick={handleNewQuestionnaire}
-            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-            Ново запитване
-          </button>
+          {client && (
+            <QuickStartMenu clientId={client.id}>
+              {({ onClick, ref }) => (
+                <button
+                  ref={ref}
+                  onClick={onClick}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-colors hover:bg-blue-700"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Ново запитване
+                </button>
+              )}
+            </QuickStartMenu>
+          )}
         </div>
       </div>
 
@@ -534,12 +542,19 @@ export default function ClientProfilePage() {
             {submissions.length === 0 ? (
               <div className="py-10 text-center">
                 <p className="text-sm text-gray-400">Няма запитвания</p>
-                <button
-                  onClick={handleNewQuestionnaire}
-                  className="mt-3 text-xs text-blue-600 hover:underline"
-                >
-                  + Ново запитване
-                </button>
+                {client && (
+                  <QuickStartMenu clientId={client.id}>
+                    {({ onClick, ref }) => (
+                      <button
+                        ref={ref}
+                        onClick={onClick}
+                        className="mt-3 text-xs text-blue-600 hover:underline"
+                      >
+                        + Ново запитване
+                      </button>
+                    )}
+                  </QuickStartMenu>
+                )}
               </div>
             ) : (
               <div className="divide-y divide-gray-50">
@@ -593,15 +608,22 @@ export default function ClientProfilePage() {
             )}
 
             <div className="px-5 py-3 border-t border-gray-100">
-              <button
-                onClick={handleNewQuestionnaire}
-                className="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-blue-300 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                </svg>
-                Ново запитване за този клиент
-              </button>
+              {client && (
+                <QuickStartMenu clientId={client.id}>
+                  {({ onClick, ref }) => (
+                    <button
+                      ref={ref}
+                      onClick={onClick}
+                      className="w-full flex items-center justify-center gap-2 rounded-lg border border-dashed border-blue-300 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Ново запитване за този клиент
+                    </button>
+                  )}
+                </QuickStartMenu>
+              )}
             </div>
           </div>
         </div>
