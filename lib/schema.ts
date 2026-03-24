@@ -1,8 +1,8 @@
 export type FieldType = 'text' | 'number' | 'date' | 'select' | 'textarea'
-export type InsurerKey = 'bulstrad' | 'generali' | 'instinct' | 'axiom' | 'euroins'
+export type InsurerKey = 'bulstrad' | 'generali' | 'instinct' | 'axiom' | 'euroins' | 'ozk'
 
 // Property-specific insurers (shown in property questionnaire)
-export const PROPERTY_INSURER_KEYS: InsurerKey[] = ['bulstrad', 'generali', 'instinct']
+export const PROPERTY_INSURER_KEYS: InsurerKey[] = ['bulstrad', 'generali', 'instinct', 'ozk']
 export type TransformType =
   | 'direct'
   | 'year_to_range'
@@ -18,6 +18,7 @@ export interface FieldMapping {
   euroins?:  string | null
   allianz?:  string | null
   groupama?: string | null
+  ozk?:      string | null
 }
 
 export interface FieldOption {
@@ -52,6 +53,7 @@ export const INSURERS: Record<InsurerKey, { key: InsurerKey; name: string; color
   instinct: { key: 'instinct', name: 'Инстинкт',  color: '#6B21A8', formCode: 'AR-01082025',     logo: '/logos/instinct.jpg' },
   axiom:    { key: 'axiom',    name: 'Аксиом',    color: '#1E2D6B', formCode: 'PL-Application',  logo: '/logos/axiom.jpg' },
   euroins:  { key: 'euroins',  name: 'Евроинс',   color: '#1E3A8A', formCode: 'ПО-кл.08',        logo: '/logos/euroins.png' },
+  ozk:      { key: 'ozk',     name: 'ОЗК',       color: '#1B3F8B', formCode: 'ОЗК-Имущество',   logo: '/logos/ozk.png' },
 }
 
 // Only these insurers appear in the Property questionnaire selector
@@ -59,6 +61,7 @@ export const PROPERTY_INSURERS: Record<string, { key: InsurerKey; name: string; 
   bulstrad: INSURERS.bulstrad,
   generali: INSURERS.generali,
   instinct: INSURERS.instinct,
+  ozk:      INSURERS.ozk,
 }
 
 const YES_NO: FieldOption[] = [

@@ -73,11 +73,11 @@ function InsurerHeader({
     >
       <div className="flex items-center gap-3">
         <div
-          className="w-12 h-10 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center"
-          style={{ backgroundColor: color + '15', border: `1px solid ${color}40` }}
+          className="w-14 h-11 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center bg-white"
+          style={{ border: `1px solid ${color}40` }}
         >
           {logo ? (
-            <Image src={logo} alt={name} width={48} height={40} className="object-contain w-full h-full" />
+            <Image src={logo} alt={name} width={56} height={44} className="object-contain p-1" />
           ) : (
             <div className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: color }}>
               {name[0]}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import Image from 'next/image'
 import { TC_INSURERS, TC_INITIAL, TC_REQUIRED, type TCInsurerKey, type TCFormData } from '@/lib/tc-schema'
 import AutoFillUploader from './AutoFillUploader'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
@@ -300,12 +301,15 @@ export default function TCQuestionnaireForm() {
                   }`}
                   style={selected ? { backgroundColor: ins.color, borderColor: ins.color } : {}}
                 >
+                  <div className={`w-7 h-6 rounded overflow-hidden flex-shrink-0 flex items-center justify-center ${selected ? 'bg-white/20' : 'bg-white'}`}>
+                    <Image src={ins.logo} alt={ins.name} width={28} height={24} className="object-contain w-full h-full" />
+                  </div>
+                  {ins.name}
                   {selected && (
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   )}
-                  {ins.name}
                 </button>
               )
             })}

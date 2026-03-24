@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import Image from 'next/image'
 import { INSURERS } from '@/lib/schema'
 import { PL_SCHEMA, PL_INSURERS, PL_INSURER_KEYS, PLFormData, PLInsurerKey } from '@/lib/pl-schema'
 import type { SchemaField } from '@/lib/schema'
@@ -441,7 +442,7 @@ function PLSidebar({ currentIndex, formData, onNavigate }: {
 
 export default function PLQuestionnaireForm() {
   const router = useRouter()
-  const [selectedInsurers, setSelectedInsurers] = useState<PLInsurerKey[]>(['axiom', 'bulstrad', 'euroins'])
+  const [selectedInsurers, setSelectedInsurers] = useState<PLInsurerKey[]>(['axiom', 'bulstrad', 'euroins', 'ozk'])
   const [formData, setFormData] = useState<PLFormData>({})
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -681,9 +682,8 @@ export default function PLQuestionnaireForm() {
                     }`}
                     style={isSelected ? { backgroundColor: ins.color, borderColor: ins.color } : undefined}
                   >
-                    <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0 bg-gray-100 flex items-center justify-center text-[10px] font-bold"
-                      style={isSelected ? { backgroundColor: 'rgba(255,255,255,0.2)' } : undefined}>
-                      {ins.name[0]}
+                    <div className={`w-7 h-6 rounded overflow-hidden flex-shrink-0 flex items-center justify-center ${isSelected ? 'bg-white/20' : 'bg-white'}`}>
+                      <Image src={ins.logo} alt={ins.name} width={28} height={24} className="object-contain w-full h-full" />
                     </div>
                     {ins.name}
                     {isSelected && (

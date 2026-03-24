@@ -10,8 +10,8 @@ import type { InsurerKey, SchemaField, SchemaSection } from './schema'
 
 // ─── GL Insurer subset ────────────────────────────────────────────────────────
 
-export type GLInsurerKey = 'generali' | 'bulstrad'
-export const GL_INSURER_KEYS: GLInsurerKey[] = ['generali', 'bulstrad']
+export type GLInsurerKey = 'generali' | 'bulstrad' | 'ozk'
+export const GL_INSURER_KEYS: GLInsurerKey[] = ['generali', 'bulstrad', 'ozk']
 
 export interface GLInsurerMeta {
   key: InsurerKey
@@ -38,6 +38,14 @@ export const GL_INSURERS: Record<GLInsurerKey, GLInsurerMeta> = {
     formCode:    'vpr-1330',
     description: 'Въпросник Отг. на работодателя · ЗЕАД Булстрад (BG/EN, 2025)',
     logo:        '/logos/bulstrad.svg',
+  },
+  ozk: {
+    key:         'ozk',
+    name:        'ОЗК',
+    color:       '#1B3F8B',
+    formCode:    'ОЗК-ОГО',
+    description: 'Обща гражданска отговорност · ОЗК Застраховане АД',
+    logo:        '/logos/ozk.png',
   },
 }
 

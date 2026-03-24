@@ -51,18 +51,16 @@ export default function InsurerSelector({ selected, onChange, availableInsurers 
           >
             {/* Logo */}
             <div
-              className="w-12 h-10 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center"
-              style={{ backgroundColor: insurer.color + '20' }}
+              className="w-14 h-11 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center bg-white border border-gray-200"
             >
               {insurer.logo ? (
                 <Image
                   src={insurer.logo}
                   alt={insurer.name}
-                  width={48}
-                  height={40}
-                  className="object-contain w-full h-full"
+                  width={56}
+                  height={44}
+                  className="object-contain p-1"
                   onError={(e) => {
-                    // Fallback to color dot with initial
                     const target = e.currentTarget as HTMLImageElement
                     target.style.display = 'none'
                     const parent = target.parentElement

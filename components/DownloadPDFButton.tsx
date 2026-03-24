@@ -83,6 +83,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
         if (insurerKey === 'allianz') {
           const { AllianzOAPDF } = await import('./pdf/AllianzOAPDF')
           element = React.createElement(AllianzOAPDF, { formData: formData as OAFormData, clientName })
+        } else if (insurerKey === 'ozk') {
+          alert('PDF шаблонът за ОЗК (Трудова злополука) предстои да бъде добавен.')
+          setLoading(false)
+          return
         } else {
           const { GroupamaOAPDF } = await import('./pdf/GroupamaOAPDF')
           element = React.createElement(GroupamaOAPDF, { formData: formData as OAFormData, clientName })
@@ -91,6 +95,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
         if (insurerKey === 'generali') {
           const { GeneraliGLPDF } = await import('./pdf/GeneraliGLPDF')
           element = React.createElement(GeneraliGLPDF, { formData: formData as GLFormData, clientName })
+        } else if (insurerKey === 'ozk') {
+          alert('PDF шаблонът за ОЗК (ОГО) предстои да бъде добавен.')
+          setLoading(false)
+          return
         } else {
           const { BulstradGLPDF } = await import('./pdf/BulstradGLPDF')
           element = React.createElement(BulstradGLPDF, { formData: formData as GLFormData, clientName })
@@ -106,6 +114,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
         } else if (insurerKey === 'euroins') {
           const { EuroinsPLPDF } = await import('./pdf/EuroinsPLPDF')
           element = React.createElement(EuroinsPLPDF, { formData: plData, clientName })
+        } else if (insurerKey === 'ozk') {
+          alert('PDF шаблонът за ОЗК (Проф. отговорност) предстои да бъде добавен.')
+          setLoading(false)
+          return
         } else {
           alert(`PDF за ${INSURERS[insurerKey as InsurerKey]?.name ?? insurerKey} (ПО) не е наличен.`)
           setLoading(false)
@@ -128,6 +140,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
         } else if (insurerKey === 'generali') {
           const { GeneraliPDF } = await import('./pdf/GeneraliPDF')
           element = React.createElement(GeneraliPDF, { formData: formData as FormData, clientName })
+        } else if (insurerKey === 'ozk') {
+          alert('PDF шаблонът за ОЗК (Имущество) предстои да бъде добавен.')
+          setLoading(false)
+          return
         } else {
           const { InstinctPDF } = await import('./pdf/InstinctPDF')
           element = React.createElement(InstinctPDF, { formData: formData as FormData, clientName })
@@ -142,16 +158,19 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
 
       const safe = clientName.replace(/\s+/g, '_')
       if (insuranceClass === 'occupational_accident') {
-        const prefix = insurerKey === 'allianz' ? 'Allianz_TZ' : 'Groupama_TZ'
+        const oaPrefixes: Record<string, string> = { allianz: 'Allianz_TZ', groupama: 'Groupama_TZ', ozk: 'OZK_TZ' }
+        const prefix = oaPrefixes[insurerKey] ?? insurerKey
         a.download = `${prefix}_${safe}.pdf`
       } else if (insuranceClass === 'general_liability') {
-        const prefix = insurerKey === 'generali' ? 'Generali_OGO' : 'Bulstrad_OGO'
+        const glPrefixes: Record<string, string> = { generali: 'Generali_OGO', bulstrad: 'Bulstrad_OGO', ozk: 'OZK_OGO' }
+        const prefix = glPrefixes[insurerKey] ?? insurerKey
         a.download = `${prefix}_${safe}.pdf`
       } else if (insuranceClass === 'professional_liability') {
         const plPrefixes: Partial<Record<InsurerKey, string>> = {
           axiom:    'Axiom_PO',
           bulstrad: 'Bulstrad_PO',
           euroins:  'Euroins_PO',
+          ozk:      'OZK_PO',
         }
         a.download = `${plPrefixes[insurerKey as InsurerKey] ?? insurerKey}_${safe}.pdf`
       } else if (insuranceClass === 'trade_credit') {
@@ -165,6 +184,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           bulstrad: 'Bulstrad_Imushestvo',
           generali: 'Generali_IMSB',
           instinct: 'Instinct_AllRisks',
+          ozk:      'OZK_Imushestvo',
         }
         a.download = `${prefixes[insurerKey] ?? insurerKey}_${safe}.pdf`
       }

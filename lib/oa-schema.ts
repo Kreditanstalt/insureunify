@@ -12,8 +12,8 @@ import type { SchemaField, SchemaSection } from './schema'
 
 // ─── OA Insurer subset ────────────────────────────────────────────────────────
 
-export type OAInsurerKey = 'allianz' | 'groupama'
-export const OA_INSURER_KEYS: OAInsurerKey[] = ['allianz', 'groupama']
+export type OAInsurerKey = 'allianz' | 'groupama' | 'ozk'
+export const OA_INSURER_KEYS: OAInsurerKey[] = ['allianz', 'groupama', 'ozk']
 
 export interface OAInsurerMeta {
   key:         OAInsurerKey
@@ -40,6 +40,14 @@ export const OA_INSURERS: Record<OAInsurerKey, OAInsurerMeta> = {
     formCode:    'Групама-Злополука',
     description: 'Групова застраховка Злополука · Групама Застраховане ЕАД',
     logo:        '/logos/groupama.png',
+  },
+  ozk: {
+    key:         'ozk',
+    name:        'ОЗК',
+    color:       '#1B3F8B',
+    formCode:    'ОЗК-Злополука',
+    description: 'Трудова злополука · ОЗК Застраховане АД',
+    logo:        '/logos/ozk.png',
   },
 }
 

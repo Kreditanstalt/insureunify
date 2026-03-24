@@ -265,7 +265,7 @@ function RenderSection({
 
 export default function OAQuestionnaireForm() {
   const router = useRouter()
-  const [selectedInsurers, setSelectedInsurers] = useState<OAInsurerKey[]>(['allianz', 'groupama'])
+  const [selectedInsurers, setSelectedInsurers] = useState<OAInsurerKey[]>(['allianz', 'groupama', 'ozk'])
   const [formData, setFormData] = useState<OAFormData>({})
   const [submitting, setSubmitting] = useState(false)
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
@@ -413,8 +413,8 @@ export default function OAQuestionnaireForm() {
                   }`}
                   style={selected ? { backgroundColor: ins.color, borderColor: ins.color } : undefined}
                 >
-                  <div className="w-5 h-5 rounded overflow-hidden flex-shrink-0">
-                    <Image src={ins.logo} alt={ins.name} width={20} height={20} className="object-contain w-full h-full" />
+                  <div className={`w-7 h-6 rounded overflow-hidden flex-shrink-0 flex items-center justify-center ${selected ? 'bg-white/20' : 'bg-white'}`}>
+                    <Image src={ins.logo} alt={ins.name} width={28} height={24} className="object-contain w-full h-full" />
                   </div>
                   {ins.name}
                   {selected && (

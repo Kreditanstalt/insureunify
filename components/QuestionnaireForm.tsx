@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import Image from 'next/image'
 import { INSURERS, PROPERTY_INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, InsurerKey, SchemaField } from '@/lib/schema'
 import { fmtDateBG } from '@/lib/utils'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
@@ -507,7 +508,7 @@ function RenderGroup({
 
 export default function QuestionnaireForm() {
   const router = useRouter()
-  const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct'])
+  const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct', 'ozk'])
   const [formData, setFormData] = useState<FormData>({})
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -661,20 +662,27 @@ export default function QuestionnaireForm() {
           <div className="flex flex-wrap gap-2">
             {(Object.keys(PROPERTY_INSURERS) as InsurerKey[]).map((key) => {
               const ins = PROPERTY_INSURERS[key]
+              if (!ins) return null
               const selected = selectedInsurers.includes(key)
               return (
                 <button
                   key={key}
                   type="button"
                   onClick={() => toggleInsurer(key)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
-                    selected ? '' : 'bg-white border-gray-200 text-gray-500 hover:text-gray-700'
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-sm font-medium transition-all ${
+                    selected ? 'text-white' : 'bg-white text-gray-700 border-gray-200'
                   }`}
-                  style={selected ? { backgroundColor: ins.color + '18', borderColor: ins.color, color: ins.color } : {}}
+                  style={selected ? { backgroundColor: ins.color, borderColor: ins.color } : undefined}
                 >
-                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: selected ? ins.color : '#d1d5db' }} />
-                  <span style={selected ? { color: ins.color } : {}}>{ins.name}</span>
-                  <span className="text-xs opacity-50">{ins.formCode}</span>
+                  <div className={`w-7 h-6 rounded overflow-hidden flex-shrink-0 flex items-center justify-center ${selected ? 'bg-white/20' : 'bg-white'}`}>
+                    <Image src={ins.logo} alt={ins.name} width={28} height={24} className="object-contain w-full h-full" />
+                  </div>
+                  {ins.name}
+                  {selected && (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </button>
               )
             })}
