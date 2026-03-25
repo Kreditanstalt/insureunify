@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import { useAuth } from '@/lib/useAuth'
@@ -23,6 +23,7 @@ const INSURER_OPTIONS = [
 
 interface ExtractedData {
   premium_annual?: number | null
+  premium_rate_percent?: number | null
   premium_monthly?: number | null
   currency?: string | null
   insured_sum?: number | null
@@ -34,6 +35,9 @@ interface ExtractedData {
   exclusions?: string[]
   special_conditions?: string[]
   payment_terms?: string | null
+  territory?: string | null
+  assistance?: string | null
+  claim_settlement?: string | null
   notes?: string | null
   [key: string]: unknown
 }
@@ -71,14 +75,98 @@ const CLASS_LABELS: Record<string, string> = {
   trade_credit: 'Търговски кредит',
 }
 
-const MAIN_FIELDS: { key: keyof ExtractedData; label: string; suffix?: string; type?: 'number' | 'text' }[] = [
-  { key: 'premium_annual', label: 'Годишна премия', suffix: ' лв', type: 'number' },
-  { key: 'premium_monthly', label: 'Месечна премия', suffix: ' лв', type: 'number' },
-  { key: 'insured_sum', label: 'Застрахователна сума', suffix: ' лв', type: 'number' },
-  { key: 'deductible', label: 'Самоучастие', type: 'text' },
-  { key: 'payment_terms', label: 'Начин на плащане', type: 'text' },
-  { key: 'valid_until', label: 'Срок на валидност', type: 'text' },
+interface FieldDef { key: keyof ExtractedData; label: string; type?: 'number' | 'text' }
+interface FieldGroup { label: string; fields: FieldDef[] }
+
+const FIELD_GROUPS: FieldGroup[] = [
+  {
+    label: 'Цена',
+    fields: [
+      { key: 'premium_annual', label: 'Годишна премия', type: 'number' },
+      { key: 'premium_monthly', label: 'Месечна премия', type: 'number' },
+      { key: 'insured_sum', label: 'Застрахователна сума', type: 'number' },
+      { key: 'deductible', label: 'Самоучастие', type: 'text' },
+      { key: 'payment_terms', label: 'Начин на плащане', type: 'text' },
+    ],
+  },
+  {
+    label: 'Условия',
+    fields: [
+      { key: 'territory', label: 'Територия', type: 'text' },
+      { key: 'valid_until', label: 'Валидна до', type: 'text' },
+      { key: 'assistance', label: 'Асистанс', type: 'text' },
+      { key: 'claim_settlement', label: 'Уреждане на щети', type: 'text' },
+    ],
+  },
 ]
+
+// ─── Coverage scoring ────────────────────────────────────────────────────────
+
+function scoreCoverage(offer: Offer, allOffers: Offer[]): number {
+  let score = 0
+  const d = offer.extracted_data ?? {}
+  const coverages = d.coverages ?? []
+
+  // Premium points (lower = better, max 40)
+  const premiums = allOffers.map((o) => o.extracted_data?.premium_annual).filter((p): p is number => typeof p === 'number' && p > 0)
+  if (typeof d.premium_annual === 'number' && d.premium_annual > 0 && premiums.length > 0) {
+    const lowest = Math.min(...premiums)
+    score += 40 * (lowest / d.premium_annual)
+  } else if (premiums.length === 0) {
+    score += 20 // no premium data available for any offer
+  }
+
+  // Coverage breadth (more = better, max 30)
+  const maxCov = Math.max(1, ...allOffers.map((o) => o.extracted_data?.coverages?.length ?? 0))
+  score += 30 * (coverages.length / maxCov)
+
+  // Special benefits (max 20)
+  const text = [...coverages, d.assistance ?? '', d.claim_settlement ?? '', d.notes ?? ''].join(' ').toLowerCase()
+  if (d.assistance || text.includes('асистанс') || text.includes('assistance') || text.includes('пътна помощ')) score += 5
+  if (text.includes('официален') || text.includes('оторизиран') || text.includes('dealer')) score += 5
+  if (text.includes('24/7') || text.includes('24 часа') || text.includes('денонощ')) score += 5
+  if (text.includes('заместващ') || text.includes('replacement') || text.includes('рент а кар')) score += 5
+
+  // Deductible (lower/none = better, max 10)
+  const ded = String(d.deductible ?? '').toLowerCase()
+  if (!d.deductible || ded === 'няма' || ded === '0' || ded === 'без') {
+    score += 10
+  } else {
+    const num = parseFloat(ded.replace(/[^\d.]/g, ''))
+    if (!isNaN(num)) {
+      if (num < 500) score += 7
+      else if (num < 1000) score += 4
+      else score += 1
+    } else {
+      score += 3
+    }
+  }
+
+  return Math.round(Math.min(100, score))
+}
+
+function getScoreInfo(score: number): { label: string; color: string; bg: string } {
+  if (score >= 90) return { label: 'Отлично', color: '#15803d', bg: '#dcfce7' }
+  if (score >= 70) return { label: 'Добро', color: '#1d4ed8', bg: '#dbeafe' }
+  if (score >= 50) return { label: 'Средно', color: '#a16207', bg: '#fef3c7' }
+  return { label: 'Основно', color: '#6b7280', bg: '#f3f4f6' }
+}
+
+function getRecommendationReason(best: Offer, allOffers: Offer[]): string {
+  const premiums = allOffers.map((o) => ({ id: o.id, p: o.extracted_data?.premium_annual })).filter((x): x is { id: string; p: number } => typeof x.p === 'number' && x.p > 0)
+  const bestPremium = best.extracted_data?.premium_annual
+  const lowestPremium = premiums.length ? Math.min(...premiums.map((x) => x.p)) : null
+
+  if (typeof bestPremium === 'number' && lowestPremium !== null && bestPremium <= lowestPremium) {
+    return 'Най-добра цена'
+  }
+  const maxCov = Math.max(...allOffers.map((o) => o.extracted_data?.coverages?.length ?? 0))
+  const bestCov = best.extracted_data?.coverages?.length ?? 0
+  if (bestCov >= maxCov && maxCov > 0) {
+    return 'Най-широко покритие'
+  }
+  return 'Най-добро съотношение цена/покритие'
+}
 
 // ─── Send Modal ──────────────────────────────────────────────────────────────
 
@@ -672,29 +760,78 @@ export default function ComparisonWorkspacePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {/* Main fields */}
-                {MAIN_FIELDS.map((field) => (
-                  <tr key={field.key} className="hover:bg-gray-50/50">
-                    <td className="sticky left-0 bg-white z-10 px-4 py-2.5 text-xs font-semibold text-gray-700 border-r border-gray-100">
-                      {field.label}
-                    </td>
-                    {offers.map((o) => {
-                      const val = o.extracted_data?.[field.key]
-                      const displayVal = val != null ? String(val) : ''
-                      const isNull = (val === null || val === undefined) && (field.key === 'premium_annual' || field.key === 'premium_monthly')
+                {/* Score row */}
+                <tr className="bg-gray-50/80">
+                  <td className="sticky left-0 bg-gray-50/80 z-10 px-4 py-2 text-xs font-bold text-gray-700 border-r border-gray-100">
+                    Оценка
+                  </td>
+                  {offers.map((o) => {
+                    const score = scoreCoverage(o, offers)
+                    const info = getScoreInfo(score)
+                    return (
+                      <td key={o.id} className="px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 rounded-full bg-gray-100">
+                            <div className="h-2 rounded-full transition-all" style={{ width: `${score}%`, backgroundColor: info.color }} />
+                          </div>
+                          <span className="text-[11px] font-bold whitespace-nowrap" style={{ color: info.color }}>{score}</span>
+                        </div>
+                        <span className="text-[10px] font-medium" style={{ color: info.color }}>{info.label}</span>
+                      </td>
+                    )
+                  })}
+                </tr>
+
+                {/* Grouped fields */}
+                {FIELD_GROUPS.map((group) => (
+                  <React.Fragment key={group.label}>
+                    <tr className="bg-gray-50/60">
+                      <td colSpan={offers.length + 1} className="px-4 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        {group.label}
+                      </td>
+                    </tr>
+                    {group.fields.map((field) => {
+                      // Skip if no offer has this field
+                      const anyHasValue = offers.some((o) => o.extracted_data?.[field.key] != null)
+                      if (!anyHasValue && field.key !== 'premium_annual') return null
                       return (
-                        <td key={o.id} className={['px-3 py-1.5', o.is_recommended ? 'bg-emerald-50/50' : ''].join(' ')}>
-                          <EditableCell
-                            value={displayVal}
-                            type={field.type}
-                            isNull={isNull}
-                            isManuallyEdited={o.manually_edited}
-                            onChange={(v) => updateOfferField(o.id, String(field.key), v)}
-                          />
-                        </td>
+                        <tr key={field.key} className="hover:bg-gray-50/50">
+                          <td className="sticky left-0 bg-white z-10 px-4 py-2.5 text-xs font-semibold text-gray-700 border-r border-gray-100">
+                            {field.label}
+                          </td>
+                          {offers.map((o) => {
+                            const d = o.extracted_data ?? {}
+                            let displayVal = ''
+                            let isCalc = false
+
+                            if (field.key === 'premium_annual' && d.premium_annual == null && typeof d.premium_rate_percent === 'number' && typeof d.insured_sum === 'number') {
+                              // Calculate from rate
+                              const calc = Math.round(d.insured_sum * d.premium_rate_percent / 100)
+                              displayVal = `${d.premium_rate_percent}% ≈ ${calc.toLocaleString('bg-BG')} EUR`
+                              isCalc = true
+                            } else {
+                              const val = d[field.key]
+                              displayVal = val != null ? String(val) : ''
+                            }
+
+                            const isNull = !displayVal && (field.key === 'premium_annual' || field.key === 'premium_monthly')
+
+                            return (
+                              <td key={o.id} className={['px-3 py-1.5', isCalc ? 'bg-amber-50/50' : o.is_recommended ? 'bg-emerald-50/50' : ''].join(' ')}>
+                                <EditableCell
+                                  value={displayVal}
+                                  type={field.type}
+                                  isNull={isNull}
+                                  isManuallyEdited={o.manually_edited}
+                                  onChange={(v) => updateOfferField(o.id, String(field.key), v)}
+                                />
+                              </td>
+                            )
+                          })}
+                        </tr>
                       )
                     })}
-                  </tr>
+                  </React.Fragment>
                 ))}
 
                 {/* Coverages (expand/collapse) */}
@@ -710,20 +847,36 @@ export default function ComparisonWorkspacePage() {
                         </button>
                       </td>
                     </tr>
-                    {expandCoverages && allCoverages.map((cov, i) => (
-                      <tr key={`cov-${i}`} className="hover:bg-gray-50/50">
-                        <td className="sticky left-0 bg-white z-10 px-4 py-1.5 text-[11px] text-gray-600 border-r border-gray-100">{cov}</td>
-                        {offers.map((o) => (
-                          <td key={o.id} className={['px-3 py-1.5 text-center text-xs', o.is_recommended ? 'bg-emerald-50/50' : ''].join(' ')}>
-                            {o.extracted_data?.coverages?.some((c) => c.toLowerCase().includes(cov.toLowerCase())) ? (
-                              <span className="text-emerald-600 font-semibold">ДА</span>
-                            ) : (
-                              <span className="text-gray-300">-</span>
-                            )}
+                    {expandCoverages && allCoverages.map((cov, i) => {
+                      const matchCount = offers.filter((o) => o.extracted_data?.coverages?.some((c) => c.toLowerCase().includes(cov.toLowerCase()))).length
+                      const isUniversal = matchCount === offers.length
+                      const isUnique = matchCount === 1
+                      return (
+                        <tr key={`cov-${i}`} className="hover:bg-gray-50/50">
+                          <td className="sticky left-0 bg-white z-10 px-4 py-1.5 border-r border-gray-100">
+                            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                              isUniversal ? 'bg-gray-100 text-gray-600' : isUnique ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-700'
+                            }`}>
+                              {cov}
+                              {!isUniversal && !isUnique && <span className="text-[9px] opacity-70">{matchCount}/{offers.length}</span>}
+                              {isUnique && <span className="text-[9px]">само тук</span>}
+                            </span>
                           </td>
-                        ))}
-                      </tr>
-                    ))}
+                          {offers.map((o) => {
+                            const has = o.extracted_data?.coverages?.some((c) => c.toLowerCase().includes(cov.toLowerCase()))
+                            return (
+                              <td key={o.id} className={['px-3 py-1.5 text-center text-xs', o.is_recommended ? 'bg-emerald-50/50' : ''].join(' ')}>
+                                {has ? (
+                                  <svg className="h-4 w-4 mx-auto text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                ) : (
+                                  <span className="text-gray-300">—</span>
+                                )}
+                              </td>
+                            )
+                          })}
+                        </tr>
+                      )
+                    })}
                   </>
                 )}
 
@@ -787,25 +940,47 @@ export default function ComparisonWorkspacePage() {
                   </>
                 )}
 
-                {/* Recommendation row */}
-                <tr className="bg-emerald-50/30 border-t-2 border-emerald-200">
-                  <td className="sticky left-0 bg-emerald-50/30 z-10 px-4 py-3 text-xs font-bold text-emerald-700 border-r border-gray-100">
-                    Препоръка
-                  </td>
-                  {offers.map((o) => (
-                    <td key={o.id} className="px-3 py-3 text-center">
-                      {o.is_recommended ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
-                          ⭐ Препоръчана
-                        </span>
-                      ) : (
-                        <button onClick={() => toggleRecommendation(o.id)} className="text-xs text-gray-400 hover:text-emerald-600 transition-colors">
-                          Препоръчай
-                        </button>
-                      )}
-                    </td>
-                  ))}
-                </tr>
+                {/* Smart recommendation row */}
+                {(() => {
+                  const scores = offers.map((o) => ({ id: o.id, score: scoreCoverage(o, offers), offer: o }))
+                  const bestScore = Math.max(...scores.map((s) => s.score))
+                  const bestOffer = scores.find((s) => s.score === bestScore)?.offer
+                  return (
+                    <tr className="bg-emerald-50/30 border-t-2 border-emerald-200">
+                      <td className="sticky left-0 bg-emerald-50/30 z-10 px-4 py-3 text-xs font-bold text-emerald-700 border-r border-gray-100">
+                        Препоръка
+                      </td>
+                      {offers.map((o) => {
+                        const isBest = bestOffer?.id === o.id && bestScore >= 50
+                        const isManual = o.is_recommended
+                        return (
+                          <td key={o.id} className={`px-3 py-3 text-center ${isBest && !isManual ? 'bg-emerald-50/80' : ''}`}>
+                            {isManual ? (
+                              <div>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-700">
+                                  ⭐ ПРЕПОРЪЧАНА
+                                </span>
+                              </div>
+                            ) : isBest ? (
+                              <div>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700">
+                                  {getRecommendationReason(o, offers)}
+                                </span>
+                                <button onClick={() => toggleRecommendation(o.id)} className="block mx-auto mt-1 text-[10px] text-emerald-600 hover:text-emerald-800 transition-colors">
+                                  Потвърди
+                                </button>
+                              </div>
+                            ) : (
+                              <button onClick={() => toggleRecommendation(o.id)} className="text-xs text-gray-400 hover:text-emerald-600 transition-colors">
+                                Препоръчай
+                              </button>
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })()}
               </tbody>
             </table>
           </div>

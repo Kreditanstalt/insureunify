@@ -38,24 +38,31 @@ function detectInsurerFromEmail(email: string): string {
 
 // ─── Extraction prompts ──────────────────────────────────────────────────────
 
-const BASE_PROMPT = `Extract all insurance offer details from this document. Return a JSON object with these fields:
+const BASE_PROMPT = `Extract ALL insurance offer details from this document. Return a JSON object with these fields:
 {
-  "premium_annual": number or null (annual premium),
-  "premium_monthly": number or null (monthly premium),
+  "premium_annual": number or null (annual premium amount),
+  "premium_rate_percent": number or null (if offer gives % tariff rate instead of fixed amount),
+  "premium_monthly": number or null (monthly premium if stated),
   "currency": "BGN" or "EUR" or "USD",
-  "insured_sum": number or null (total insured amount),
-  "deductible": string or null (e.g. "500 BGN" or "1%"),
-  "coverage_start": string or null (date),
-  "coverage_end": string or null (date),
-  "valid_until": string or null (offer validity date),
-  "coverages": array of strings (list of included coverages),
-  "exclusions": array of strings (list of exclusions if mentioned),
-  "special_conditions": array of strings (any special terms),
-  "payment_terms": string or null (e.g. "monthly", "annual", "quarterly"),
+  "insured_sum": number or null (total insured/coverage amount),
+  "deductible": string or null (e.g. "500 EUR" or "10%"),
+  "coverage_start": string or null (date DD.MM.YYYY),
+  "coverage_end": string or null (date DD.MM.YYYY),
+  "valid_until": string or null (offer validity/expiry date),
+  "payment_terms": string or null (e.g. "еднократно", "разсрочено на 2 вноски"),
+  "territory": string or null (territorial validity),
+  "coverages": array of strings (ALL included coverages, risks, and benefits as separate items),
+  "exclusions": array of strings (explicitly excluded risks),
+  "special_conditions": array of strings (special terms, requirements, clauses),
+  "assistance": string or null (roadside assistance, medical assistance details),
+  "claim_settlement": string or null (how claims are settled, repair type),
   "notes": string or null (any other important information)
 }
-If a field cannot be found in the document, use null.
-For coverages, list each coverage as a separate string.
+If a field cannot be found, use null.
+For coverages array: list EVERY mentioned coverage as a SEPARATE string. Be thorough — extract all.
+Example coverages: ["Пожар", "Природни бедствия", "Кражба чрез взлом", "Наводнение", "Гражданска отговорност", "Загуба на доход"]
+For exclusions: list what is NOT covered if explicitly mentioned.
+Numbers in Bulgarian format: '1 268,06' = 1268.06, '74 500' = 74500.
 Respond with valid JSON only, no other text.`
 
 const EMAIL_PROMPT_PREFIX = `This is an insurance offer email from a Bulgarian insurer.
