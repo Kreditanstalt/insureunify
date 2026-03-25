@@ -82,23 +82,27 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (authLoading) return
+    // Wait for user to be available before fetching
+    if (!user) return
     try {
       const raw = localStorage.getItem('iu_submissions')
       if (raw) setSubmissions(JSON.parse(raw))
     } catch { /* ignore */ }
     setDrafts(getAllDrafts())
-    const params = user ? `?broker_id=${user.id}` : ''
-    fetch(`/api/submissions${params}`)
+    fetch(`/api/submissions?broker_id=${user.id}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.submissions?.length) {
-          setSubmissions(d.submissions.map((s: Record<string, unknown>) => ({
+          const normalized = d.submissions.map((s: Record<string, unknown>) => ({
             id: s.id, clientName: s.client_name ?? s.clientName,
             insuranceClass: s.insurance_class ?? s.insuranceClass,
             selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
             formData: s.form_data ?? s.formData ?? {},
             createdAt: s.created_at ?? s.createdAt,
-          })))
+          }))
+          setSubmissions(normalized)
+          // Cache in localStorage for faster load next time
+          try { localStorage.setItem('iu_submissions', JSON.stringify(normalized)) } catch {}
         }
       })
       .catch(() => {})
