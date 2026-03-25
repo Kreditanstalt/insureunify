@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
-import { useAuth } from '@/lib/useAuth'
+import { AuthProvider, useAuth } from '@/lib/AuthProvider'
 
 function getLabel(pathname: string): string {
   if (pathname === '/dashboard') return 'Начало'
@@ -20,7 +20,8 @@ function getLabel(pathname: string): string {
   return 'Dashboard'
 }
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+// Inner layout that consumes the auth context
+function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
@@ -31,66 +32,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
-
       <Sidebar mobileOpen={mobileOpen} onMobileClose={() => setMobileOpen(false)} />
-
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-
-        {/* Top header */}
         <header className="flex h-14 flex-shrink-0 items-center gap-3 border-b border-gray-200 bg-white px-4 lg:px-6">
-          {/* Hamburger — mobile/tablet */}
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden"
-            aria-label="Отвори навигацията"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          <button type="button" onClick={() => setMobileOpen(true)} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden" aria-label="Навигация">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-
-          {/* Logo — mobile only */}
           <Link href="/dashboard" className="flex items-center gap-1.5 lg:hidden">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600">
-              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
             </div>
-            <span className="text-sm font-bold text-gray-900 hidden sm:block">InsureUnify</span>
           </Link>
-
-          {/* Breadcrumb — desktop */}
           <nav className="hidden lg:flex min-w-0 items-center gap-1.5 text-sm">
             <span className="text-gray-400">InsureUnify</span>
             <span className="text-gray-300">/</span>
             <span className="font-semibold text-gray-900">{getLabel(pathname)}</span>
           </nav>
-
-          {/* Page title — mobile */}
           <span className="lg:hidden text-sm font-semibold text-gray-900">{getLabel(pathname)}</span>
-
           <div className="ml-auto flex items-center gap-2">
-            {/* Quick new button — mobile */}
-            <Link
-              href="/dashboard/new"
-              className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors sm:hidden"
-            >
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
+            <Link href="/dashboard/new" className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors sm:hidden">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
             </Link>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto relative">
           {showTrialBlock && (
             <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
               <div className="max-w-md mx-auto text-center px-6 py-10">
                 <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100">
-                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                  </svg>
+                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
                 </div>
                 <h2 className="text-xl font-bold text-gray-900 mb-2">Пробният период е изтекъл</h2>
                 <p className="text-sm text-gray-500 mb-6">За да продължите, моля изберете план.</p>
@@ -104,5 +74,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+  )
+}
+
+// Root layout wraps everything in AuthProvider (loaded ONCE)
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AuthProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </AuthProvider>
   )
 }

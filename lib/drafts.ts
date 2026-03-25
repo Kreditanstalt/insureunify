@@ -18,6 +18,37 @@ export interface Draft {
 const DRAFT_PREFIX = 'iu_draft_'
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000 // 30 days
 
+// ─── Cross-tab sync via BroadcastChannel ──────────────────────────────────────
+
+let _channel: BroadcastChannel | null = null
+const _listeners: Array<(msg: { type: string; key: string }) => void> = []
+
+function getChannel(): BroadcastChannel | null {
+  if (typeof window === 'undefined') return null
+  if (typeof BroadcastChannel === 'undefined') return null // Safari < 15.4
+  if (!_channel) {
+    _channel = new BroadcastChannel('iu_drafts')
+    _channel.onmessage = (e) => {
+      _listeners.forEach((fn) => fn(e.data))
+    }
+  }
+  return _channel
+}
+
+function notifyOtherTabs(type: 'save' | 'delete', key: string) {
+  getChannel()?.postMessage({ type, key })
+}
+
+/** Subscribe to draft changes from other tabs. Returns unsubscribe function. */
+export function onDraftChange(fn: (msg: { type: string; key: string }) => void): () => void {
+  getChannel() // ensure channel is initialized
+  _listeners.push(fn)
+  return () => {
+    const idx = _listeners.indexOf(fn)
+    if (idx >= 0) _listeners.splice(idx, 1)
+  }
+}
+
 // ─── Key helpers ─────────────────────────────────────────────────────────────
 
 export function draftKey(insuranceClass: InsuranceClass, eik?: string): string {
@@ -31,6 +62,7 @@ export function saveDraft(draft: Omit<Draft, 'key' | 'savedAt'>): string {
   const key = draftKey(draft.insuranceClass, draft.eik)
   const full: Draft = { ...draft, key, savedAt: new Date().toISOString() }
   localStorage.setItem(key, JSON.stringify(full))
+  notifyOtherTabs('save', key)
   return key
 }
 
@@ -59,9 +91,11 @@ export function loadDraft(insuranceClass: InsuranceClass, eik?: string): Draft |
 
 export function deleteDraft(insuranceClass: InsuranceClass, eik?: string): void {
   if (typeof window === 'undefined') return
-  // Delete both possible keys
-  localStorage.removeItem(draftKey(insuranceClass, eik))
-  localStorage.removeItem(draftKey(insuranceClass))
+  const key1 = draftKey(insuranceClass, eik)
+  const key2 = draftKey(insuranceClass)
+  localStorage.removeItem(key1)
+  localStorage.removeItem(key2)
+  notifyOtherTabs('delete', key1)
 }
 
 // ─── List all drafts ─────────────────────────────────────────────────────────
