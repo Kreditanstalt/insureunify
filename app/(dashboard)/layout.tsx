@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
 import { AuthProvider, useAuth } from '@/lib/AuthProvider'
+import { ToastProvider } from '@/components/ToastProvider'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 function getLabel(pathname: string): string {
@@ -89,7 +90,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <DashboardShell>{children}</DashboardShell>
+      <ToastProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </ToastProvider>
     </AuthProvider>
   )
 }

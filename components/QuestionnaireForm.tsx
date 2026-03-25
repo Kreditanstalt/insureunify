@@ -8,8 +8,10 @@ import { INSURERS, PROPERTY_INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, Ins
 import { fmtDateBG } from '@/lib/utils'
 import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
+import { useToast } from './ToastProvider'
 import CityInput from './CityInput'
 import AutoFillUploader from './AutoFillUploader'
+import { findPreviousSubmission, enrichFromPrevious, PROPERTY_ENRICHMENT_FIELDS } from '@/lib/clientEnrichment'
 import StepperBar from './StepperBar'
 import DraftRecoveryBanner from './DraftRecoveryBanner'
 import DraftStatusIndicator from './DraftStatusIndicator'
@@ -561,6 +563,8 @@ export default function QuestionnaireForm() {
   const [touched, setTouched] = useState<Set<string>>(new Set())
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
+  const [enrichedBanner, setEnrichedBanner] = useState<string | null>(null)
+  const toast = useToast()
 
   const draft = useDraftAutoSave({
     insuranceClass: 'property',
@@ -632,6 +636,24 @@ export default function QuestionnaireForm() {
     setFormDataGeneric,
     BENEFICIARY_EIK_FIELD_MAP,
   )
+
+  // Client enrichment: when EIK lookup succeeds, check for previous submissions
+  useEffect(() => {
+    if (eikStatus !== 'found') return
+    const eik = String(formData.eik ?? '')
+    if (!eik) return
+    const prev = findPreviousSubmission(eik, 'property')
+    if (!prev) return
+    const { enrichedFields } = enrichFromPrevious(formData, prev, PROPERTY_ENRICHMENT_FIELDS)
+    if (enrichedFields.length === 0) return
+    setFormData((fd) => {
+      const { enriched } = enrichFromPrevious(fd, prev, PROPERTY_ENRICHMENT_FIELDS)
+      return enriched as FormData
+    })
+    toast.info(`Заредени ${enrichedFields.length} полета от предишно запитване`)
+    setEnrichedBanner(`${enrichedFields.length} полета заредени от предишно запитване за този клиент`)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eikStatus])
 
   function set(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value }))

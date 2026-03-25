@@ -268,6 +268,8 @@ export default function ComparisonWorkspacePage() {
   const [showSendModal, setShowSendModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [sharing, setSharing] = useState(false)
   const [expandCoverages, setExpandCoverages] = useState(false)
   const [expandExclusions, setExpandExclusions] = useState(false)
   const [expandConditions, setExpandConditions] = useState(false)
@@ -485,6 +487,32 @@ export default function ComparisonWorkspacePage() {
     showToast('Запазено')
   }
 
+  // ── Share link ──
+  async function handleShare() {
+    if (sharing) return
+    setSharing(true)
+    try {
+      const res = await fetch('/api/comparisons/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ comparison_id: id }),
+      })
+      const data = await res.json()
+      if (data.ok && data.shareToken) {
+        const url = `${window.location.origin}/share/${data.shareToken}`
+        setShareUrl(url)
+        await navigator.clipboard.writeText(url)
+        showToast('Линкът е копиран')
+      } else {
+        showToast('Грешка при генериране на линк')
+      }
+    } catch {
+      showToast('Грешка при генериране на линк')
+    } finally {
+      setSharing(false)
+    }
+  }
+
   // ── Generate PDF ──
   async function generatePDF() {
     if (!comparison) return
@@ -604,6 +632,11 @@ export default function ComparisonWorkspacePage() {
           <button onClick={async () => { const { exportComparisonToExcel } = await import('@/lib/exportComparison'); exportComparisonToExcel(comparison!, offers) }} disabled={offers.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
             Excel
+          </button>
+          <button onClick={handleShare} disabled={offers.length === 0 || sharing}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+            {sharing ? 'Генериране...' : 'Сподели'}
           </button>
           <button onClick={() => setShowSendModal(true)} disabled={offers.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">

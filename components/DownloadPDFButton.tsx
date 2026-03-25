@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast } from './ToastProvider'
 import type { InsurerKey, FormData } from '@/lib/schema'
 import { INSURERS } from '@/lib/schema'
 import type { PLFormData } from '@/lib/pl-schema'
@@ -67,6 +68,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
   const [loading, setLoading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [fileName, setFileName] = useState('')
+  const { error: toastError, warning: toastWarning } = useToast()
 
   function getFileName(): string {
     const safe = clientName.replace(/\s+/g, '_')
@@ -96,7 +98,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           const { AllianzOAPDF } = await import('./pdf/AllianzOAPDF')
           element = React.createElement(AllianzOAPDF, { formData: formData as OAFormData, clientName })
         } else if (insurerKey === 'ozk') {
-          alert('PDF шаблонът за ОЗК (Трудова злополука) предстои да бъде добавен.')
+          toastWarning('PDF шаблонът за ОЗК (Трудова злополука) предстои да бъде добавен.')
           setLoading(false)
           return
         } else {
@@ -108,7 +110,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           const { GeneraliGLPDF } = await import('./pdf/GeneraliGLPDF')
           element = React.createElement(GeneraliGLPDF, { formData: formData as GLFormData, clientName })
         } else if (insurerKey === 'ozk') {
-          alert('PDF шаблонът за ОЗК (ОГО) предстои да бъде добавен.')
+          toastWarning('PDF шаблонът за ОЗК (ОГО) предстои да бъде добавен.')
           setLoading(false)
           return
         } else {
@@ -127,11 +129,11 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           const { EuroinsPLPDF } = await import('./pdf/EuroinsPLPDF')
           element = React.createElement(EuroinsPLPDF, { formData: plData, clientName })
         } else if (insurerKey === 'ozk') {
-          alert('PDF шаблонът за ОЗК (Проф. отговорност) предстои да бъде добавен.')
+          toastWarning('PDF шаблонът за ОЗК (Проф. отговорност) предстои да бъде добавен.')
           setLoading(false)
           return
         } else {
-          alert(`PDF за ${INSURERS[insurerKey as InsurerKey]?.name ?? insurerKey} (ПО) не е наличен.`)
+          toastWarning(`PDF за ${INSURERS[insurerKey as InsurerKey]?.name ?? insurerKey} (ПО) не е наличен.`)
           setLoading(false)
           return
         }
@@ -172,7 +174,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
     } catch (err) {
       console.error('PDF generation failed:', err)
       const msg = err instanceof Error ? err.message : String(err)
-      alert(`Грешка при генериране на PDF:\n${msg}`)
+      toastError(`Грешка при генериране на PDF: ${msg}`)
     } finally {
       setLoading(false)
     }

@@ -39,7 +39,8 @@ export async function middleware(req: NextRequest) {
     path.startsWith('/forgot-password') ||
     path.startsWith('/reset-password') ||
     path.startsWith('/auth/callback') ||
-    path.startsWith('/onboarding')
+    path.startsWith('/onboarding') ||
+    path.startsWith('/share/')
 
   // Not logged in → redirect to login (except public pages)
   if (!user && !isPublic) {
