@@ -334,6 +334,25 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* ── Team ── */}
+        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900">Екип</h2>
+          </div>
+          <div className="p-5 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-700">Управлявайте членовете на екипа и техните роли.</p>
+              <p className="text-xs text-gray-400 mt-0.5">Администратор, Брокер, Наблюдател</p>
+            </div>
+            <a
+              href="/dashboard/settings/team"
+              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Управление на екипа &rarr;
+            </a>
+          </div>
+        </section>
+
         {/* ── Security ── */}
         <section className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100">
