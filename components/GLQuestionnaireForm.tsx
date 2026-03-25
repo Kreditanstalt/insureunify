@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { GL_SCHEMA, GL_INSURERS, GL_INSURER_KEYS, GLFormData, GLInsurerKey } from '@/lib/gl-schema'
 import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
+import CityInput from './CityInput'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
 import StepperBar from './StepperBar'
@@ -109,6 +110,12 @@ function FieldInput({
   const ic = hasError
     ? inputClass.replace('border-gray-300', 'border-red-400 bg-red-50/30')
     : inputClass
+
+  // City — with autocomplete dropdown
+  if (field.id === 'gl_city') {
+    return <CityInput value={formData[field.id] as string | undefined} onChange={(v) => set(field.id, v)} hasError={hasError} />
+  }
+
   // Company name — autocomplete
   if (field.id === 'gl_company_name') {
     return (

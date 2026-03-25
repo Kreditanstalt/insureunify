@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid'
 import Image from 'next/image'
 import { INSURERS } from '@/lib/schema'
 import { PL_SCHEMA, PL_INSURERS, PL_INSURER_KEYS, PLFormData, PLInsurerKey } from '@/lib/pl-schema'
+import CityInput from './CityInput'
 import type { SchemaField } from '@/lib/schema'
 import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import AutoFillUploader from './AutoFillUploader'
@@ -287,6 +288,9 @@ function PLFieldInput({
   const isEmpty = formData[field.id] === undefined || formData[field.id] === ''
   const hasError = showError && field.required && isEmpty
   const ic = hasError ? inputClass.replace('border-gray-300', 'border-red-400 bg-red-50/30') : inputClass
+  if (field.id === 'pl_city') {
+    return <CityInput value={formData[field.id] as string | undefined} onChange={(v) => set(field.id, v)} hasError={hasError} />
+  }
   if (field.id === 'pl_company_name') {
     return (
       <CompanyNameInput

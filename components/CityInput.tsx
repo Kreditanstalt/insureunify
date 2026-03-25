@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 
 // ─── Bulgarian cities/towns ──────────────────────────────────────────────────
-// Top cities first, then full list of all major settlements
 
 const TOP_CITIES = [
   'София', 'Пловдив', 'Варна', 'Бургас', 'Русе',
@@ -11,51 +10,19 @@ const TOP_CITIES = [
 ]
 
 const ALL_CITIES = [
-  // Областни центрове и големи градове
   'София', 'Пловдив', 'Варна', 'Бургас', 'Русе', 'Стара Загора', 'Плевен',
-  'Велико Търново', 'Благоевград', 'Перник', 'Добрич', 'Сливен', 'Шумен',
-  'Хасково', 'Ямбол', 'Пазарджик', 'Враца', 'Габрово', 'Кърджали',
-  'Монтана', 'Видин', 'Ловеч', 'Търговище', 'Кюстендил', 'Разград',
-  'Силистра', 'Смолян',
-  // Средни и малки градове
-  'Асеновград', 'Казанлък', 'Ботевград', 'Самоков', 'Дупница', 'Горна Оряховица',
-  'Димитровград', 'Свищов', 'Карлово', 'Троян', 'Лом', 'Петрич', 'Сандански',
-  'Севлиево', 'Нова Загора', 'Свиленград', 'Провадия', 'Раднево', 'Карнобат',
-  'Панагюрище', 'Велинград', 'Червен бряг', 'Попово', 'Първомай', 'Мездра',
-  'Тетевен', 'Берковица', 'Козлодуй', 'Елхово', 'Ихтиман', 'Нови Искър',
-  'Банско', 'Девня', 'Банкя', 'Елин Пелин', 'Костинброд', 'Етрополе',
-  'Твърдица', 'Исперих', 'Тутракан', 'Нови пазар', 'Каспичан', 'Омуртаг',
-  'Кубрат', 'Своге', 'Костенец', 'Пирдоп', 'Белоградчик', 'Трявна',
-  'Дряново', 'Ардино', 'Крумовград', 'Момчилград', 'Златоград',
-  'Мадан', 'Рудозем', 'Девин', 'Чепеларе', 'Доспат', 'Неделино',
-  'Средец', 'Созопол', 'Несебър', 'Поморие', 'Айтос', 'Каварна',
-  'Балчик', 'Тервел', 'Бяла', 'Обзор', 'Ахтопол',
-  'Белослав', 'Аксаково', 'Вълчи дол', 'Суворово', 'Долни чифлик',
-  'Генерал Тошево', 'Шабла', 'Чирпан', 'Гълъбово', 'Харманли',
-  'Симеоновград', 'Любимец', 'Ивайловград', 'Тополовград',
-  'Крън', 'Мъглиж', 'Павел баня', 'Шипка', 'Гурково',
-  'Сопот', 'Хисаря', 'Калофер', 'Клисура', 'Баня',
-  'Разлог', 'Гоце Делчев', 'Хаджидимово', 'Белица',
-  'Рила', 'Бобов дол', 'Бобошево', 'Сапарева баня',
-  'Батак', 'Белово', 'Брацигово', 'Пещера', 'Ракитово', 'Септември', 'Стрелча',
-  'Долна баня', 'Копривщица', 'Златица',
-  'Правец', 'Тетевен', 'Априлци', 'Луковит', 'Угърчин', 'Ябланица',
-  'Оряхово', 'Бяла Слатина', 'Кнежа', 'Левски', 'Никопол', 'Белене',
-  'Павликени', 'Сухиндол', 'Полски Тръмбеш', 'Стражица', 'Златарица',
-  'Дебелец', 'Килифарево', 'Лясковец', 'Елена',
-  'Две могили', 'Бяла', 'Борово', 'Ценово',
-  'Алфатар', 'Дулово', 'Главиница',
-  'Чипровци', 'Вършец', 'Бойчиновци',
-  'Вълчедръм', 'Брусарци',
-  'Котел', 'Нови пазар', 'Велики Преслав',
-  'Каолиново', 'Върбица',
-  'Болярово', 'Стралджа',
-  'Тунджа', 'Ябланово',
-  'Ивайловград', 'Маджарово',
-  'Златарица', 'Антоново', 'Опака',
+  'Велико Търново', 'Благоевград', 'Перник', 'Добрич', 'Шумен', 'Хасково',
+  'Пазарджик', 'Сливен', 'Монтана', 'Видин', 'Ловеч', 'Враца', 'Габрово',
+  'Кърджали', 'Смолян', 'Силистра', 'Разград', 'Търговище', 'Кюстендил',
+  'Ямбол', 'Троян', 'Асеновград', 'Казанлък', 'Дупница', 'Горна Оряховица',
+  'Димитровград', 'Свищов', 'Карлово', 'Севлиево', 'Нова Загора', 'Свиленград',
+  'Карнобат', 'Панагюрище', 'Велинград', 'Петрич', 'Сандански', 'Банско',
+  'Провадия', 'Самоков', 'Ботевград', 'Попово', 'Лом', 'Раднево',
+  'Червен бряг', 'Елхово', 'Нови Искър', 'Несебър', 'Поморие', 'Созопол',
+  'Балчик', 'Каварна', 'Девня', 'Козлодуй', 'Берковица', 'Ихтиман',
 ]
 
-// Remove duplicates and sort
+// Remove duplicates
 const UNIQUE_CITIES = Array.from(new Set(ALL_CITIES))
 
 const inputClass =
@@ -70,15 +37,19 @@ export default function CityInput({
   value,
   onChange,
   hasError,
+  placeholder,
 }: {
   value: string | undefined
   onChange: (v: string) => void
   hasError?: boolean
+  placeholder?: string
 }) {
   const [query, setQuery] = useState(value ?? '')
   const [open, setOpen] = useState(false)
   const [focused, setFocused] = useState(false)
+  const [highlightIndex, setHighlightIndex] = useState(-1)
   const ref = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   // Sync external value
   useEffect(() => {
@@ -98,10 +69,50 @@ export default function CityInput({
   const showSearch = trimmed.length >= 2
 
   const filtered = showSearch
-    ? UNIQUE_CITIES.filter((c) => c.toLowerCase().includes(trimmed)).slice(0, 15)
+    ? UNIQUE_CITIES.filter((c) => c.toLowerCase().includes(trimmed)).slice(0, 10)
     : TOP_CITIES
 
   const shouldShowDropdown = open && focused
+
+  // Reset highlight when list changes
+  useEffect(() => {
+    setHighlightIndex(-1)
+  }, [query, open])
+
+  // Scroll highlighted item into view
+  useEffect(() => {
+    if (highlightIndex >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll('[data-city-item]')
+      items[highlightIndex]?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [highlightIndex])
+
+  const selectCity = useCallback((city: string) => {
+    setQuery(city)
+    onChange(city)
+    setOpen(false)
+    setHighlightIndex(-1)
+  }, [onChange])
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!shouldShowDropdown || filtered.length === 0) return
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlightIndex((prev) => (prev < filtered.length - 1 ? prev + 1 : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlightIndex((prev) => (prev > 0 ? prev - 1 : filtered.length - 1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (highlightIndex >= 0 && highlightIndex < filtered.length) {
+        selectCity(filtered[highlightIndex])
+      }
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+      setHighlightIndex(-1)
+    }
+  }
 
   return (
     <div ref={ref} className="relative">
@@ -115,29 +126,32 @@ export default function CityInput({
         }}
         onFocus={() => { setFocused(true); setOpen(true) }}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
-        placeholder="Започнете да пишете или изберете..."
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder ?? 'Започнете да пишете или изберете...'}
         className={hasError ? errorInputClass : inputClass}
         autoComplete="off"
       />
       {shouldShowDropdown && filtered.length > 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-52 overflow-y-auto">
+        <div ref={listRef} className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg max-h-52 overflow-y-auto">
           {!showSearch && (
             <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100">
               Популярни градове
             </div>
           )}
-          {filtered.map((city) => (
+          {filtered.map((city, idx) => (
             <button
               key={city}
               type="button"
+              data-city-item
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => {
-                setQuery(city)
-                onChange(city)
-                setOpen(false)
-              }}
-              className={`w-full text-left px-3 py-2 text-sm transition-colors hover:bg-blue-50 hover:text-blue-700 ${
-                city === query ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+              onClick={() => selectCity(city)}
+              onMouseEnter={() => setHighlightIndex(idx)}
+              className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                idx === highlightIndex
+                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  : city === query
+                    ? 'bg-blue-50/50 text-blue-700 font-medium'
+                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
               }`}
             >
               {city}

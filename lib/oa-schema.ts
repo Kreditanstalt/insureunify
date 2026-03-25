@@ -107,8 +107,13 @@ export const OA_SCHEMA: SchemaSection[] = [
         mapping: { allianz: 'ЕИК', groupama: 'ЕИК' },
       } satisfies SchemaField,
       {
+        id: 'oa_city', label: 'Град', type: 'text', required: true,
+        placeholder: 'София',
+        mapping: { allianz: 'Град', groupama: 'Град' },
+      } satisfies SchemaField,
+      {
         id: 'oa_address', label: 'Адрес', type: 'text', required: true,
-        placeholder: 'гр. София, ул. …',
+        placeholder: 'ул. / бул., номер, етаж',
         mapping: { allianz: 'Адрес (гр./с., ул., №)', groupama: 'Адрес за кореспонденция' },
       } satisfies SchemaField,
       {
@@ -122,8 +127,18 @@ export const OA_SCHEMA: SchemaSection[] = [
         mapping: { groupama: 'Представляван от' },
       } satisfies SchemaField,
       {
-        id: 'oa_activity', label: 'Основна дейност', type: 'text', required: true,
-        placeholder: 'Производство / Строителство / Търговия',
+        id: 'oa_activity', label: 'Основна дейност', type: 'select', required: true,
+        options: [
+          { value: 'retail', label: 'Търговия на дребно' },
+          { value: 'wholesale', label: 'Търговия на едро' },
+          { value: 'manufacturing', label: 'Производство' },
+          { value: 'construction', label: 'Строителство' },
+          { value: 'transport', label: 'Транспорт' },
+          { value: 'services', label: 'Услуги' },
+          { value: 'distribution', label: 'Дистрибуция' },
+          { value: 'it', label: 'IT / Технологии' },
+          { value: 'other', label: 'Друго' },
+        ],
         mapping: { allianz: 'Основна дейност на фирмата', groupama: 'Предмет на дейност' },
       } satisfies SchemaField,
       {

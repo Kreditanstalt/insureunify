@@ -88,8 +88,13 @@ export const GL_SCHEMA: SchemaSection[] = [
         mapping: { generali: 'ЕИК / ЕГН', bulstrad: 'ЕИК, БУЛСТАТ / UIC' },
       } satisfies SchemaField,
       {
-        id: 'gl_address', label: 'Адрес на управление', type: 'text', required: true,
-        placeholder: 'гр. София, ул. …',
+        id: 'gl_city', label: 'Град', type: 'text', required: true,
+        placeholder: 'София',
+        mapping: { generali: 'Град', bulstrad: 'Град' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_address', label: 'Адрес', type: 'text', required: true,
+        placeholder: 'ул. / бул., номер, етаж',
         mapping: { generali: 'Адрес на управление', bulstrad: 'Адрес / Address' },
       } satisfies SchemaField,
       {
@@ -118,8 +123,18 @@ export const GL_SCHEMA: SchemaSection[] = [
         mapping: { generali: 'Длъжност' },
       } satisfies SchemaField,
       {
-        id: 'gl_activity', label: 'Основна дейност', type: 'text', required: true,
-        placeholder: 'Производство / Дистрибуция / Търговия',
+        id: 'gl_activity', label: 'Основна дейност', type: 'select', required: true,
+        options: [
+          { value: 'retail', label: 'Търговия на дребно' },
+          { value: 'wholesale', label: 'Търговия на едро' },
+          { value: 'manufacturing', label: 'Производство' },
+          { value: 'construction', label: 'Строителство' },
+          { value: 'transport', label: 'Транспорт' },
+          { value: 'services', label: 'Услуги' },
+          { value: 'distribution', label: 'Дистрибуция' },
+          { value: 'it', label: 'IT / Технологии' },
+          { value: 'other', label: 'Друго' },
+        ],
         mapping: { generali: 'Основна дейност', bulstrad: 'Описание на Дейността / Description of insured activity' },
       } satisfies SchemaField,
       {

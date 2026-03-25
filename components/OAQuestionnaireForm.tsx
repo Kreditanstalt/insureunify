@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { OA_SCHEMA, OA_INSURERS, OA_INSURER_KEYS, OAFormData, OAInsurerKey } from '@/lib/oa-schema'
 import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import { EikInput, CompanyNameInput, useEikLookup } from './EikLookup'
+import CityInput from './CityInput'
 import type { SchemaField } from '@/lib/schema'
 import AutoFillUploader from './AutoFillUploader'
 import StepperBar from './StepperBar'
@@ -127,6 +128,10 @@ function FieldInput({
   const isEmpty = formData[field.id] === undefined || formData[field.id] === ''
   const hasError = showError && field.required && isEmpty
   const ic = hasError ? inputClass.replace('border-gray-300', 'border-red-400 bg-red-50/30') : inputClass
+  if (field.id === 'oa_city') {
+    return <CityInput value={formData[field.id] as string | undefined} onChange={(v) => set(field.id, v)} hasError={hasError} />
+  }
+
   if (field.id === 'oa_company_name') {
     return (
       <CompanyNameInput
