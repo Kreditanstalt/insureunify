@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Sidebar from '@/components/Sidebar'
 import { AuthProvider, useAuth } from '@/lib/AuthProvider'
 import { ToastProvider } from '@/components/ToastProvider'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 
 function getLabel(pathname: string): string {
@@ -91,7 +92,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <AuthProvider>
       <ToastProvider>
-        <DashboardShell>{children}</DashboardShell>
+        <ErrorBoundary>
+          <DashboardShell>{children}</DashboardShell>
+        </ErrorBoundary>
       </ToastProvider>
     </AuthProvider>
   )

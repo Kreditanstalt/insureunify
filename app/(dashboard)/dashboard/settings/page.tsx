@@ -138,7 +138,7 @@ export default function SettingsPage() {
             {/* Logo */}
             <div className="flex items-center gap-4">
               {profile.logo_url ? (
-                <img src={profile.logo_url} alt="" className="h-14 w-14 rounded-xl object-cover border border-gray-200" />
+                <img src={profile.logo_url} alt="" width={56} height={56} className="h-14 w-14 rounded-xl object-cover border border-gray-200" loading="lazy" />
               ) : (
                 <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-xl font-bold text-blue-700">
                   {profile.company_name[0]?.toUpperCase() ?? '?'}

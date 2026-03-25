@@ -11,6 +11,7 @@ import { getAllDrafts, deleteDraft, CLASS_META, timeAgo } from '@/lib/drafts'
 import type { Draft } from '@/lib/drafts'
 import { useAuth } from '@/lib/useAuth'
 import { PLAN_LABELS } from '@/lib/planLimits'
+import { DashboardSkeleton } from '@/components/Skeletons'
 
 interface Submission {
   id:               string
@@ -135,7 +136,7 @@ export default function DashboardPage() {
   const topMax = Math.max(1, ...topInsurers.map((i) => i.count))
 
   if (authLoading) {
-    return <div className="flex h-full items-center justify-center"><div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" /></div>
+    return <DashboardSkeleton />
   }
 
   return (

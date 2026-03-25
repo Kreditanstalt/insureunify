@@ -158,7 +158,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boo
           {profile && (
             <div className={`mb-1 flex items-center rounded-lg ${mini ? 'justify-center py-1.5' : 'gap-2 px-2 py-1.5'}`}>
               {profile.logo_url ? (
-                <img src={profile.logo_url} alt="" className="h-7 w-7 rounded-full object-cover flex-shrink-0" />
+                <img src={profile.logo_url} alt="" width={28} height={28} className="h-7 w-7 rounded-full object-cover flex-shrink-0" loading="lazy" />
               ) : (
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
                   {profile.company_name[0]?.toUpperCase() ?? '?'}
