@@ -252,8 +252,6 @@ export const MASTER_SCHEMA: SchemaSection[] = [
         required: true,
         options: [
           { value: 'EUR', label: 'EUR (€)' },
-          { value: 'BGN', label: 'BGN (лв.)' },
-          { value: 'USD', label: 'USD ($)' },
         ],
         mapping: { bulstrad: 'Валута', generali: 'Евро', instinct: 'EUR', ozk: 'Валута' },
       },

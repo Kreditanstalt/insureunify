@@ -425,6 +425,137 @@ function InstinctTemplate({ mappedData, clientName }: TemplateProps) {
 }
 
 // ===============================================================================
+// ОЗК
+// ===============================================================================
+
+const OZ = StyleSheet.create({
+  page: {
+    fontFamily: 'Roboto',
+    fontSize: 9,
+    padding: '30 40 55 40',
+    color: '#0a0a0a',
+    backgroundColor: '#ffffff',
+  },
+  topBand: {
+    backgroundColor: '#1B3F8B',
+    marginHorizontal: -40,
+    marginTop: -30,
+    paddingHorizontal: 40,
+    paddingTop: 14,
+    paddingBottom: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginBottom: 14,
+  },
+  bandTitle: { fontSize: 16, fontWeight: 'bold', color: '#ffffff' },
+  bandSub: { fontSize: 7.5, color: '#b0c4ef', marginTop: 2 },
+  bandRight: { alignItems: 'flex-end' },
+  bandLabel: { fontSize: 6.5, color: '#b0c4ef', textTransform: 'uppercase' },
+  bandValue: { fontSize: 9, fontWeight: 'bold', color: '#ffffff' },
+  clientBox: {
+    border: '1.5 solid #1B3F8B',
+    borderRadius: 3,
+    padding: '7 10',
+    marginBottom: 14,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  clientLabel: { fontSize: 7, color: '#6b7280' },
+  clientValue: { fontSize: 12, fontWeight: 'bold', color: '#1B3F8B' },
+  formRef: { fontSize: 8, color: '#374151' },
+  rightAligned: { alignItems: 'flex-end' },
+  sectionTitle: {
+    fontSize: 7,
+    fontWeight: 'bold',
+    color: '#1B3F8B',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 12,
+    marginBottom: 4,
+    paddingBottom: 2,
+    borderBottom: '1 solid #1B3F8B',
+  },
+  row: { flexDirection: 'row', paddingVertical: 3, borderBottom: '0.5 solid #e5e7eb' },
+  rowEven: { backgroundColor: '#f0f3fb' },
+  rowLabel: { width: '50%', color: '#374151', paddingRight: 8 },
+  rowValue: { width: '50%', fontWeight: 'bold' },
+  footer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    borderTop: '0.5 solid #1B3F8B',
+    paddingTop: 5,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    fontSize: 7,
+    color: '#6b7280',
+  },
+  footerBold: { fontWeight: 'bold', color: '#1B3F8B' },
+})
+
+function OZKTemplate({ mappedData, clientName }: TemplateProps) {
+  const insurer = INSURERS.ozk
+  const date = todayStr()
+  return (
+    <Document title={`ОЗК -- ${clientName}`} author="InsureUnify">
+      <Page size="A4" style={OZ.page}>
+        <View style={OZ.topBand}>
+          <View>
+            <Text style={OZ.bandTitle}>ОЗК — ЗАСТРАХОВАНЕ</Text>
+            <Text style={OZ.bandSub}>Застрахователен въпросник / Имущество</Text>
+            <Text style={OZ.bandSub}>{insurer.formCode}</Text>
+          </View>
+          <View style={OZ.bandRight}>
+            <Text style={OZ.bandLabel}>Дата на изготвяне</Text>
+            <Text style={OZ.bandValue}>{date}</Text>
+          </View>
+        </View>
+
+        <View style={OZ.clientBox}>
+          <View>
+            <Text style={OZ.clientLabel}>Кандидат-застрахован</Text>
+            <Text style={OZ.clientValue}>{clientName}</Text>
+          </View>
+          <View style={OZ.rightAligned}>
+            <Text style={OZ.clientLabel}>Застраховател</Text>
+            <Text style={OZ.formRef}>ОЗК · {insurer.formCode}</Text>
+          </View>
+        </View>
+
+        {MASTER_SCHEMA.map((section) => {
+          const fields = section.fields.filter((f) => mappedData[f.id])
+          if (fields.length === 0) return null
+          return (
+            <View key={section.id}>
+              <Text style={OZ.sectionTitle}>{section.label}</Text>
+              {fields.map((field, idx) => {
+                const m = mappedData[field.id]
+                if (!m) return null
+                return (
+                  <View key={field.id} style={idx % 2 === 1 ? [OZ.row, OZ.rowEven] : OZ.row}>
+                    <Text style={OZ.rowLabel}>{m.originalLabel}</Text>
+                    <Text style={OZ.rowValue}>{m.displayValue}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          )
+        })}
+
+        <View style={OZ.footer} fixed>
+          <Text>
+            <Text style={OZ.footerBold}>ОЗК</Text> · {insurer.formCode}
+          </Text>
+          <Text>InsureUnify · {date}</Text>
+        </View>
+      </Page>
+    </Document>
+  )
+}
+
+// ===============================================================================
 // Dispatcher
 // ===============================================================================
 
@@ -442,5 +573,10 @@ export function InsurerDocument({ insurerKey, mappedData, clientName }: Props) {
       return <GeneraliTemplate mappedData={mappedData} clientName={clientName} />
     case 'instinct':
       return <InstinctTemplate mappedData={mappedData} clientName={clientName} />
+    case 'ozk':
+      return <OZKTemplate mappedData={mappedData} clientName={clientName} />
+    default:
+      // Fallback: use OZK-style template for any unknown insurer
+      return <OZKTemplate mappedData={mappedData} clientName={clientName} />
   }
 }
