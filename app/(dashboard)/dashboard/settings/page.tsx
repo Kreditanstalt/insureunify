@@ -71,36 +71,55 @@ export default function SettingsPage() {
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file || !user) return
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Файлът е прекалено голям (макс. 2 MB)')
+      return
+    }
     setUploadingLogo(true)
 
-    const supabase = getBrowserClient()
-    const ext = file.name.split('.').pop()
-    const path = `${user.id}/logo.${ext}`
+    try {
+      const supabase = getBrowserClient()
+      let logoUrl: string | null = null
 
-    const { error: uploadError } = await supabase.storage
-      .from('broker-logos')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      // Try Supabase Storage first
+      const ext = file.name.split('.').pop()?.toLowerCase() ?? 'png'
+      const path = `${user.id}/logo.${ext}`
 
-    if (!uploadError) {
-      const { data: urlData } = supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('broker-logos')
-        .getPublicUrl(path)
+        .upload(path, file, { upsert: true, contentType: file.type })
 
-      const logoUrl = urlData.publicUrl
-
-      // Save to broker_profiles
-      await supabase.from('broker_profiles').update({ logo_url: logoUrl }).eq('id', user.id)
-
-      // Also save to broker_accounts if user has one
-      if (profile?.account_id) {
-        await supabase.from('broker_accounts').update({ logo_url: logoUrl }).eq('id', profile.account_id)
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from('broker-logos')
+          .getPublicUrl(path)
+        logoUrl = urlData.publicUrl
+      } else {
+        console.warn('[Logo] Storage upload failed, using data URL fallback:', uploadError.message)
+        // Fallback: convert to base64 data URL and store directly
+        const reader = new FileReader()
+        logoUrl = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(file)
+        })
       }
 
-      if (profile) {
-        setProfile({ ...profile, logo_url: logoUrl })
+      if (logoUrl) {
+        // Save to broker_profiles
+        await supabase.from('broker_profiles').upsert({ id: user.id, logo_url: logoUrl, company_name: profile?.company_name ?? '', email: profile?.email ?? '' })
+
+        // Also save to broker_accounts if user has one
+        if (profile?.account_id) {
+          await supabase.from('broker_accounts').update({ logo_url: logoUrl }).eq('id', profile.account_id)
+        }
+
+        if (profile) {
+          setProfile({ ...profile, logo_url: logoUrl })
+        }
+        toast.success('Логото е обновено')
       }
-      toast.success('Логото е обновено')
-    } else {
+    } catch (err) {
+      console.error('[Logo] Upload error:', err)
       toast.error('Грешка при качване на логото')
     }
     setUploadingLogo(false)
