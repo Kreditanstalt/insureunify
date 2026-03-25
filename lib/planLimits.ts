@@ -37,7 +37,7 @@ export async function getAccountForUser(userId: string, supabase: SupabaseClient
   const { data: bu } = await supabase
     .from('broker_users')
     .select('account_id')
-    .eq('user_id', userId)
+    .eq('id', userId)
     .maybeSingle()
   return { accountId: bu?.account_id ?? null }
 }

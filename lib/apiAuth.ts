@@ -46,7 +46,7 @@ export async function getAuthFromRequest(req: NextRequest): Promise<AuthResult> 
         const { data: bu } = await db
           .from('broker_users')
           .select('account_id')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .maybeSingle()
         accountId = bu?.account_id ?? null
       }

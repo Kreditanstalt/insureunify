@@ -50,7 +50,7 @@ export default function SettingsPage() {
     updateError = e1
     if (e1) {
       // Fallback: try broker_accounts via broker_users
-      const { data: bu } = await supabase.from('broker_users').select('account_id').eq('user_id', user.id).maybeSingle()
+      const { data: bu } = await supabase.from('broker_users').select('account_id').eq('id', user.id).maybeSingle()
       if (bu?.account_id) {
         const { error: e2 } = await supabase
           .from('broker_accounts')

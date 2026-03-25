@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { data: bu } = await supabase
             .from('broker_users')
             .select('*, broker_accounts(*)')
-            .eq('user_id', session.user.id)
+            .eq('id', session.user.id)
             .maybeSingle()
 
           if (bu) {

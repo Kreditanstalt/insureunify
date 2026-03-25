@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const { data: bu } = await db
       .from('broker_users')
       .select('account_id')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .maybeSingle()
 
     if (!bu?.account_id) {

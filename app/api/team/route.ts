@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await db
       .from('broker_users')
-      .select('id, user_id, email, role, created_at')
+      .select('id, email, role, created_at')
       .eq('account_id', auth.accountId)
       .order('created_at', { ascending: true })
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const { data: currentUser } = await db
       .from('broker_users')
       .select('role')
-      .eq('user_id', auth.userId)
+      .eq('id', auth.userId)
       .eq('account_id', auth.accountId)
       .single()
 
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         account_id: auth.accountId,
         email,
         role,
-        user_id: null, // Will be linked when user registers/logs in
+        // id will be auto-generated, linked to user when they register/login
       })
       .select()
       .single()
@@ -110,7 +110,7 @@ export async function PATCH(req: NextRequest) {
     const { data: currentUser } = await db
       .from('broker_users')
       .select('role')
-      .eq('user_id', auth.userId)
+      .eq('id', auth.userId)
       .eq('account_id', auth.accountId)
       .single()
 

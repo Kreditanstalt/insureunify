@@ -7,7 +7,6 @@ import { ROLE_LABELS, type UserRole } from '@/lib/roles'
 
 interface Member {
   id: string
-  user_id: string | null
   email: string
   role: UserRole
   created_at: string
@@ -140,7 +139,7 @@ export default function TeamPage() {
               <div className="px-5 py-8 text-center text-sm text-gray-400">Все още няма членове на екипа</div>
             ) : (
               members.map((m) => {
-                const isMe = m.user_id === user?.id
+                const isMe = m.id === user?.id
                 const info = ROLE_LABELS[m.role] ?? ROLE_LABELS.broker
                 return (
                   <div key={m.id} className="px-5 py-3 flex items-center gap-3">
