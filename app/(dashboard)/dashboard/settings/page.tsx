@@ -18,6 +18,7 @@ export default function SettingsPage() {
   const [companyName, setCompanyName] = useState(profile?.company_name ?? '')
   const [phone, setPhone] = useState(profile?.phone ?? '')
   const [address, setAddress] = useState(profile?.address ?? '')
+  const [brandColor, setBrandColor] = useState(profile?.brand_color ?? '#2563EB')
 
   // Password form state
   const [newPassword, setNewPassword] = useState('')
@@ -42,7 +43,7 @@ export default function SettingsPage() {
     let updateError = null
     const { error: e1 } = await supabase
       .from('broker_profiles')
-      .update({ company_name: companyName.trim(), phone: phone || null, address: address || null })
+      .update({ company_name: companyName.trim(), phone: phone || null, address: address || null, brand_color: brandColor || null })
       .eq('id', user.id)
     updateError = e1
     if (e1) {
@@ -51,14 +52,14 @@ export default function SettingsPage() {
       if (bu?.account_id) {
         const { error: e2 } = await supabase
           .from('broker_accounts')
-          .update({ company_name: companyName.trim(), phone: phone || null, address: address || null })
+          .update({ company_name: companyName.trim(), phone: phone || null, address: address || null, brand_color: brandColor || null })
           .eq('id', bu.account_id)
         updateError = e2
       }
     }
 
     if (!updateError && profile) {
-      setProfile({ ...profile, company_name: companyName.trim(), phone, address })
+      setProfile({ ...profile, company_name: companyName.trim(), phone, address, brand_color: brandColor })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
     }
@@ -175,11 +176,30 @@ export default function SettingsPage() {
                 <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="гр. София, ул..." className={inputClass} />
               </div>
             </div>
+            {/* Brand color */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Цвят на бранда</label>
+              <div className="flex items-center gap-3">
+                <input type="color" value={brandColor} onChange={(e) => setBrandColor(e.target.value)} className="h-9 w-14 rounded-lg border border-gray-300 cursor-pointer" />
+                <div className="flex gap-1.5">
+                  {['#2563EB', '#0B3D91', '#C8102E', '#1B6B3A', '#6B21A8', '#92400e', '#0891b2'].map((c) => (
+                    <button key={c} type="button" onClick={() => setBrandColor(c)}
+                      className={`h-7 w-7 rounded-full border-2 transition-all ${brandColor === c ? 'border-gray-900 scale-110' : 'border-transparent hover:scale-105'}`}
+                      style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+                <input type="text" value={brandColor} onChange={(e) => setBrandColor(e.target.value)}
+                  className="w-24 rounded-lg border border-gray-200 px-2 py-1.5 text-xs font-mono text-gray-600" />
+              </div>
+              <p className="text-[11px] text-gray-400 mt-1">Този цвят се използва в sidebar-а, бутоните и PDF документите</p>
+            </div>
+
             <div className="flex items-center gap-3">
               <button
                 onClick={saveProfile}
                 disabled={saving}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
+                style={{ backgroundColor: brandColor }}
               >
                 {saving ? 'Запазване...' : 'Запази промените'}
               </button>

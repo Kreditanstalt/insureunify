@@ -7,7 +7,10 @@ import Sidebar from '@/components/Sidebar'
 import { AuthProvider, useAuth } from '@/lib/AuthProvider'
 import { ToastProvider } from '@/components/ToastProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { BrandProvider } from '@/lib/BrandProvider'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import BrandLogo from '@/components/BrandLogo'
+import { useBrand } from '@/lib/BrandProvider'
 
 function getLabel(pathname: string): string {
   if (pathname === '/dashboard') return 'Начало'
@@ -43,13 +46,11 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           <button type="button" onClick={() => setMobileOpen(true)} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 lg:hidden" aria-label="Навигация">
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <Link href="/dashboard" className="flex items-center gap-1.5 lg:hidden">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-blue-600">
-              <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </div>
+          <Link href="/dashboard" className="lg:hidden">
+            <BrandLogo size="sm" />
           </Link>
           <nav className="hidden lg:flex min-w-0 items-center gap-1.5 text-sm">
-            <span className="text-gray-400">InsureUnify</span>
+            <BrandLogo size="sm" showName />
             <span className="text-gray-300">/</span>
             <span className="font-semibold text-gray-900">{getLabel(pathname)}</span>
           </nav>
@@ -92,11 +93,13 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <ToastProvider>
-        <ErrorBoundary>
-          <DashboardShell>{children}</DashboardShell>
-        </ErrorBoundary>
-      </ToastProvider>
+      <BrandProvider>
+        <ToastProvider>
+          <ErrorBoundary>
+            <DashboardShell>{children}</DashboardShell>
+          </ErrorBoundary>
+        </ToastProvider>
+      </BrandProvider>
     </AuthProvider>
   )
 }

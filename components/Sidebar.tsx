@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
+import { useBrand } from '@/lib/BrandProvider'
 import { PLAN_LABELS } from '@/lib/planLimits'
+import BrandLogo from './BrandLogo'
 
 interface NavItem { label: string; href: string; soon?: boolean; exact?: boolean; icon: React.ReactNode }
 
@@ -38,6 +40,7 @@ const LOGOUT_ICON = <I d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2
 export default function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boolean; onMobileClose: () => void }) {
   const pathname = usePathname()
   const { profile, signOut, plan, trialDaysLeft } = useAuth()
+  const brand = useBrand()
 
   // Desktop collapse state persisted in localStorage
   const [collapsed, setCollapsed] = useState(false)
@@ -84,14 +87,15 @@ export default function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boo
         className={`group/nav relative flex items-center rounded-lg transition-colors ${
           mini ? 'justify-center px-0 py-2.5' : 'gap-2.5 px-2.5 py-2'
         } text-[13px] ${
-          active ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
+          active ? 'font-medium' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
         }`}
+        style={active ? { backgroundColor: brand.colorLight, color: brand.color } : undefined}
         title={mini ? item.label : undefined}
       >
-        {active && !mini && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full bg-blue-600" />}
-        <span className={`flex-shrink-0 ${active ? 'text-blue-600' : 'text-gray-400'}`}>{item.icon}</span>
+        {active && !mini && <span className="absolute inset-y-1.5 left-0 w-[3px] rounded-r-full" style={{ backgroundColor: brand.color }} />}
+        <span className="flex-shrink-0" style={active ? { color: brand.color } : { color: '#9ca3af' }}>{item.icon}</span>
         {!mini && <span className="truncate">{item.label}</span>}
-        {active && mini && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-blue-600" />}
+        {active && mini && <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full" style={{ backgroundColor: brand.color }} />}
         {/* Tooltip for collapsed */}
         {mini && (
           <span className="pointer-events-none absolute left-full ml-2 z-50 whitespace-nowrap rounded-md bg-gray-900 px-2.5 py-1 text-xs text-white opacity-0 group-hover/nav:opacity-100 transition-opacity">
@@ -109,13 +113,8 @@ export default function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boo
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className={`flex h-14 flex-shrink-0 items-center border-b border-gray-100 ${mini ? 'justify-center px-0' : 'px-4'}`}>
-          <Link href="/dashboard" onClick={closeMobile} className="flex items-center gap-2 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 shadow-sm shadow-blue-200 group-hover:bg-blue-700 transition-colors flex-shrink-0">
-              <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            {!mini && <span className="text-sm font-bold text-gray-900">InsureUnify</span>}
+          <Link href="/dashboard" onClick={closeMobile}>
+            <BrandLogo size="md" showName={!mini} />
           </Link>
         </div>
 
@@ -124,9 +123,10 @@ export default function Sidebar({ mobileOpen, onMobileClose }: { mobileOpen: boo
           <Link
             href="/dashboard/new"
             onClick={closeMobile}
-            className={`flex items-center justify-center rounded-lg bg-blue-600 text-white font-semibold shadow-sm shadow-blue-100 hover:bg-blue-700 transition-colors ${
+            className={`flex items-center justify-center rounded-lg text-white font-semibold shadow-sm transition-colors ${
               mini ? 'h-9 w-full text-sm' : 'gap-1.5 py-2 text-xs'
             }`}
+            style={{ backgroundColor: brand.color, boxShadow: `0 1px 2px ${brand.color}22` }}
             title={mini ? 'Ново запитване' : undefined}
           >
             <svg className={mini ? 'h-4 w-4' : 'h-3.5 w-3.5'} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
