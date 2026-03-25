@@ -227,34 +227,58 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
 
       {/* PDF Preview Modal */}
       {previewUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closePreview}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" onClick={closePreview}>
+          <div className="bg-white w-full h-[95vh] sm:h-[85vh] sm:max-w-4xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
-                <span className="text-sm font-semibold text-gray-900">{fileName}</span>
+            <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <div className="h-3 w-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{fileName}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-2">
                 <button
                   onClick={handleDownload}
-                  className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Изтегли
+                  <span className="hidden sm:inline">Изтегли</span>
                 </button>
                 <button onClick={closePreview} className="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg className="h-5 w-5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
-            {/* PDF iframe */}
-            <div className="flex-1 bg-gray-100">
-              <iframe src={previewUrl} className="w-full h-full border-0" title="PDF Preview" />
+            {/* PDF content — iframe on desktop, object on mobile for better scrolling */}
+            <div className="flex-1 bg-gray-100 overflow-auto">
+              <object data={previewUrl} type="application/pdf" className="w-full h-full hidden sm:block">
+                <iframe src={previewUrl} className="w-full h-full border-0" title="PDF Preview" />
+              </object>
+              {/* Mobile: show download prompt instead of broken iframe */}
+              <div className="flex sm:hidden flex-col items-center justify-center h-full px-6 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+                  <svg className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-bold text-gray-900 mb-1">PDF е готов</h3>
+                <p className="text-sm text-gray-500 mb-5">{fileName}</p>
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Изтегли PDF
+                </button>
+                <button onClick={closePreview} className="mt-3 text-sm text-gray-500 hover:text-gray-700">
+                  Затвори
+                </button>
+              </div>
             </div>
           </div>
         </div>
