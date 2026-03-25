@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import { useToast } from '@/components/ToastProvider'
 
 interface Comparison {
   id: string
@@ -17,9 +18,7 @@ interface Comparison {
 const LS_KEY = 'iu_comparisons'
 
 function loadComparisons(): Comparison[] {
-  try {
-    return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]')
-  } catch { return [] }
+  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]') } catch { return [] }
 }
 
 function saveComparisons(list: Comparison[]) {
@@ -42,15 +41,13 @@ const STATUS_LABELS: Record<string, { label: string; color: string; bg: string }
 
 export default function ComparisonsPage() {
   const router = useRouter()
+  const toast = useToast()
   const [comparisons, setComparisons] = useState<Comparison[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load from localStorage immediately
     setComparisons(loadComparisons())
     setLoading(false)
-
-    // Then try Supabase in background
     fetch('/api/comparisons')
       .then((r) => r.json())
       .then((d) => {
@@ -73,15 +70,40 @@ export default function ComparisonsPage() {
     const updated = [newComp, ...comparisons]
     setComparisons(updated)
     saveComparisons(updated)
-
-    // Sync to Supabase in background
     fetch('/api/comparisons', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newComp),
     }).catch(() => {})
-
     router.push(`/dashboard/comparisons/${newComp.id}`)
+  }
+
+  function deleteComparison(id: string) {
+    if (!confirm('Изтриване на сравнението?')) return
+    const updated = comparisons.filter((c) => c.id !== id)
+    setComparisons(updated)
+    saveComparisons(updated)
+    fetch(`/api/comparisons?id=${id}`, { method: 'DELETE' }).catch(() => {})
+    toast.success('Сравнението е изтрито')
+  }
+
+  function duplicateComparison(comp: Comparison) {
+    const newComp: Comparison = {
+      ...comp,
+      id: uuidv4(),
+      status: 'draft',
+      created_at: new Date().toISOString(),
+      client_name: comp.client_name ? `${comp.client_name} (копие)` : '',
+    }
+    const updated = [newComp, ...comparisons]
+    setComparisons(updated)
+    saveComparisons(updated)
+    fetch('/api/comparisons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newComp),
+    }).catch(() => {})
+    toast.success('Сравнението е копирано')
   }
 
   return (
@@ -126,7 +148,7 @@ export default function ComparisonsPage() {
             const cls = CLASS_LABELS[c.insurance_class] ?? CLASS_LABELS.property
             const st = STATUS_LABELS[c.status] ?? STATUS_LABELS.draft
             return (
-              <div key={c.id} className="px-5 py-4 hover:bg-gray-50/80 transition-colors flex items-center gap-4">
+              <div key={c.id} className="group px-5 py-4 hover:bg-gray-50/80 transition-colors flex items-center gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-semibold text-gray-900 truncate">
@@ -143,12 +165,35 @@ export default function ComparisonsPage() {
                     {new Date(c.created_at).toLocaleDateString('bg-BG', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </p>
                 </div>
-                <button
-                  onClick={() => router.push(`/dashboard/comparisons/${c.id}`)}
-                  className="rounded-lg bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors whitespace-nowrap"
-                >
-                  Отвори
-                </button>
+                <div className="flex items-center gap-2">
+                  {/* Action buttons — visible on hover */}
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => duplicateComparison(c)}
+                      className="rounded-lg p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                      title="Копирай"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => deleteComparison(c.id)}
+                      className="rounded-lg p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      title="Изтрий"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => router.push(`/dashboard/comparisons/${c.id}`)}
+                    className="rounded-lg bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition-colors whitespace-nowrap"
+                  >
+                    Отвори
+                  </button>
+                </div>
               </div>
             )
           })}

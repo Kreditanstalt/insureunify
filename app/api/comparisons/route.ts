@@ -71,6 +71,26 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function DELETE(req: NextRequest) {
+  try {
+    const id = req.nextUrl.searchParams.get('id')
+    if (!id) return NextResponse.json({ ok: false }, { status: 400 })
+
+    const db = getServiceClient()
+    if (!db) return NextResponse.json({ ok: true })
+
+    // Delete offers associated with this comparison first
+    await db.from('offers').delete().eq('comparison_id', id)
+    // Delete the comparison itself
+    await db.from('offer_comparisons').delete().eq('id', id)
+
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    console.error('DELETE /api/comparisons error:', e)
+    return NextResponse.json({ ok: false }, { status: 500 })
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get('id')

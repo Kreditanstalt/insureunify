@@ -161,10 +161,18 @@ export default function SubmissionsPage() {
 
   async function bulkDelete() {
     if (!confirm(`Изтриване на ${selected.size} запитвания?`)) return
-    for (const id of Array.from(selected)) {
-      await fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
-    }
-    setSubmissions(prev => prev.filter(s => !selected.has(s.id)))
+    const ids = Array.from(selected)
+    // Delete from API (parallel)
+    await Promise.all(ids.map(id =>
+      fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
+    ))
+    // Update state
+    setSubmissions(prev => {
+      const next = prev.filter(s => !selected.has(s.id))
+      // Update localStorage cache
+      try { localStorage.setItem('iu_submissions', JSON.stringify(next)) } catch {}
+      return next
+    })
     setSelected(new Set())
   }
 
