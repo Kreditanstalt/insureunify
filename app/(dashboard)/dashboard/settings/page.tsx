@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
+import { useToast } from '@/components/ToastProvider'
 import { PLAN_LABELS } from '@/lib/planLimits'
 import { getBrowserClient } from '@/lib/supabase'
 
@@ -13,6 +14,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const logoInputRef = useRef<HTMLInputElement>(null)
+  const toast = useToast()
 
   // Profile form state
   const [companyName, setCompanyName] = useState(profile?.company_name ?? '')
@@ -85,14 +87,21 @@ export default function SettingsPage() {
         .getPublicUrl(path)
 
       const logoUrl = urlData.publicUrl
-      await supabase
-        .from('broker_profiles')
-        .update({ logo_url: logoUrl })
-        .eq('id', user.id)
+
+      // Save to broker_profiles
+      await supabase.from('broker_profiles').update({ logo_url: logoUrl }).eq('id', user.id)
+
+      // Also save to broker_accounts if user has one
+      if (profile?.account_id) {
+        await supabase.from('broker_accounts').update({ logo_url: logoUrl }).eq('id', profile.account_id)
+      }
 
       if (profile) {
         setProfile({ ...profile, logo_url: logoUrl })
       }
+      toast.success('Логото е обновено')
+    } else {
+      toast.error('Грешка при качване на логото')
     }
     setUploadingLogo(false)
     if (logoInputRef.current) logoInputRef.current.value = ''

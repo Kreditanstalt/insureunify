@@ -29,7 +29,8 @@ export default function BrandLogo({ size = 'md', showName = false, className = '
           alt={name}
           width={s.img}
           height={s.img}
-          className={`${s.container} object-contain flex-shrink-0`}
+          className={`${s.container} object-contain flex-shrink-0 bg-white`}
+          style={{ padding: size === 'sm' ? 2 : 3 }}
           loading="lazy"
         />
       ) : (
