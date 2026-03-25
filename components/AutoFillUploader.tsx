@@ -18,6 +18,7 @@ export default function AutoFillUploader({ onFill, className }: Props) {
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [filledCount, setFilledCount] = useState(0)
+  const [detectedClass, setDetectedClass] = useState<string | null>(null)
 
   async function processFile(file: File) {
     const allowed = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
@@ -49,8 +50,9 @@ export default function AutoFillUploader({ onFill, className }: Props) {
       }
 
       const extracted: Record<string, string | null> = json.extracted ?? {}
-      const count = Object.values(extracted).filter((v) => v !== null && v !== '').length
+      const count = json.fieldCount ?? Object.values(extracted).filter((v) => v !== null && v !== '').length
       setFilledCount(count)
+      setDetectedClass(json.detectedClass ?? null)
       setStatus('done')
       onFill(extracted)
     } catch {
@@ -96,6 +98,11 @@ export default function AutoFillUploader({ onFill, className }: Props) {
             </svg>
             <span>
               <span className="font-semibold">{filledCount} полета</span> попълнени от документа
+              {detectedClass && (
+                <span className="ml-1.5 rounded bg-emerald-200/50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                  {({ property: 'Имущество', general_liability: 'ОГО', occupational_accident: 'Трудова злоп.', professional_liability: 'Проф. отг.', trade_credit: 'Търг. кредит' } as Record<string, string>)[detectedClass] ?? detectedClass}
+                </span>
+              )}
             </span>
           </div>
           <button onClick={reset} className="text-emerald-600 hover:text-emerald-800 transition-colors text-xs underline">

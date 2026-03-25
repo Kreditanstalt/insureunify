@@ -674,26 +674,67 @@ export default function QuestionnaireForm() {
     setFormData((prev) => {
       const next = { ...prev }
       const s = (id: string, v: string | null | undefined) => { if (v) next[id] = v }
-      s('company_name',   extracted.company_name)
-      s('eik',            extracted.eik)
-      s('address',        extracted.address)
-      s('phone',          extracted.phone)
-      s('email',          extracted.email)
-      s('activity',       extracted.activity)
-      s('nkid_code',      extracted.nkid_code)
+      // Company info
+      s('company_name', extracted.company_name)
+      s('eik', extracted.eik)
+      s('address', extracted.address ?? (extracted.city && extracted.address ? `${extracted.city}, ${extracted.address}` : null))
+      s('phone', extracted.phone)
+      s('email', extracted.email)
+      s('activity', extracted.activity)
+      s('nkid_code', extracted.nkid_code)
       s('representative', extracted.representative)
+      // Property location
+      s('property_city', extracted.property_city ?? extracted.city)
       s('property_address', extracted.property_address)
-      s('val_buildings',  extracted.val_buildings)
-      s('val_machinery',  extracted.val_machinery)
-      s('val_total',      extracted.val_total)
+      s('object_activity', extracted.object_activity)
+      s('building_purpose', extracted.building_purpose)
+      // Beneficiary
+      s('beneficiary_type', extracted.beneficiary_type)
+      s('beneficiary_name', extracted.beneficiary_name)
+      // Building info
       s('construction_type', extracted.construction_type)
       s('construction_year', extracted.construction_year)
-      s('floors',         extracted.floors)
-      s('area_sqm',       extracted.area_sqm)
-      s('fire_alarm',     extracted.fire_alarm)
-      s('sprinklers',     extracted.sprinklers)
+      s('roof_type', extracted.roof_type)
+      s('floors', extracted.floors)
+      s('area_sqm', extracted.area_sqm)
+      s('last_renovation', extracted.last_renovation)
+      s('sandwich_panels', extracted.sandwich_panels)
+      // Values
+      s('val_buildings', extracted.val_buildings)
+      s('val_machinery', extracted.val_machinery)
+      s('val_electronics', extracted.val_electronics)
+      s('val_inventory', extracted.val_inventory)
+      s('val_stock', extracted.val_stock)
+      s('val_other_dma', extracted.val_other_dma)
+      s('val_third_party', extracted.val_third_party)
+      s('val_cash', extracted.val_cash)
+      s('val_total', extracted.val_total)
+      // Fire safety
+      s('fire_alarm', extracted.fire_alarm)
+      s('sprinklers', extracted.sprinklers)
+      s('fire_extinguishers', extracted.fire_extinguishers)
+      s('hydrants', extracted.hydrants)
+      s('fire_station_distance', extracted.fire_station_distance)
+      s('fire_compliance', extracted.fire_compliance)
+      // Security
+      s('alarm_system', extracted.alarm_system)
+      s('guard_type', extracted.guard_type)
+      s('cctv', extracted.cctv)
+      s('occupancy', extracted.occupancy)
+      // Risk
+      s('hazardous_materials', extracted.hazardous_materials)
+      s('water_basin_distance', extracted.water_basin_distance)
+      s('landslide_area', extracted.landslide_area)
+      s('previous_claims', extracted.previous_claims)
+      s('claims_details', extracted.claims_details)
+      // Contract
+      s('payment_type', extracted.payment_type)
+      s('deductible_details', extracted.deductible)
+      if (extracted.period_from) s('period_from', extracted.period_from)
+      if (extracted.period_to) s('period_to', extracted.period_to)
       return next
     })
+    toast.success(`${Object.values(extracted).filter(v => v).length} полета извлечени от документа`)
   }
 
   function toggleInsurer(key: InsurerKey) {
