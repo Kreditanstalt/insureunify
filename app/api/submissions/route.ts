@@ -81,6 +81,16 @@ export async function GET(req: NextRequest) {
     if (brokerId) query = query.eq('broker_id', brokerId)
 
     const { data, error } = await query
+
+    // If filtered query returns empty but user is authenticated, try without filter
+    // (handles cases where submissions were created before broker_id was added)
+    if (!error && data?.length === 0 && brokerId) {
+      const { data: allData } = await db.from('submissions').select('*').order('created_at', { ascending: false }).limit(100)
+      if (allData && allData.length > 0) {
+        return NextResponse.json({ submissions: allData })
+      }
+    }
+
     if (error) return NextResponse.json({ submissions: [] })
     return NextResponse.json({ submissions: data })
   } catch (e) {
