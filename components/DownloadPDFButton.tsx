@@ -141,9 +141,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
           const { GeneraliPDF } = await import('./pdf/GeneraliPDF')
           element = React.createElement(GeneraliPDF, { formData: formData as FormData, clientName })
         } else if (insurerKey === 'ozk') {
-          alert('PDF шаблонът за ОЗК (Имущество) предстои да бъде добавен.')
-          setLoading(false)
-          return
+          const { InsurerDocument } = await import('./pdf/InsurerPDF')
+          const { mapFormDataForInsurer } = await import('@/lib/mappings')
+          const mapped = mapFormDataForInsurer(formData as FormData, 'ozk')
+          element = React.createElement(InsurerDocument, { mappedData: mapped, insurerKey: 'ozk', clientName })
         } else {
           const { InstinctPDF } = await import('./pdf/InstinctPDF')
           element = React.createElement(InstinctPDF, { formData: formData as FormData, clientName })

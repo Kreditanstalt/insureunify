@@ -45,6 +45,12 @@ const PROPERTY_EIK_FIELD_MAP = {
   representative: 'representative',
 }
 
+const BENEFICIARY_EIK_FIELD_MAP = {
+  eik:          'beneficiary_eik',
+  company_name: 'beneficiary_name',
+  address:      '_beneficiary_address', // not displayed, but required by hook
+}
+
 // ─── Field lookup map ────────────────────────────────────────────────────────
 
 const fieldById = new Map<string, SchemaField>()
@@ -69,9 +75,10 @@ const LAYOUT: Record<string, Group[]> = {
     { type: 'pair',  ids: ['nkid_code', 'representative'] },
   ],
   insurance_object: [
-    { type: 'full',  id: 'property_address' },
+    { type: 'pair',  ids: ['property_city', 'property_address'] },
     { type: 'full',  id: 'object_activity' },
-    { type: 'full',  id: 'beneficiary' },
+    { type: 'full',  id: 'beneficiary_type' },
+    { type: 'pair',  ids: ['beneficiary_eik', 'beneficiary_name'] },
     { type: 'period' },
   ],
   property_values: [
@@ -128,15 +135,19 @@ const LAYOUT: Record<string, Group[]> = {
 
 // ─── Conditional field visibility ────────────────────────────────────────────
 
-const CONDITIONAL: Record<string, { field: string; value: string }> = {
-  claims_details:   { field: 'previous_claims',    value: 'yes' },
-  hazardous_desc:   { field: 'hazardous_materials', value: 'yes' },
-  deductible_details: { field: 'custom_deductible', value: 'yes' },
+const CONDITIONAL: Record<string, { field: string; value: string; negate?: boolean }> = {
+  claims_details:     { field: 'previous_claims',    value: 'yes' },
+  hazardous_desc:     { field: 'hazardous_materials', value: 'yes' },
+  deductible_details: { field: 'custom_deductible',  value: 'yes' },
+  beneficiary_eik:    { field: 'beneficiary_type',   value: 'none', negate: true },
+  beneficiary_name:   { field: 'beneficiary_type',   value: 'none', negate: true },
 }
 
 function isVisible(id: string, formData: FormData): boolean {
   const cond = CONDITIONAL[id]
-  return !cond || formData[cond.field] === cond.value
+  if (!cond) return true
+  const match = formData[cond.field] === cond.value
+  return cond.negate ? !match : match
 }
 
 // ─── Primitive components ────────────────────────────────────────────────────
@@ -377,6 +388,7 @@ function EIKInput(props: Parameters<typeof SharedEikInput>[0]) {
 
 function FieldInput({
   field, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError,
+  beneficiaryEikStatus, onBeneficiaryEikChange,
 }: {
   field: SchemaField
   formData: FormData
@@ -386,6 +398,8 @@ function FieldInput({
   eikStatus?: import('./EikLookup').EikStatus
   onEikChange?: (v: string) => void
   onCompanySelect?: Parameters<typeof CompanyNameInput>[0]['onSelect']
+  beneficiaryEikStatus?: import('./EikLookup').EikStatus
+  onBeneficiaryEikChange?: (v: string) => void
   showError?: boolean
 }) {
   const isEmpty = formData[field.id] === undefined || formData[field.id] === '' || formData[field.id] === null
@@ -407,6 +421,16 @@ function FieldInput({
         value={formData.eik}
         onChange={onEikChange ?? ((v) => set('eik', v))}
         status={eikStatus ?? 'idle'}
+      />
+    )
+  }
+  // Special render for beneficiary EIK
+  if (field.id === 'beneficiary_eik') {
+    return (
+      <SharedEikInput
+        value={formData.beneficiary_eik}
+        onChange={onBeneficiaryEikChange ?? ((v) => set('beneficiary_eik', v))}
+        status={beneficiaryEikStatus ?? 'idle'}
       />
     )
   }
@@ -446,6 +470,7 @@ function FieldInput({
 
 function RenderGroup({
   group, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError,
+  beneficiaryEikStatus, onBeneficiaryEikChange,
 }: {
   group: Group
   formData: FormData
@@ -456,7 +481,10 @@ function RenderGroup({
   onEikChange: (v: string) => void
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
   showError?: boolean
+  beneficiaryEikStatus?: import('./EikLookup').EikStatus
+  onBeneficiaryEikChange?: (v: string) => void
 }) {
+  const fiProps = { formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError, beneficiaryEikStatus, onBeneficiaryEikChange }
   if (group.type === 'period') {
     return <PeriodSelector formData={formData} set={set} />
   }
@@ -467,7 +495,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
+        <FieldInput field={field} {...fiProps} />
       </Field>
     )
   }
@@ -487,7 +515,7 @@ function RenderGroup({
     if (!field) return null
     return (
       <Field label={field.label} required={field.required}>
-        <FieldInput field={field} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
+        <FieldInput field={field} {...fiProps} />
       </Field>
     )
   }
@@ -496,12 +524,12 @@ function RenderGroup({
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {fieldA && (
         <Field label={fieldA.label} required={fieldA.required}>
-          <FieldInput field={fieldA} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
+          <FieldInput field={fieldA} {...fiProps} />
         </Field>
       )}
       {fieldB && (
         <Field label={fieldB.label} required={fieldB.required}>
-          <FieldInput field={fieldB} formData={formData} set={set} setNum={setNum} total={total} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />
+          <FieldInput field={fieldB} {...fiProps} />
         </Field>
       )}
     </div>
@@ -513,7 +541,7 @@ function RenderGroup({
 export default function QuestionnaireForm() {
   const router = useRouter()
   const [selectedInsurers, setSelectedInsurers] = useState<InsurerKey[]>(['bulstrad', 'generali', 'instinct', 'ozk'])
-  const [formData, setFormData] = useState<FormData>({})
+  const [formData, setFormData] = useState<FormData>({ currency: 'EUR', beneficiary_type: 'none' })
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
@@ -561,6 +589,7 @@ export default function QuestionnaireForm() {
         activity:          p.activity          ?? prev.activity,
         nkid_code:         p.nkid_code         ?? prev.nkid_code,
         representative:    p.representative    ?? prev.representative,
+        property_city:     p.property_city     ?? prev.property_city,
         property_address:  p.property_address  ?? prev.property_address,
         construction_type: p.construction_type ?? prev.construction_type,
         roof_type:         p.roof_type         ?? prev.roof_type,
@@ -583,6 +612,11 @@ export default function QuestionnaireForm() {
   const { eikStatus, handleEikChange, handleCompanySelect } = useEikLookup(
     setFormDataGeneric,
     PROPERTY_EIK_FIELD_MAP,
+  )
+
+  const { eikStatus: beneficiaryEikStatus, handleEikChange: handleBeneficiaryEikChange } = useEikLookup(
+    setFormDataGeneric,
+    BENEFICIARY_EIK_FIELD_MAP,
   )
 
   function set(id: string, value: string) {
@@ -781,6 +815,8 @@ export default function QuestionnaireForm() {
                     onEikChange={handleEikChange}
                     onCompanySelect={handleCompanySelect}
                     showError={showFieldErrorsProp}
+                    beneficiaryEikStatus={beneficiaryEikStatus}
+                    onBeneficiaryEikChange={handleBeneficiaryEikChange}
                   />
                 ))}
               </div>
