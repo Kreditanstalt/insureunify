@@ -1,13 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/db'
 import Anthropic from '@anthropic-ai/sdk'
+import { simpleParser } from 'mailparser'
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY ?? ''
 
-const EXTRACTION_PROMPT = `Extract all insurance offer details from this document. Return a JSON object with these fields:
+// ─── Insurer detection from email domain ─────────────────────────────────────
+
+const INSURER_DOMAINS: Record<string, string> = {
+  'bulstrad.bg':     'Булстрад',
+  'generali.bg':     'Дженерали',
+  'instinct.bg':     'Инстинкт',
+  'allianz.bg':      'Алианц',
+  'euroins.bg':      'Евроинс',
+  'groupama.bg':     'Групама',
+  'atradius.com':    'Атрадиус',
+  'ozk.bg':          'ОЗК',
+  'dzi.bg':          'ДЗИ',
+  'armeec.bg':       'Армеец',
+  'uniqa.bg':        'Уника',
+  'colonnade.bg':    'Колонад',
+  'allianz-trade.com': 'Алианц Трейд',
+}
+
+function detectInsurerFromEmail(email: string): string {
+  if (!email) return ''
+  const domain = email.split('@')[1]?.toLowerCase() ?? ''
+  // Check exact match first
+  if (INSURER_DOMAINS[domain]) return INSURER_DOMAINS[domain]
+  // Check if domain contains insurer name
+  for (const [key, name] of Object.entries(INSURER_DOMAINS)) {
+    const baseDomain = key.split('.')[0]
+    if (domain.includes(baseDomain)) return name
+  }
+  return ''
+}
+
+// ─── Extraction prompts ──────────────────────────────────────────────────────
+
+const BASE_PROMPT = `Extract all insurance offer details from this document. Return a JSON object with these fields:
 {
-  "premium_annual": number or null (annual premium in BGN),
-  "premium_monthly": number or null (monthly premium in BGN),
+  "premium_annual": number or null (annual premium),
+  "premium_monthly": number or null (monthly premium),
   "currency": "BGN" or "EUR" or "USD",
   "insured_sum": number or null (total insured amount),
   "deductible": string or null (e.g. "500 BGN" or "1%"),
@@ -23,6 +57,19 @@ const EXTRACTION_PROMPT = `Extract all insurance offer details from this documen
 If a field cannot be found in the document, use null.
 For coverages, list each coverage as a separate string.
 Respond with valid JSON only, no other text.`
+
+const EMAIL_PROMPT_PREFIX = `This is an insurance offer email from a Bulgarian insurer.
+Extract the insurance offer details from the email body below.
+Look for: premium amount (премия), insured sum (застрахователна сума),
+payment terms (еднократно/разсрочено), deductible (самоучастие),
+validity date (валидна до), special conditions, coverage details.
+Numbers may be written as: '1 268,06 евро' or '74 500 EUR' or '1.92%' or '1 234.56 лв.'
+Convert all amounts to numbers without spaces or commas (e.g. 1268.06).
+If the premium is stated with VAT (с ДДС), use the amount without VAT if available.
+
+`
+
+// ─── Main handler ────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
@@ -55,24 +102,78 @@ export async function POST(req: NextRequest) {
     // Extract text/content for AI
     let extractedData: Record<string, unknown> = {}
     let extractionSucceeded = false
+    let detectedInsurer = ''
 
+    const isEml = fileName.endsWith('.eml') || fileType === 'message/rfc822'
+    const isPdf = fileType.includes('pdf') || fileName.endsWith('.pdf')
+    const isImage = fileType.startsWith('image/')
+    const isDocx = fileName.endsWith('.docx') || fileName.endsWith('.doc')
+
+    // ─── Parse .eml files ──────────────────────────────────────────────
+    let emailText = ''
+    let emailSubject = ''
+    if (isEml) {
+      try {
+        const parsed = await simpleParser(buffer)
+        emailText = parsed.text || ''
+        // If no plain text, try HTML stripped of tags
+        if (!emailText && parsed.html) {
+          emailText = parsed.html
+            .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+            .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/\s+/g, ' ')
+            .trim()
+        }
+        emailSubject = parsed.subject || ''
+        const senderEmail = parsed.from?.value?.[0]?.address || ''
+        detectedInsurer = detectInsurerFromEmail(senderEmail)
+
+        console.log('[EML] Subject:', emailSubject)
+        console.log('[EML] Sender:', senderEmail)
+        console.log('[EML] Detected insurer:', detectedInsurer || '(none)')
+        console.log('[EML] Text length:', emailText.length)
+      } catch (emlErr) {
+        console.error('[EML] Parse error:', emlErr)
+        // Fallback: try raw text extraction
+        emailText = buffer.toString('utf-8')
+          .replace(/Content-Transfer-Encoding:.*\n/gi, '')
+          .replace(/Content-Type:.*\n/gi, '')
+          .replace(/MIME-Version:.*\n/gi, '')
+      }
+    }
+
+    // ─── AI extraction ─────────────────────────────────────────────────
     if (ANTHROPIC_API_KEY) {
       try {
         const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY })
-        const isPdf = fileType.includes('pdf') || fileName.endsWith('.pdf')
-        const isImage = fileType.startsWith('image/')
-        const isDocx = fileName.endsWith('.docx') || fileName.endsWith('.doc')
 
         let content: Anthropic.MessageCreateParams['messages'][0]['content']
 
-        if (isPdf) {
+        if (isEml) {
+          // For emails: send parsed text, not raw MIME
+          const emailContext = [
+            emailSubject ? `Subject: ${emailSubject}` : '',
+            detectedInsurer ? `Sender insurer: ${detectedInsurer}` : '',
+            `Insurer name provided: ${insurerName}`,
+            '',
+            'Email body:',
+            emailText.slice(0, 15000), // Limit text length
+          ].filter(Boolean).join('\n')
+
+          content = `${EMAIL_PROMPT_PREFIX}${emailContext}\n\n${BASE_PROMPT}`
+        } else if (isPdf) {
           const base64 = buffer.toString('base64')
           content = [
             {
               type: 'document' as const,
               source: { type: 'base64' as const, media_type: 'application/pdf' as const, data: base64 },
             },
-            { type: 'text' as const, text: EXTRACTION_PROMPT },
+            { type: 'text' as const, text: BASE_PROMPT },
           ]
         } else if (isImage) {
           const base64 = buffer.toString('base64')
@@ -82,24 +183,24 @@ export async function POST(req: NextRequest) {
               type: 'image' as const,
               source: { type: 'base64' as const, media_type: mediaType, data: base64 },
             },
-            { type: 'text' as const, text: EXTRACTION_PROMPT },
+            { type: 'text' as const, text: BASE_PROMPT },
           ]
         } else if (isDocx) {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const mammoth = require('mammoth')
           const result = await mammoth.extractRawText({ buffer })
           const text = result.value || ''
-          content = `Document content:\n\n${text}\n\n${EXTRACTION_PROMPT}`
+          content = `Document content:\n\n${text}\n\n${BASE_PROMPT}`
         } else {
-          // Try as text
+          // Generic text fallback
           const text = buffer.toString('utf-8')
-          content = `Document content:\n\n${text}\n\n${EXTRACTION_PROMPT}`
+          content = `Document content:\n\n${text.slice(0, 15000)}\n\n${BASE_PROMPT}`
         }
 
         const response = await client.messages.create({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
-          system: 'You are an insurance offer data extractor. Extract structured data from insurance offer documents. Always respond with valid JSON only, no other text.',
+          system: 'You are an insurance offer data extractor for the Bulgarian insurance market. Extract structured data from insurance offer documents and emails. Always respond with valid JSON only, no other text. Parse Bulgarian text, numbers with spaces as thousands separators, and amounts in EUR/BGN/лв.',
           messages: [{ role: 'user', content }],
         })
 
@@ -117,14 +218,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Save offer to database
+    // ─── Save offer to database ────────────────────────────────────────
+
+    // Use detected insurer if the user-provided one is generic
+    const finalInsurerName = insurerName || detectedInsurer
+
     const offerRow = {
       comparison_id: comparisonId,
-      insurer_name: insurerName,
+      insurer_name: finalInsurerName,
       file_url: fileUrl,
       file_name: fileName,
       file_type: fileType,
-      extracted_data: extractedData,
+      extracted_data: {
+        ...extractedData,
+        ...(detectedInsurer ? { _detected_insurer: detectedInsurer } : {}),
+        ...(emailSubject ? { _email_subject: emailSubject } : {}),
+      },
       manually_edited: false,
       is_recommended: false,
     }
@@ -144,6 +253,7 @@ export async function POST(req: NextRequest) {
       ok: true,
       offer: savedOffer,
       extraction_succeeded: extractionSucceeded,
+      detected_insurer: detectedInsurer || null,
     })
   } catch (e) {
     console.error('POST /api/offers/extract error:', e)

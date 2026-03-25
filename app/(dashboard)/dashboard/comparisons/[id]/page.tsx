@@ -647,6 +647,12 @@ export default function ComparisonWorkspacePage() {
                     >
                       <div className="flex items-center justify-center gap-2">
                         <span>{o.insurer_name}</span>
+                        {typeof o.extracted_data?._detected_insurer === 'string' && (
+                          <span className="inline-flex items-center gap-0.5 rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-medium text-emerald-700 normal-case tracking-normal">
+                            <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            имейл
+                          </span>
+                        )}
                         <button onClick={() => toggleRecommendation(o.id)} title="Препоръчай"
                           className={o.is_recommended ? 'text-amber-500' : 'text-gray-300 hover:text-amber-400'}>
                           <svg className="h-4 w-4" fill={o.is_recommended ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
