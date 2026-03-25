@@ -8,6 +8,7 @@ import { INSURERS, PROPERTY_INSURERS, MASTER_SCHEMA, VALUE_FIELDS, FormData, Ins
 import { fmtDateBG } from '@/lib/utils'
 import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
 import { EikInput as SharedEikInput, CompanyNameInput, useEikLookup } from './EikLookup'
+import CityInput from './CityInput'
 import AutoFillUploader from './AutoFillUploader'
 import StepperBar from './StepperBar'
 import DraftRecoveryBanner from './DraftRecoveryBanner'
@@ -423,6 +424,10 @@ function FieldInput({
         status={eikStatus ?? 'idle'}
       />
     )
+  }
+  // Special render for city field — searchable dropdown
+  if (field.id === 'property_city') {
+    return <CityInput value={formData.property_city as string | undefined} onChange={(v) => set('property_city', v)} hasError={hasError} />
   }
   // Special render for beneficiary EIK
   if (field.id === 'beneficiary_eik') {
