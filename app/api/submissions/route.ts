@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
       created_at:        body.createdAt ?? new Date().toISOString(),
     }
     if (body.renewedFromId) row.renewed_from_id = body.renewedFromId
+    if (body.broker_id) row.broker_id = body.broker_id
 
     const { error } = await db.from('submissions').upsert(row, { onConflict: 'id' })
 
@@ -31,6 +32,7 @@ export async function GET(req: NextRequest) {
   try {
     const db = getServiceClient()
     const id = req.nextUrl.searchParams.get('id')
+    const brokerId = req.nextUrl.searchParams.get('broker_id')
 
     if (!db) return NextResponse.json(id ? { submission: null } : { submissions: [] })
 
@@ -44,11 +46,10 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ submission: data })
     }
 
-    const { data, error } = await db
-      .from('submissions')
-      .select('*')
-      .order('created_at', { ascending: false })
+    let query = db.from('submissions').select('*').order('created_at', { ascending: false })
+    if (brokerId) query = query.eq('broker_id', brokerId)
 
+    const { data, error } = await query
     if (error) return NextResponse.json({ submissions: [] })
     return NextResponse.json({ submissions: data })
   } catch (e) {

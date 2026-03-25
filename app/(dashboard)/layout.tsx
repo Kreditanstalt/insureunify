@@ -15,6 +15,7 @@ function getLabel(pathname: string): string {
   if (pathname === '/dashboard/clients') return 'Клиенти'
   if (pathname === '/dashboard/comparisons') return 'Сравнения'
   if (pathname.startsWith('/dashboard/comparisons/')) return 'Сравнение на оферти'
+  if (pathname === '/dashboard/settings') return 'Настройки'
   return 'Dashboard'
 }
 

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/db'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const db = getServiceClient()
     if (!db) return NextResponse.json({ clients: [] })
+    const brokerId = req.nextUrl.searchParams.get('broker_id')
 
-    const { data, error } = await db
-      .from('clients')
-      .select('*')
-      .order('updated_at', { ascending: false })
+    let query = db.from('clients').select('*').order('updated_at', { ascending: false })
+    if (brokerId) query = query.eq('broker_id', brokerId)
 
+    const { data, error } = await query
     if (error) return NextResponse.json({ clients: [] })
     return NextResponse.json({ clients: data })
   } catch {

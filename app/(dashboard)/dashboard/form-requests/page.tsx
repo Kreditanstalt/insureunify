@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
+import { useAuth } from '@/lib/useAuth'
 
 interface FormRequest {
   id: string
@@ -51,19 +52,11 @@ export default function FormRequestsPage() {
   const [notes, setNotes] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
-  // Load broker profile from localStorage
-  const [brokerName, setBrokerName] = useState('')
-  const [brokerEmail, setBrokerEmail] = useState('')
+  const { profile: authProfile } = useAuth()
+  const brokerName = authProfile?.company_name ?? ''
+  const brokerEmail = authProfile?.email ?? ''
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('iu_profile')
-      if (raw) {
-        const p = JSON.parse(raw)
-        setBrokerName(p.companyName || '')
-        setBrokerEmail(p.email || '')
-      }
-    } catch { /* ignore */ }
     fetchRequests()
   }, [])
 

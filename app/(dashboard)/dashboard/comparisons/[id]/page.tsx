@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import { useAuth } from '@/lib/useAuth'
 
 const INSURER_OPTIONS = [
   { value: 'Булстрад', label: 'Булстрад' },
@@ -165,6 +166,7 @@ function EditableCell({
 export default function ComparisonWorkspacePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
+  const { profile: authProfile } = useAuth()
   const [comparison, setComparison] = useState<Comparison | null>(null)
   const [offers, setOffers] = useState<Offer[]>([])
   const [loading, setLoading] = useState(true)
@@ -401,7 +403,7 @@ export default function ComparisonWorkspacePage() {
     showToast('Генериране на PDF...')
     const { pdf } = await import('@react-pdf/renderer')
     const { ComparisonPDF } = await import('@/components/pdf/ComparisonPDF')
-    const profile = JSON.parse(localStorage.getItem('iu_profile') ?? '{}')
+    const profile = { companyName: authProfile?.company_name ?? '', email: authProfile?.email ?? '' }
     const blob = await pdf(
       ComparisonPDF({
         clientName: comparison.client_name,

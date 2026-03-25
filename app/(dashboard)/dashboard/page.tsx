@@ -8,6 +8,7 @@ import { TC_INSURERS } from '@/lib/tc-schema'
 import { storeRenewalData, classToFormUrl } from '@/lib/renewal'
 import { getAllDrafts, deleteDraft, CLASS_META, timeAgo } from '@/lib/drafts'
 import type { Draft } from '@/lib/drafts'
+import { useAuth } from '@/lib/useAuth'
 import dynamic from 'next/dynamic'
 
 const DashboardAnalytics = dynamic(() => import('@/components/DashboardAnalytics'), { ssr: false })
@@ -21,10 +22,7 @@ interface Submission {
   createdAt:        string
 }
 
-interface Profile {
-  companyName: string
-  email:       string
-}
+// Profile comes from useAuth hook now
 
 const ALL_INSURERS: Record<string, { color: string; name: string }> = {
   ...INSURERS,
@@ -87,21 +85,16 @@ function getInitials(name: string) {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const [profile,     setProfile]     = useState<Profile | null>(null)
+  const { profile: authProfile, user, loading: authLoading } = useAuth()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [search,      setSearch]      = useState('')
-  const [authChecked, setAuthChecked] = useState(false)
-  const [migrating, setMigrating] = useState(false)
-  const [migrated, setMigrated] = useState(false)
   const [drafts, setDrafts] = useState<Draft[]>([])
 
+  // Adapt profile to the format used in the template
+  const profile = authProfile ? { companyName: authProfile.company_name, email: authProfile.email } : null
+
   useEffect(() => {
-    const auth = localStorage.getItem('iu_auth')
-    if (!auth) { router.replace('/login'); return }
-    const rawProfile = localStorage.getItem('iu_profile')
-    if (!rawProfile) { router.replace('/onboarding'); return }
-    setProfile(JSON.parse(rawProfile))
-    setAuthChecked(true)
+    if (authLoading) return
 
     // Load from localStorage immediately (cache)
     try {
@@ -113,7 +106,8 @@ export default function DashboardPage() {
     setDrafts(getAllDrafts())
 
     // Then fetch from Supabase
-    fetch('/api/submissions')
+    const params = user ? `?broker_id=${user.id}` : ''
+    fetch(`/api/submissions${params}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.submissions?.length) {
@@ -129,31 +123,7 @@ export default function DashboardPage() {
         }
       })
       .catch(() => {/* offline — localStorage is fine */})
-
-    // Auto-migrate localStorage data to Supabase once
-    const migrationDone = localStorage.getItem('iu_migrated_to_supabase')
-    if (!migrationDone) {
-      setMigrating(true)
-      const subs = JSON.parse(localStorage.getItem('iu_submissions') ?? '[]')
-      const clients = JSON.parse(localStorage.getItem('iu_clients') ?? '[]')
-      const migrateBatch = async () => {
-        try {
-          // Migrate submissions
-          await Promise.all(subs.map((s: Record<string, unknown>) =>
-            fetch('/api/submissions', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(s) })
-          ))
-          // Migrate clients
-          await Promise.all(clients.map((c: Record<string, unknown>) =>
-            fetch('/api/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c) })
-          ))
-          localStorage.setItem('iu_migrated_to_supabase', '1')
-          setMigrated(true)
-        } catch { /* ignore */ } finally { setMigrating(false) }
-      }
-      if (subs.length > 0 || clients.length > 0) migrateBatch()
-      else { localStorage.setItem('iu_migrated_to_supabase', '1'); setMigrating(false) }
-    }
-  }, [router])
+  }, [authLoading, user])
 
   function deleteSubmission(id: string) {
     const updated = submissions.filter((s) => s.id !== id)
@@ -191,7 +161,7 @@ export default function DashboardPage() {
     [submissions, search],
   )
 
-  if (!authChecked) {
+  if (authLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-500 border-t-transparent" />
@@ -202,22 +172,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-full bg-gray-50/60">
       <div className="px-4 sm:px-6 py-6 sm:py-8 max-w-6xl mx-auto space-y-5 sm:space-y-7">
-
-        {/* Migration banner */}
-        {migrating && (
-          <div className="flex items-center gap-3 rounded-xl bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800">
-            <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin flex-shrink-0" />
-            Синхронизиране на данни с облака…
-          </div>
-        )}
-        {migrated && !migrating && (
-          <div className="flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
-            <svg className="h-4 w-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-            Данните са успешно синхронизирани с облака.
-          </div>
-        )}
 
         {/* ── Hero header ── */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-7 py-7 text-white shadow-lg shadow-blue-200">
