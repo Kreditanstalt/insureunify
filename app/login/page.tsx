@@ -11,13 +11,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim() || !password) return
     setError(null)
-    setDebugInfo(null)
     setLoading(true)
 
     try {
@@ -33,7 +31,6 @@ export default function LoginPage() {
 
       if (authError) {
         console.error('[Login] Auth error:', authError.message, authError.status)
-        setDebugInfo(`Status: ${authError.status} | ${authError.message}`)
 
         if (authError.message.includes('Invalid login credentials')) {
           setError('Грешен имейл или парола')
@@ -58,7 +55,6 @@ export default function LoginPage() {
     } catch (err) {
       console.error('[Login] Unexpected error:', err)
       setError('Грешка при свързване със сървъра')
-      setDebugInfo(String(err))
     } finally {
       setLoading(false)
     }
@@ -107,12 +103,6 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
               {error}
-            </div>
-          )}
-
-          {debugInfo && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 font-mono break-all">
-              {debugInfo}
             </div>
           )}
 

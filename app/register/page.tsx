@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getBrowserClient } from '@/lib/supabase'
 
@@ -19,7 +18,6 @@ function getStrength(pw: string): { level: number; label: string; color: string 
 }
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [companyName, setCompanyName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -41,35 +39,67 @@ export default function RegisterPage() {
     try {
       const supabase = getBrowserClient()
 
-      // 1. Sign up
+      // 1. Sign up (may or may not auto-confirm depending on Supabase settings)
       const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: email.trim(),
         password,
         options: {
           data: { company_name: companyName.trim() },
         },
       })
+
       if (signUpError) {
-        if (signUpError.message.includes('already registered')) {
-          setError('Този имейл вече е регистриран')
+        if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
+          setError('Този имейл вече е регистриран. Опитайте да влезете.')
         } else {
           setError(signUpError.message)
         }
         return
       }
 
-      // 2. Create broker profile (try broker_profiles, fall back silently if table doesn't exist)
-      if (data.user) {
-        try {
-          await supabase.from('broker_profiles').upsert({
-            id: data.user.id,
-            company_name: companyName.trim(),
-            email,
-          })
-        } catch { /* table may not exist */ }
+      // 2. If no session returned (email confirmation enabled), sign in immediately
+      if (!data.session) {
+        console.log('[Register] No session after signUp, attempting signIn...')
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        })
+        if (signInError) {
+          console.error('[Register] signIn after signUp failed:', signInError.message)
+          // If sign in fails, the user might need to confirm email
+          if (signInError.message.includes('Email not confirmed')) {
+            setError('Регистрацията е успешна! Моля проверете пощата си за потвърждение.')
+          } else {
+            setError('Регистрацията е успешна, но не можахме да ви логнем автоматично. Моля влезте от страницата за вход.')
+          }
+          return
+        }
+        if (!signInData.session) {
+          setError('Регистрацията е успешна! Моля влезте от страницата за вход.')
+          return
+        }
       }
 
-      // Use full page navigation to ensure cookies are picked up
+      // 3. Create broker records via server-side API (uses service role, bypasses RLS)
+      const userId = data.user?.id ?? data.session?.user?.id
+      if (userId) {
+        try {
+          await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId,
+              email: email.trim(),
+              companyName: companyName.trim(),
+            }),
+          })
+        } catch {
+          // Non-critical — profile can be created later
+          console.warn('[Register] Failed to create broker records')
+        }
+      }
+
+      // 4. Full page redirect to dashboard
       window.location.href = '/dashboard'
     } catch {
       setError('Грешка при регистрация')

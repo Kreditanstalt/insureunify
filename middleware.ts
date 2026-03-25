@@ -3,8 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  // Create a response that we can modify
-  const res = NextResponse.next({ request: req })
+  let res = NextResponse.next({ request: req })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -15,10 +14,11 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // Set cookies on both the request (for downstream) and response (for browser)
           cookiesToSet.forEach(({ name, value }) => {
             req.cookies.set(name, value)
           })
+          // Recreate response once to carry updated request cookies
+          res = NextResponse.next({ request: req })
           cookiesToSet.forEach(({ name, value, options }) => {
             res.cookies.set(name, value, options)
           })
@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
     }
   )
 
-  // Use getUser() — more reliable than getSession() for middleware
+  // getUser() validates the token server-side (more secure than getSession)
   const { data: { user } } = await supabase.auth.getUser()
 
   const path = req.nextUrl.pathname
@@ -43,13 +43,18 @@ export async function middleware(req: NextRequest) {
 
   // Not logged in → redirect to login (except public pages)
   if (!user && !isPublic) {
-    const loginUrl = new URL('/login', req.url)
-    return NextResponse.redirect(loginUrl)
+    const url = new URL('/login', req.url)
+    const redirect = NextResponse.redirect(url)
+    // Carry any refreshed cookies to the redirect response
+    res.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value))
+    return redirect
   }
 
   // Logged in → redirect away from login/register
   if (user && (path === '/login' || path === '/register')) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    const redirect = NextResponse.redirect(new URL('/dashboard', req.url))
+    res.cookies.getAll().forEach((c) => redirect.cookies.set(c.name, c.value))
+    return redirect
   }
 
   return res

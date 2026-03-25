@@ -18,8 +18,12 @@ export default function ForgotPasswordPage() {
 
     try {
       const supabase = getBrowserClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      // Use explicit production URL so the reset link always works
+      const redirectTo = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? `${window.location.origin}/reset-password`
+        : 'https://insureunify.vercel.app/reset-password'
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo,
       })
       if (error) { setError(error.message); return }
       setSent(true)
