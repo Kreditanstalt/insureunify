@@ -12,6 +12,7 @@ import type { Draft } from '@/lib/drafts'
 import { useAuth } from '@/lib/useAuth'
 import { PLAN_LABELS } from '@/lib/planLimits'
 import { DashboardSkeleton } from '@/components/Skeletons'
+import OnboardingWizard from '@/components/OnboardingWizard'
 
 interface Submission {
   id:               string
@@ -141,6 +142,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-full bg-[#F8F9FA]">
+      <OnboardingWizard />
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-5">
 
         {/* ── Two-column layout ── */}

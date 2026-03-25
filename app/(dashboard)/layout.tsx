@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { BrandProvider } from '@/lib/BrandProvider'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import BrandLogo from '@/components/BrandLogo'
+import CommandPalette from '@/components/CommandPalette'
 import { useBrand } from '@/lib/BrandProvider'
 
 function getLabel(pathname: string): string {
@@ -22,6 +23,7 @@ function getLabel(pathname: string): string {
   if (pathname === '/dashboard/comparisons') return 'Сравнения'
   if (pathname.startsWith('/dashboard/comparisons/')) return 'Сравнение на оферти'
   if (pathname === '/dashboard/settings') return 'Настройки'
+  if (pathname === '/dashboard/settings/team') return 'Екип'
   if (pathname.startsWith('/dashboard/new/')) return 'Нов въпросник'
   if (pathname.startsWith('/review/')) return 'Преглед'
   return 'Dashboard'
@@ -55,11 +57,16 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             <span className="font-semibold text-gray-900">{getLabel(pathname)}</span>
           </nav>
           <span className="lg:hidden text-sm font-semibold text-gray-900">{getLabel(pathname)}</span>
-          {/* Shortcut hint — desktop only */}
-          <div className="hidden lg:flex items-center gap-3 ml-auto">
-            <kbd className="hidden xl:inline-flex items-center gap-0.5 rounded border border-gray-200 bg-gray-50 px-1.5 py-0.5 text-[10px] text-gray-400 font-mono">
-              Ctrl+N
-            </kbd>
+          {/* Search + shortcut hints — desktop only */}
+          <div className="hidden lg:flex items-center gap-2 ml-auto">
+            <button
+              onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', ctrlKey: true }))}
+              className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-300 hover:bg-white transition-colors cursor-text"
+            >
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+              <span className="hidden xl:inline">Търси...</span>
+              <kbd className="rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px] font-mono">⌘K</kbd>
+            </button>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <Link href="/dashboard/new" className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 transition-colors sm:hidden">
@@ -96,6 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <BrandProvider>
         <ToastProvider>
           <ErrorBoundary>
+            <CommandPalette />
             <DashboardShell>{children}</DashboardShell>
           </ErrorBoundary>
         </ToastProvider>
