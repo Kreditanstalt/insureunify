@@ -17,15 +17,21 @@ interface FormRequest {
   estimated_days: number
 }
 
+const INSURER_OPTIONS = [
+  'Булстрад', 'Дженерали', 'Инстинкт', 'ОЗК', 'Алианц', 'Групама',
+  'Аксиом', 'Евроинс', 'Атрадиус', 'Алианц Трейд', 'ДЗИ', 'Армеец',
+  'Уника', 'Колонад', 'Лев Инс',
+]
+
 const CLASS_OPTIONS = [
-  'Имущество',
-  'ОГО',
-  'Трудова злополука',
-  'Професионална отговорност',
-  'Търговски кредит',
-  'Карго',
-  'Здравна',
-  'Нов клас (моля опишете в бележките)',
+  { value: 'Имущество', label: 'Имущество', icon: '🏢' },
+  { value: 'ОГО', label: 'ОГО / Работодател', icon: '🛡️' },
+  { value: 'Трудова злополука', label: 'Трудова злополука', icon: '⚡' },
+  { value: 'Професионална отговорност', label: 'Проф. отговорност', icon: '⚖️' },
+  { value: 'Търговски кредит', label: 'Търговски кредит', icon: '💳' },
+  { value: 'Карго', label: 'Карго', icon: '📦' },
+  { value: 'Здравна', label: 'Здравна', icon: '❤️' },
+  { value: 'Друг', label: 'Друг клас', icon: '📋' },
 ]
 
 const STATUS_BADGES: Record<string, { label: string; classes: string }> = {
@@ -48,9 +54,11 @@ export default function FormRequestsPage() {
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [insurerName, setInsurerName] = useState('')
-  const [insuranceClass, setInsuranceClass] = useState('')
+  const [insurerCustom, setInsurerCustom] = useState('')
+  const [selectedClasses, setSelectedClasses] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
+  const [dragging, setDragging] = useState(false)
 
   const { profile: authProfile } = useAuth()
   const brokerName = authProfile?.company_name ?? ''
@@ -68,36 +76,64 @@ export default function FormRequestsPage() {
     } catch { /* ignore */ }
   }
 
+  function toggleClass(cls: string) {
+    setSelectedClasses((prev) => {
+      const next = new Set(prev)
+      if (next.has(cls)) next.delete(cls); else next.add(cls)
+      return next
+    })
+  }
+
+  function addFiles(files: FileList | File[]) {
+    const arr = Array.from(files).filter((f) => {
+      const ext = f.name.split('.').pop()?.toLowerCase()
+      return ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'jpg', 'jpeg', 'png'].includes(ext ?? '')
+    })
+    setSelectedFiles((prev) => [...prev, ...arr])
+  }
+
+  function removeFile(idx: number) {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== idx))
+  }
+
+  const effectiveInsurer = insurerName === '__custom' ? insurerCustom : insurerName
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!insurerName || !insuranceClass || !selectedFile) return
+    if (!effectiveInsurer || selectedClasses.size === 0 || selectedFiles.length === 0) return
 
     setLoading(true)
     setError(null)
     setSuccess(false)
 
     try {
-      const fd = new FormData()
-      fd.append('insurer_name', insurerName)
-      fd.append('insurance_class', insuranceClass)
-      fd.append('notes', notes)
-      fd.append('broker_name', brokerName)
-      fd.append('broker_email', brokerEmail)
-      fd.append('file', selectedFile)
+      const classStr = Array.from(selectedClasses).join(', ')
+      // Submit one request per file
+      let okCount = 0
+      for (const file of selectedFiles) {
+        const fd = new FormData()
+        fd.append('insurer_name', effectiveInsurer)
+        fd.append('insurance_class', classStr)
+        fd.append('notes', notes)
+        fd.append('broker_name', brokerName)
+        fd.append('broker_email', brokerEmail)
+        fd.append('file', file)
+        const res = await fetch('/api/form-requests', { method: 'POST', body: fd })
+        const data = await res.json()
+        if (data.ok) okCount++
+      }
 
-      const res = await fetch('/api/form-requests', { method: 'POST', body: fd })
-      const data = await res.json()
-
-      if (data.ok) {
+      if (okCount > 0) {
         setSuccess(true)
         setInsurerName('')
-        setInsuranceClass('')
+        setInsurerCustom('')
+        setSelectedClasses(new Set())
         setNotes('')
-        setSelectedFile(null)
+        setSelectedFiles([])
         if (fileRef.current) fileRef.current.value = ''
         fetchRequests()
       } else {
-        setError(data.error || 'Грешка при изпращане')
+        setError('Грешка при изпращане')
       }
     } catch {
       setError('Грешка при връзката със сървъра')
@@ -129,75 +165,129 @@ export default function FormRequestsPage() {
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          {/* Insurer */}
+          {/* Insurer — dropdown */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Застраховател <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
-              required
+            <select
               value={insurerName}
               onChange={(e) => setInsurerName(e.target.value)}
-              placeholder="напр. Булстрад, Алианц..."
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            />
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+            >
+              <option value="">Изберете застраховател...</option>
+              {INSURER_OPTIONS.map((ins) => (
+                <option key={ins} value={ins}>{ins}</option>
+              ))}
+              <option value="__custom">Друг...</option>
+            </select>
+            {insurerName === '__custom' && (
+              <input
+                type="text"
+                value={insurerCustom}
+                onChange={(e) => setInsurerCustom(e.target.value)}
+                placeholder="Въведете име на застраховател..."
+                className="mt-2 block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                autoFocus
+              />
+            )}
           </div>
 
-          {/* Insurance Class */}
+          {/* Insurance Classes — multi-select chips */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Клас застраховка <span className="text-red-500">*</span>
+              {selectedClasses.size > 0 && <span className="text-xs text-gray-400 font-normal ml-1">({selectedClasses.size} избрани)</span>}
             </label>
-            <select
-              required
-              value={insuranceClass}
-              onChange={(e) => setInsuranceClass(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="">Изберете клас...</option>
-              {CLASS_OPTIONS.map((cls) => (
-                <option key={cls} value={cls}>{cls}</option>
-              ))}
-            </select>
+            <div className="flex flex-wrap gap-2">
+              {CLASS_OPTIONS.map((cls) => {
+                const selected = selectedClasses.has(cls.value)
+                return (
+                  <button
+                    key={cls.value}
+                    type="button"
+                    onClick={() => toggleClass(cls.value)}
+                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      selected
+                        ? 'border-blue-500 bg-blue-50 text-blue-700 font-medium'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>{cls.icon}</span>
+                    <span>{cls.label}</span>
+                    {selected && (
+                      <svg className="h-3.5 w-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">Бележки</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Бележки</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="допълнителна информация..."
-              rows={3}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              rows={2}
+              className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
-          {/* File Upload */}
+          {/* File Upload — drag & drop + multiple */}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Формуляр <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              Формуляри <span className="text-red-500">*</span>
             </label>
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setDragging(false); if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files) }}
+              onClick={() => fileRef.current?.click()}
+              className={`rounded-xl border-2 border-dashed px-4 py-6 text-center cursor-pointer transition-colors ${
+                dragging ? 'border-blue-400 bg-blue-50' : 'border-gray-200 bg-gray-50 hover:border-blue-300 hover:bg-blue-50/50'
+              }`}
+            >
+              <svg className="mx-auto h-8 w-8 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+              </svg>
+              <p className="text-sm text-gray-600 font-medium">Плъзнете файлове тук или кликнете</p>
+              <p className="text-xs text-gray-400 mt-1">PDF, Word, Excel, изображения — може повече от един файл</p>
+            </div>
             <input
               ref={fileRef}
               type="file"
-              required
-              accept=".pdf,.doc,.docx"
-              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
-              className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-lg file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png"
+              onChange={(e) => { if (e.target.files?.length) addFiles(e.target.files); e.target.value = '' }}
+              className="hidden"
             />
-            {selectedFile && (
-              <p className="mt-1.5 text-xs text-gray-500">
-                {selectedFile.name} — {formatFileSize(selectedFile.size)}
-              </p>
+            {selectedFiles.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {selectedFiles.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg bg-white border border-gray-200 px-3 py-1.5 text-xs">
+                    <svg className="h-3.5 w-3.5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                    <span className="flex-1 text-gray-700 truncate">{f.name}</span>
+                    <span className="text-gray-400">{formatFileSize(f.size)}</span>
+                    <button type="button" onClick={() => removeFile(i)} className="text-gray-300 hover:text-red-500 transition-colors">
+                      <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
 
           {/* Submit */}
           <button
             type="submit"
-            disabled={loading || !insurerName || !insuranceClass || !selectedFile}
+            disabled={loading || !effectiveInsurer || selectedClasses.size === 0 || selectedFiles.length === 0}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading && (
