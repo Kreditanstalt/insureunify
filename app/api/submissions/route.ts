@@ -73,30 +73,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ submission: data })
     }
 
-    // List: authenticate and filter by user's broker_id
+    // Get broker_id from cookie auth OR query param
     const auth = await getAuthFromRequest(req)
-    const brokerId = auth.userId ?? req.nextUrl.searchParams.get('broker_id')
-    console.log('[GET /api/submissions] auth:', { userId: auth.userId, accountId: auth.accountId, brokerId })
+    const brokerId = auth.userId || req.nextUrl.searchParams.get('broker_id')
 
-    // Get submissions: match broker_id OR submissions without broker_id (legacy)
+    let query = db.from('submissions').select('*').order('created_at', { ascending: false }).limit(200)
     if (brokerId) {
-      const { data, error } = await db
-        .from('submissions')
-        .select('*')
-        .or(`broker_id.eq.${brokerId},broker_id.is.null`)
-        .order('created_at', { ascending: false })
-        .limit(200)
-      if (error) {
-        console.error('[GET /api/submissions] query error:', error)
-        return NextResponse.json({ submissions: [] })
-      }
-      return NextResponse.json({ submissions: data })
+      query = query.eq('broker_id', brokerId)
     }
 
-    // No broker_id — return all (admin/fallback)
-    const { data, error } = await db.from('submissions').select('*').order('created_at', { ascending: false }).limit(200)
-    if (error) return NextResponse.json({ submissions: [] })
-    return NextResponse.json({ submissions: data })
+    const { data, error } = await query
+    if (error) {
+      console.error('[GET /api/submissions] error:', error)
+      return NextResponse.json({ submissions: [] })
+    }
+    return NextResponse.json({ submissions: data ?? [] })
   } catch (e) {
     console.error('GET /api/submissions error:', e)
     return NextResponse.json({ submissions: [] })
