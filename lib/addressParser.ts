@@ -16,16 +16,16 @@ export function parseAddress(address: string): { city: string; street: string } 
     return { city: grMatch[1].trim(), street: grMatch[2].trim() }
   }
 
-  // Pattern 2: "Град, ул. / бул. ..."
-  const commaMatch = s.match(/^([^,]+),\s*((?:ул|бул|пл|ж\.?к|кв|п\.?к)\.?.*)$/i)
-  if (commaMatch) {
-    return { city: commaMatch[1].trim(), street: commaMatch[2].trim() }
-  }
-
-  // Pattern 3: "1234 Град, ..."  (postal code + city)
+  // Pattern 2: "1234 Град, ..."  (postal code + city)
   const postalMatch = s.match(/^(\d{4})\s+([^,]+),?\s*(.*)/i)
   if (postalMatch) {
     return { city: postalMatch[2].trim(), street: postalMatch[3].trim() }
+  }
+
+  // Pattern 3: "Град, ул. / бул. ..."
+  const commaMatch = s.match(/^([^,]+),\s*((?:ул|бул|пл|ж\.?к|кв|п\.?к)\.?.*)$/i)
+  if (commaMatch) {
+    return { city: commaMatch[1].trim(), street: commaMatch[2].trim() }
   }
 
   // Pattern 4: Just "Град, rest"
