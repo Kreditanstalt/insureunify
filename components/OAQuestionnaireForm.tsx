@@ -23,6 +23,7 @@ const OA_EIK_FIELD_MAP = {
   eik:            'oa_eik',
   company_name:   'oa_company_name',
   address:        'oa_address',
+  city:           'oa_city',
   email:          'oa_email',
   phone:          'oa_phone',
   activity:       'oa_activity',

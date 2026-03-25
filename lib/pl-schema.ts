@@ -420,14 +420,28 @@ export const PL_SCHEMA: SchemaSection[] = [
       {
         id: 'pl_territory',
         label: 'Териториална валидност',
-        type: 'text',
+        type: 'select',
         required: true,
-        placeholder: 'Република България',
+        options: [
+          { value: 'bg', label: 'Република България' },
+          { value: 'bg_eu', label: 'България + ЕС' },
+          { value: 'bg_eu_third', label: 'България + ЕС + трети страни' },
+          { value: 'worldwide', label: 'Целият свят' },
+          { value: 'other', label: 'Друго' },
+        ],
         mapping: {
           axiom:    'Териториална валидност',
           bulstrad: 'Територия на валидност',
           euroins:  'Териториална валидност',
         },
+      } satisfies SchemaField,
+      {
+        id: 'pl_territory_other',
+        label: 'Уточнете територията',
+        type: 'text',
+        required: false,
+        placeholder: 'Опишете териториалния обхват',
+        mapping: {},
       } satisfies SchemaField,
       {
         id: 'pl_deductible',

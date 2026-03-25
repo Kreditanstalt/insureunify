@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import PeriodSelector from './PeriodSelector'
 import Image from 'next/image'
 import { GL_SCHEMA, GL_INSURERS, GL_INSURER_KEYS, GLFormData, GLInsurerKey } from '@/lib/gl-schema'
 import { readRenewalData, todayISO as renewalToday, addMonthsISO } from '@/lib/renewal'
@@ -23,6 +24,7 @@ const GL_EIK_FIELD_MAP = {
   eik:            'gl_eik',
   company_name:   'gl_company_name',
   address:        'gl_address',
+  city:           'gl_city',
   email:          'gl_email',
   phone:          'gl_phone',
   activity:       'gl_activity',
@@ -233,17 +235,27 @@ function RenderSection({
   onCompanySelect: Parameters<typeof CompanyNameInput>[0]['onSelect']
   showError?:      boolean
 }) {
-  const pairs: SchemaField[][] = []
+  // Filter out fields handled specially
+  const SKIP_IDS = new Set(['gl_period_to', 'gl_currency', 'gl_revenue_currency'])
+  const filteredFields = section.fields.filter((f) => !SKIP_IDS.has(f.id))
+
+  const pairs: (SchemaField[] | 'period')[] = []
   let i = 0
-  while (i < section.fields.length) {
-    const f = section.fields[i]
+  while (i < filteredFields.length) {
+    const f = filteredFields[i]
+    // Replace period_from with PeriodSelector
+    if (f.id === 'gl_period_from') {
+      pairs.push('period')
+      i++
+      continue
+    }
     // textarea, select with many options → full width
     const isWide = f.type === 'textarea' || (f.type === 'select' && (f.options?.length ?? 0) > 4)
-    if (isWide || i + 1 >= section.fields.length) {
+    if (isWide || i + 1 >= filteredFields.length) {
       pairs.push([f])
       i++
     } else {
-      pairs.push([f, section.fields[i + 1]])
+      pairs.push([f, filteredFields[i + 1]])
       i += 2
     }
   }
@@ -253,7 +265,9 @@ function RenderSection({
       <SectionTitle icon={section.icon} label={section.label} />
       <div className="space-y-3">
         {pairs.map((group, gi) =>
-          group.length === 1 ? (
+          group === 'period' ? (
+            <PeriodSelector key="gl_period" fromFieldId="gl_period_from" toFieldId="gl_period_to" formData={formData} set={set} />
+          ) : group.length === 1 ? (
             <div key={gi}>
               <Label text={group[0].label} required={group[0].required} />
               <FieldInput field={group[0]} formData={formData} set={set} setNum={setNum} eikStatus={eikStatus} onEikChange={onEikChange} onCompanySelect={onCompanySelect} showError={showError} />

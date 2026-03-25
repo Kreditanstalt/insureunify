@@ -3,6 +3,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
+import { parseAddress } from '@/lib/addressParser'
+import PeriodSelector from './PeriodSelector'
 import Image from 'next/image'
 import { INSURERS } from '@/lib/schema'
 import { PL_SCHEMA, PL_INSURERS, PL_INSURER_KEYS, PLFormData, PLInsurerKey } from '@/lib/pl-schema'
@@ -547,7 +549,13 @@ export default function PLQuestionnaireForm() {
           setFormData((prev) => ({
             ...prev,
             ...(data.company_name   ? { pl_company_name: data.company_name  } : {}),
-            ...(data.address        ? { pl_address:       data.address       } : {}),
+            ...(data.address ? (() => {
+              const parsed = parseAddress(data.address)
+              return {
+                ...(parsed.city ? { pl_city: parsed.city } : {}),
+                pl_address: parsed.street || data.address,
+              }
+            })() : {}),
             ...(data.email          ? { pl_email:         data.email         } : {}),
             ...(data.phone          ? { pl_phone:         data.phone         } : {}),
             ...(data.activity       ? { pl_activity:      data.activity      } : {}),
@@ -786,7 +794,26 @@ export default function PLQuestionnaireForm() {
             <h2 className="text-sm font-semibold text-gray-900">{section.label}</h2>
           </div>
           <div className="p-5 space-y-4">
-            {section.fields.map((field) => (
+            {section.fields.map((field) => {
+              // Hide pl_period_to (rendered inside PeriodSelector)
+              if (field.id === 'pl_period_to') return null
+              // Hide pl_territory_other unless territory is 'other'
+              if (field.id === 'pl_territory_other' && formData.pl_territory !== 'other') return null
+              // Hide pl_currency — EUR only, no selector needed
+              if (field.id === 'pl_currency') return null
+              // Render PeriodSelector for period_from
+              if (field.id === 'pl_period_from') {
+                return (
+                  <PeriodSelector
+                    key="pl_period"
+                    fromFieldId="pl_period_from"
+                    toFieldId="pl_period_to"
+                    formData={formData}
+                    set={set}
+                  />
+                )
+              }
+              return (
               <FieldLabel
                 key={field.id}
                 label={field.label}
@@ -807,7 +834,8 @@ export default function PLQuestionnaireForm() {
                   showError={showFieldError(field.id) || (attemptedSubmit && field.required && (formData[field.id] === undefined || formData[field.id] === ''))}
                 />
               </FieldLabel>
-            ))}
+              )
+            })}
           </div>
         </div>
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { parseAddress } from '@/lib/addressParser'
+
 /**
  * Shared EIK lookup UI components — used by QuestionnaireForm and GLQuestionnaireForm.
  *
@@ -231,6 +233,7 @@ export interface EikFieldMap {
   eik: string
   company_name: string
   address: string
+  city?: string              // If set, address from API will be split: city → this field, street → address field
   email?: string
   phone?: string
   activity?: string
@@ -250,7 +253,16 @@ export function useEikLookup(
       ...prev,
       [fieldMap.eik]:                           eik,
       ...(data.company_name && fieldMap.company_name ? { [fieldMap.company_name]: data.company_name } : {}),
-      ...(data.address      && fieldMap.address      ? { [fieldMap.address]:      data.address      } : {}),
+      ...(data.address && fieldMap.address ? (() => {
+        if (fieldMap.city) {
+          const parsed = parseAddress(data.address!)
+          return {
+            ...(parsed.city ? { [fieldMap.city]: parsed.city } : {}),
+            [fieldMap.address]: parsed.street || data.address,
+          }
+        }
+        return { [fieldMap.address]: data.address }
+      })() : {}),
       ...(data.email        && fieldMap.email        ? { [fieldMap.email]:        data.email        } : {}),
       ...(data.phone        && fieldMap.phone        ? { [fieldMap.phone]:        data.phone        } : {}),
       ...(data.activity     && fieldMap.activity     ? { [fieldMap.activity]:     data.activity     } : {}),
