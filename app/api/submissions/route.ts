@@ -33,19 +33,26 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Save submission ──
+    // Map to actual DB columns: id, broker_id, insurance_class, selected_insurers, form_data, created_at, status
     const row: Record<string, unknown> = {
       id:                body.id,
-      client_name:       body.clientName,
-      insurance_class:   body.insuranceClass,
-      selected_insurers: body.selectedInsurers ?? [],
-      form_data:         body.formData ?? {},
-      created_at:        body.createdAt ?? new Date().toISOString(),
+      insurance_class:   body.insuranceClass ?? body.insurance_class ?? null,
+      selected_insurers: body.selectedInsurers ?? body.selected_insurers ?? [],
+      form_data:         body.formData ?? body.form_data ?? {},
+      created_at:        body.createdAt ?? body.created_at ?? new Date().toISOString(),
+      status:            'completed',
     }
-    if (body.renewedFromId) row.renewed_from_id = body.renewedFromId
+    // Store client name inside form_data since there's no client_name column
+    if (body.clientName) {
+      const fd = (row.form_data ?? {}) as Record<string, unknown>
+      fd._client_name = body.clientName
+      row.form_data = fd
+    }
     if (brokerId) row.broker_id = brokerId
+    if (body.broker_id) row.broker_id = body.broker_id
 
     const { error } = await db.from('submissions').upsert(row, { onConflict: 'id' })
-    if (error) console.error('Submission save error:', error)
+    if (error) console.error('Submission save error:', error, 'row:', JSON.stringify(row).slice(0, 200))
 
     // ── Increment usage ──
     if (auth.accountId) {

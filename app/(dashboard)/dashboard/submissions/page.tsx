@@ -98,7 +98,7 @@ export default function SubmissionsPage() {
           // Normalize snake_case from Supabase → camelCase
           const normalized = d.submissions.map((s: Record<string, unknown>) => ({
             id:               s.id,
-            clientName:       s.client_name ?? s.clientName,
+            clientName:       s.client_name ?? s.clientName ?? (s.form_data as Record<string,unknown>)?._client_name ?? 'Без клиент',
             insuranceClass:   s.insurance_class ?? s.insuranceClass,
             selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
             formData:         s.form_data ?? s.formData ?? {},
