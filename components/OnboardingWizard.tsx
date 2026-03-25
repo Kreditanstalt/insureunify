@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/useAuth'
 
 const STEPS = [
   {
@@ -23,16 +24,21 @@ const STEPS = [
 
 export default function OnboardingWizard() {
   const router = useRouter()
+  const { user, loading } = useAuth()
   const [step, setStep] = useState(0)
   const [visible, setVisible] = useState(false)
 
+  // Per-user check: key includes user ID so different users get their own onboarding
+  const storageKey = user ? `iu_onboarding_done_${user.id}` : null
+
   useEffect(() => {
-    const dismissed = localStorage.getItem('iu_onboarding_done')
+    if (loading || !storageKey) return
+    const dismissed = localStorage.getItem(storageKey)
     if (!dismissed) setVisible(true)
-  }, [])
+  }, [loading, storageKey])
 
   function dismiss() {
-    localStorage.setItem('iu_onboarding_done', '1')
+    if (storageKey) localStorage.setItem(storageKey, '1')
     setVisible(false)
   }
 
