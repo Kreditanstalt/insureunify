@@ -16,12 +16,28 @@ export interface BrokerProfile {
   subscription_plan?: string
   trial_ends_at?: string
   is_active?: boolean
+  account_id?: string
+}
+
+export interface PlanData {
+  plan_id: string
+  plan_name: string
+  trial_ends_at: string | null
+  max_submissions_monthly: number | null
+  max_insurers_per_submission: number | null
+}
+
+export interface UsageData {
+  submissions_count: number
+  month: string
 }
 
 export function useAuth() {
   const router = useRouter()
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<BrokerProfile | null>(null)
+  const [plan, setPlan] = useState<PlanData | null>(null)
+  const [usage, setUsage] = useState<UsageData | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,6 +55,7 @@ export function useAuth() {
 
         // Try to load profile from broker_profiles first, then broker_accounts
         let profileData: Record<string, unknown> | null = null
+        let accountId: string | null = null
 
         // Try broker_profiles (our table)
         const { data: bp } = await supabase
@@ -58,6 +75,7 @@ export function useAuth() {
             .maybeSingle()
 
           if (bu) {
+            accountId = bu.account_id ?? null
             const account = (bu as Record<string, unknown>).broker_accounts as Record<string, unknown> | null
             profileData = {
               id: session.user.id,
@@ -66,7 +84,9 @@ export function useAuth() {
               phone: account?.phone ?? null,
               address: account?.address ?? null,
               logo_url: account?.logo_url ?? null,
-              subscription_plan: account?.plan_id ? 'active' : 'trial',
+              subscription_plan: account?.plan_id ?? 'trial',
+              trial_ends_at: account?.trial_ends_at ?? null,
+              account_id: accountId,
             }
           }
         }
@@ -83,6 +103,7 @@ export function useAuth() {
             subscription_plan: profileData.subscription_plan ? String(profileData.subscription_plan) : 'trial',
             trial_ends_at: profileData.trial_ends_at ? String(profileData.trial_ends_at) : undefined,
             is_active: profileData.is_active !== false,
+            account_id: profileData.account_id ? String(profileData.account_id) : undefined,
           })
         } else {
           // No profile found in any table — create a minimal one from user metadata
@@ -94,11 +115,23 @@ export function useAuth() {
             subscription_plan: 'trial',
           })
         }
+
+        // Load plan + usage data
+        loadPlanData(session.user.id)
       } catch (err) {
         console.error('[useAuth] Error loading profile:', err)
       } finally {
         setLoading(false)
       }
+    }
+
+    async function loadPlanData(userId: string) {
+      try {
+        const res = await fetch(`/api/account/plan?user_id=${userId}`)
+        const data = await res.json()
+        if (data.plan) setPlan(data.plan)
+        if (data.usage) setUsage(data.usage)
+      } catch { /* non-critical */ }
     }
 
     load()
@@ -107,9 +140,10 @@ export function useAuth() {
       if (!session) {
         setUser(null)
         setProfile(null)
+        setPlan(null)
+        setUsage(null)
       } else {
         setUser(session.user)
-        // Reload profile when auth state changes
         if (_event === 'SIGNED_IN') {
           load()
         }
@@ -125,5 +159,11 @@ export function useAuth() {
     window.location.href = '/login'
   }
 
-  return { user, profile, loading, signOut, setProfile }
+  // Computed helpers
+  const trialDaysLeft = plan?.trial_ends_at
+    ? Math.max(0, Math.ceil((new Date(plan.trial_ends_at).getTime() - Date.now()) / 86400000))
+    : null
+  const isTrialExpired = plan?.plan_id === 'trial' && trialDaysLeft !== null && trialDaysLeft <= 0
+
+  return { user, profile, plan, usage, loading, signOut, setProfile, trialDaysLeft, isTrialExpired }
 }

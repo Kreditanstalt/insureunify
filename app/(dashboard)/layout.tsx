@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Sidebar from '@/components/Sidebar'
+import { useAuth } from '@/lib/useAuth'
 
 // ─── Breadcrumb label map ────────────────────────────────────────────────────
 
@@ -24,6 +25,12 @@ function getLabel(pathname: string): string {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const { isTrialExpired, loading } = useAuth()
+
+  // Allow settings page even if trial expired
+  const isSettingsPage = pathname === '/dashboard/settings'
+  const showTrialBlock = !loading && isTrialExpired && !isSettingsPage
 
   return (
     <div className="flex h-screen overflow-hidden bg-[#F8FAFC]">
@@ -70,7 +77,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative">
+          {showTrialBlock && (
+            <div className="absolute inset-0 z-40 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+              <div className="max-w-md mx-auto text-center px-6 py-10">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-red-100">
+                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Пробният период е изтекъл</h2>
+                <p className="text-sm text-gray-500 mb-6">
+                  За да продължите да използвате InsureUnify, моля изберете план от настройките.
+                </p>
+                <button
+                  onClick={() => router.push('/dashboard/settings')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-blue-200 transition-all hover:bg-blue-700"
+                >
+                  Изберете план &rarr;
+                </button>
+              </div>
+            </div>
+          )}
           {children}
         </main>
 

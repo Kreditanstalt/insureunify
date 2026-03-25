@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/useAuth'
+import { PLAN_LABELS } from '@/lib/planLimits'
 
 interface NavItem {
   label: string
@@ -108,7 +109,7 @@ function SidebarItem({ item, active, onNavigate }: {
 
 export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname()
-  const { profile, signOut } = useAuth()
+  const { profile, signOut, plan, trialDaysLeft } = useAuth()
 
   function isActive(item: NavItem): boolean {
     if (item.href === '#') return false
@@ -194,6 +195,24 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
               </div>
             </div>
           )}
+          {plan && (() => {
+            const pi = PLAN_LABELS[plan.plan_id] ?? PLAN_LABELS.trial
+            return (
+              <div className="flex items-center gap-1.5 px-2 mb-1">
+                <span
+                  className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                  style={{ backgroundColor: pi.bg, color: pi.color }}
+                >
+                  {pi.label}
+                </span>
+                {plan.plan_id === 'trial' && trialDaysLeft !== null && trialDaysLeft > 0 && (
+                  <span className={`text-[10px] ${trialDaysLeft <= 3 ? 'text-orange-500 font-semibold' : 'text-gray-400'}`}>
+                    {trialDaysLeft}д
+                  </span>
+                )}
+              </div>
+            )
+          })()}
           <Link
             href="/dashboard/settings"
             onClick={onClose}

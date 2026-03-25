@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServiceClient } from '@/lib/db'
+import { checkSubmissionLimit, incrementUsage, getAccountForUser } from '@/lib/planLimits'
 
 export async function POST(req: NextRequest) {
   try {
@@ -7,6 +8,30 @@ export async function POST(req: NextRequest) {
     const db = getServiceClient()
     if (!db) return NextResponse.json({ ok: true, id: body.id })
 
+    // ── Plan enforcement ──
+    const brokerId = body.broker_id as string | undefined
+    if (brokerId) {
+      const { accountId } = await getAccountForUser(brokerId, db)
+      if (accountId) {
+        const check = await checkSubmissionLimit(accountId, db)
+        if (!check.allowed) {
+          if (check.reason === 'trial_expired') {
+            return NextResponse.json(
+              { ok: false, error: 'Пробният период е изтекъл. Изберете план за да продължите.', code: 'TRIAL_EXPIRED' },
+              { status: 403 }
+            )
+          }
+          if (check.reason === 'limit_reached') {
+            return NextResponse.json(
+              { ok: false, error: `Достигнахте месечния лимит от ${check.max} заявки. Надградете плана си.`, code: 'LIMIT_REACHED' },
+              { status: 403 }
+            )
+          }
+        }
+      }
+    }
+
+    // ── Save submission ──
     const row: Record<string, unknown> = {
       id:                body.id,
       client_name:       body.clientName,
@@ -16,11 +41,19 @@ export async function POST(req: NextRequest) {
       created_at:        body.createdAt ?? new Date().toISOString(),
     }
     if (body.renewedFromId) row.renewed_from_id = body.renewedFromId
-    if (body.broker_id) row.broker_id = body.broker_id
+    if (brokerId) row.broker_id = brokerId
 
     const { error } = await db.from('submissions').upsert(row, { onConflict: 'id' })
-
     if (error) console.error('Submission save error:', error)
+
+    // ── Increment usage ──
+    if (brokerId) {
+      const { accountId } = await getAccountForUser(brokerId, db)
+      if (accountId) {
+        await incrementUsage(accountId, db).catch((e) => console.error('Usage increment error:', e))
+      }
+    }
+
     return NextResponse.json({ ok: true, id: body.id })
   } catch (e) {
     console.error('POST /api/submissions error:', e)

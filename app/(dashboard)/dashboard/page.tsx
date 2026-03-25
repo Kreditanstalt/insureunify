@@ -85,7 +85,7 @@ function getInitials(name: string) {
 
 export default function DashboardPage() {
   const router = useRouter()
-  const { profile: authProfile, user, loading: authLoading } = useAuth()
+  const { profile: authProfile, user, loading: authLoading, plan, usage, trialDaysLeft, isTrialExpired } = useAuth()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [search,      setSearch]      = useState('')
   const [drafts, setDrafts] = useState<Draft[]>([])
@@ -239,6 +239,18 @@ export default function DashboardPage() {
             }
           />
         </div>
+
+        {/* ── Usage / Plan bar ── */}
+        {plan && (
+          <UsageBar
+            planId={plan.plan_id}
+            planName={plan.plan_name}
+            count={usage?.submissions_count ?? 0}
+            max={plan.max_submissions_monthly}
+            trialDaysLeft={trialDaysLeft}
+            isTrialExpired={isTrialExpired}
+          />
+        )}
 
         {/* ── Analytics ── */}
         <DashboardAnalytics submissions={submissions} allInsurers={ALL_INSURERS} />
@@ -555,6 +567,84 @@ function EmptyState({ hasSearch, onNew }: { hasSearch: boolean; onNew: () => voi
         </svg>
         Ново запитване
       </button>
+    </div>
+  )
+}
+
+function UsageBar({
+  planId, planName, count, max, trialDaysLeft, isTrialExpired,
+}: {
+  planId: string; planName: string; count: number; max: number | null
+  trialDaysLeft: number | null; isTrialExpired: boolean
+}) {
+  const router = useRouter()
+
+  if (isTrialExpired) {
+    return (
+      <div className="rounded-2xl bg-red-50 border border-red-200 px-5 py-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100 flex-shrink-0">
+            <svg className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-red-800">Пробният период е изтекъл</p>
+            <p className="text-xs text-red-600">Изберете план за да продължите да използвате InsureUnify.</p>
+          </div>
+        </div>
+        <button
+          onClick={() => router.push('/dashboard/settings')}
+          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors flex-shrink-0"
+        >
+          Изберете план &rarr;
+        </button>
+      </div>
+    )
+  }
+
+  const pct = max ? Math.min(100, Math.round((count / max) * 100)) : 0
+  const barColor = pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#22c55e'
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${
+            planId === 'trial' ? 'bg-amber-100 text-amber-700'
+              : planId === 'pro' ? 'bg-purple-100 text-purple-700'
+              : 'bg-blue-100 text-blue-700'
+          }`}>
+            {planName}
+          </span>
+          {planId === 'trial' && trialDaysLeft !== null && trialDaysLeft > 0 && (
+            <span className={`text-xs font-medium ${trialDaysLeft <= 3 ? 'text-orange-600' : 'text-gray-500'}`}>
+              {trialDaysLeft} {trialDaysLeft === 1 ? 'ден' : 'дни'} остават
+            </span>
+          )}
+        </div>
+        {max && (
+          <span className="text-xs text-gray-500">
+            Заявки този месец: <span className="font-semibold text-gray-900">{count}</span> / {max}
+          </span>
+        )}
+      </div>
+      {max && (
+        <div className="mt-3">
+          <div className="h-1.5 w-full rounded-full bg-gray-100">
+            <div className="h-1.5 rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: barColor }} />
+          </div>
+          {pct >= 90 && (
+            <p className="mt-2 text-xs text-red-600 font-medium flex items-center gap-1">
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+              Приближавате месечния лимит.{' '}
+              <button onClick={() => router.push('/dashboard/settings')} className="underline hover:text-red-700">Надградете плана си &rarr;</button>
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

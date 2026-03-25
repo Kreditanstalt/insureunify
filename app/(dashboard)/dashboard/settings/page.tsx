@@ -3,11 +3,12 @@
 import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
+import { PLAN_LABELS } from '@/lib/planLimits'
 import { getBrowserClient } from '@/lib/supabase'
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { profile, user, signOut, setProfile } = useAuth()
+  const { profile, user, signOut, setProfile, plan, usage, trialDaysLeft, isTrialExpired } = useAuth()
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -110,11 +111,6 @@ export default function SettingsPage() {
     setTimeout(() => setPasswordSaved(false), 3000)
   }
 
-  // Trial info
-  const trialEnd = profile?.trial_ends_at ? new Date(profile.trial_ends_at) : null
-  const trialDaysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / 86400000)) : null
-  const plan = profile?.subscription_plan ?? 'trial'
-
   const inputClass = 'w-full bg-white border border-gray-300 text-gray-900 rounded-lg px-3 py-2.5 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow'
 
   if (!profile) {
@@ -197,28 +193,96 @@ export default function SettingsPage() {
           <div className="px-5 py-4 border-b border-gray-100">
             <h2 className="text-sm font-semibold text-gray-900">Абонамент</h2>
           </div>
-          <div className="p-5">
-            <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                plan === 'trial' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
-              }`}>
-                {plan === 'trial' ? 'Пробен период' : plan === 'pro' ? 'Pro' : plan}
-              </span>
-              {trialDaysLeft !== null && plan === 'trial' && (
-                <span className="text-sm text-gray-500">
-                  {trialDaysLeft > 0 ? `${trialDaysLeft} дни остават` : 'Изтекъл'}
-                </span>
-              )}
+          <div className="p-5 space-y-5">
+            {/* Current plan */}
+            {plan && (() => {
+              const pi = PLAN_LABELS[plan.plan_id] ?? PLAN_LABELS.trial
+              const usageCount = usage?.submissions_count ?? 0
+              const usageMax = plan.max_submissions_monthly
+              const pct = usageMax ? Math.round((usageCount / usageMax) * 100) : 0
+              return (
+                <div className="rounded-xl border-2 p-4" style={{ borderColor: pi.color + '40' }}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide" style={{ backgroundColor: pi.bg, color: pi.color }}>
+                      {pi.label}
+                    </span>
+                    {plan.plan_id === 'trial' && trialDaysLeft !== null && (
+                      <span className={`text-xs font-medium ${isTrialExpired ? 'text-red-600' : trialDaysLeft <= 3 ? 'text-orange-600' : 'text-gray-500'}`}>
+                        {isTrialExpired ? 'Изтекъл' : `${trialDaysLeft} ${trialDaysLeft === 1 ? 'ден' : 'дни'} остават`}
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-1.5 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      До {plan.max_insurers_per_submission ?? '4'} застрахователя на заявка
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <svg className="h-4 w-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      {usageMax ? `${usageMax} заявки / месец` : 'Неограничени заявки'}
+                    </div>
+                  </div>
+                  {usageMax && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                        <span>Използвани</span>
+                        <span className="font-semibold text-gray-700">{usageCount} / {usageMax}</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-gray-100">
+                        <div className="h-2 rounded-full transition-all" style={{
+                          width: `${Math.min(100, pct)}%`,
+                          backgroundColor: pct >= 90 ? '#ef4444' : pct >= 70 ? '#f59e0b' : '#22c55e',
+                        }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+
+            {/* Plan options */}
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Налични планове</p>
+              <div className="grid gap-3">
+                {[
+                  { id: 'trial', name: 'Пробен', desc: '14 дни безплатно', features: ['До 4 застрахователя', '10 заявки / месец'] },
+                  { id: 'basic', name: 'Basic', desc: 'За малки брокери', features: ['До 6 застрахователя', '50 заявки / месец', 'Имейл поддръжка'] },
+                  { id: 'pro', name: 'Pro', desc: 'За професионалисти', features: ['Неограничени застрахователи', 'Неограничени заявки', 'Приоритетна поддръжка', 'API достъп'] },
+                ].map((p) => {
+                  const isCurrent = plan?.plan_id === p.id
+                  const pi = PLAN_LABELS[p.id] ?? PLAN_LABELS.trial
+                  return (
+                    <div key={p.id} className={`rounded-xl border p-4 ${isCurrent ? 'border-2 bg-gray-50' : 'border-gray-200'}`} style={isCurrent ? { borderColor: pi.color } : undefined}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-gray-900">{p.name}</span>
+                          <span className="text-xs text-gray-500">{p.desc}</span>
+                        </div>
+                        {isCurrent ? (
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Текущ</span>
+                        ) : (
+                          <a
+                            href={`mailto:info@insureunify.online?subject=${encodeURIComponent(`Надграждане на план - ${profile?.company_name ?? ''}`)}&body=${encodeURIComponent(`Искам да надградя към план ${p.name}.\n\nФирма: ${profile?.company_name ?? ''}\nИмейл: ${profile?.email ?? ''}`)}`}
+                            className="rounded-lg px-3 py-1 text-xs font-semibold transition-colors"
+                            style={{ backgroundColor: pi.bg, color: pi.color }}
+                          >
+                            Надградете
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {p.features.map((f) => (
+                          <span key={f} className="flex items-center gap-1 text-xs text-gray-500">
+                            <svg className="h-3 w-3 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            <p className="text-sm text-gray-500 mt-3">
-              За upgrade на плана, свържете се с нас.
-            </p>
-            <a
-              href="mailto:support@insureunify.bg?subject=Upgrade план"
-              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Свържете се за upgrade
-            </a>
           </div>
         </section>
 
