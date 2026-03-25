@@ -402,6 +402,7 @@ export default function OAQuestionnaireForm() {
         body: JSON.stringify(submission),
       }).catch(console.error)
       draft.clearDraft()
+      import('@/lib/confetti').then(({ fireConfetti }) => fireConfetti())
       router.push(`/review/${id}`)
     } catch (err) {
       console.error(err)

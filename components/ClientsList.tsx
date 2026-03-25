@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getClients, deleteClient, syncClientsFromSubmissions, type ClientProfile } from '@/lib/clients'
 import QuickStartMenu from './QuickStartMenu'
+import ExcelImport from './ExcelImport'
 
 function fmtDate(iso?: string): string {
   if (!iso) return '—'
@@ -325,9 +326,12 @@ function EmptyState({ hasSearch, onCreate }: { hasSearch: boolean; onCreate: () 
         </svg>
       </div>
       <h3 className="mb-1 text-sm font-semibold text-gray-900">Няма клиенти</h3>
-      <p className="mb-5 text-xs text-gray-400 max-w-xs mx-auto">
+      <p className="mb-4 text-xs text-gray-400 max-w-xs mx-auto">
         Клиентите се добавят автоматично при запитване, или ги добавете ръчно.
       </p>
+      <div className="max-w-sm mx-auto mb-4">
+        <ExcelImport onImported={() => window.location.reload()} />
+      </div>
       <button
         type="button"
         onClick={onCreate}

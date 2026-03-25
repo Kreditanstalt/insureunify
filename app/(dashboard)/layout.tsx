@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthProvider'
 import { ToastProvider } from '@/components/ToastProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { BrandProvider } from '@/lib/BrandProvider'
+import PageTransition from '@/components/PageTransition'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import BrandLogo from '@/components/BrandLogo'
 import CommandPalette from '@/components/CommandPalette'
@@ -89,7 +90,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
           )}
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
       </div>
     </div>

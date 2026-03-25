@@ -268,6 +268,7 @@ export default function TCQuestionnaireForm() {
         body: JSON.stringify(submission),
       }).catch(console.error)
       draft.clearDraft()
+      import('@/lib/confetti').then(({ fireConfetti }) => fireConfetti())
       router.push(`/review/${id}`)
     } catch {
       setSubmitting(false)
