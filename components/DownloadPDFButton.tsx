@@ -65,13 +65,25 @@ function getColor(insurerKey: string, insuranceClass: InsuranceClass): string {
 
 export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceClass = 'property' }: Props) {
   const [loading, setLoading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [fileName, setFileName] = useState('')
 
-  async function handleDownload() {
+  function getFileName(): string {
+    const safe = clientName.replace(/\s+/g, '_')
+    const prefixMap: Record<string, Record<string, string>> = {
+      occupational_accident: { allianz: 'Allianz_TZ', groupama: 'Groupama_TZ', ozk: 'OZK_TZ' },
+      general_liability: { generali: 'Generali_OGO', bulstrad: 'Bulstrad_OGO', ozk: 'OZK_OGO' },
+      professional_liability: { axiom: 'Axiom_PO', bulstrad: 'Bulstrad_PO', euroins: 'Euroins_PO', ozk: 'OZK_PO' },
+      trade_credit: { atradius: 'Atradius_TK', allianz_trade: 'AllianzTrade_TK' },
+      property: { bulstrad: 'Bulstrad_Imushestvo', generali: 'Generali_IMSB', instinct: 'Instinct_AllRisks', ozk: 'OZK_Imushestvo' },
+    }
+    const prefix = prefixMap[insuranceClass as string]?.[insurerKey] ?? insurerKey
+    return `${prefix}_${safe}.pdf`
+  }
+
+  async function handlePreview() {
     if (loading) return
     setLoading(true)
-    console.log('[PDF] insuranceClass:', insuranceClass, 'insurerKey:', insurerKey)
-    console.log('[PDF] formData keys:', Object.keys(formData ?? {}))
-    console.log('[PDF] formData sample:', JSON.stringify(formData).slice(0, 300))
     try {
       const { pdf } = await import('@react-pdf/renderer')
       const React = (await import('react')).default
@@ -153,47 +165,10 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const blob = await pdf(element as any).toBlob()
-      const url  = URL.createObjectURL(blob)
-      const a    = document.createElement('a')
-      a.href     = url
-
-      const safe = clientName.replace(/\s+/g, '_')
-      if (insuranceClass === 'occupational_accident') {
-        const oaPrefixes: Record<string, string> = { allianz: 'Allianz_TZ', groupama: 'Groupama_TZ', ozk: 'OZK_TZ' }
-        const prefix = oaPrefixes[insurerKey] ?? insurerKey
-        a.download = `${prefix}_${safe}.pdf`
-      } else if (insuranceClass === 'general_liability') {
-        const glPrefixes: Record<string, string> = { generali: 'Generali_OGO', bulstrad: 'Bulstrad_OGO', ozk: 'OZK_OGO' }
-        const prefix = glPrefixes[insurerKey] ?? insurerKey
-        a.download = `${prefix}_${safe}.pdf`
-      } else if (insuranceClass === 'professional_liability') {
-        const plPrefixes: Partial<Record<InsurerKey, string>> = {
-          axiom:    'Axiom_PO',
-          bulstrad: 'Bulstrad_PO',
-          euroins:  'Euroins_PO',
-          ozk:      'OZK_PO',
-        }
-        a.download = `${plPrefixes[insurerKey as InsurerKey] ?? insurerKey}_${safe}.pdf`
-      } else if (insuranceClass === 'trade_credit') {
-        const tcPrefixes: Record<TCInsurerKey, string> = {
-          atradius:      'Atradius_TK',
-          allianz_trade: 'AllianzTrade_TK',
-        }
-        a.download = `${tcPrefixes[insurerKey as TCInsurerKey] ?? insurerKey}_${safe}.pdf`
-      } else {
-        const prefixes: Record<string, string> = {
-          bulstrad: 'Bulstrad_Imushestvo',
-          generali: 'Generali_IMSB',
-          instinct: 'Instinct_AllRisks',
-          ozk:      'OZK_Imushestvo',
-        }
-        a.download = `${prefixes[insurerKey] ?? insurerKey}_${safe}.pdf`
-      }
-
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const url = URL.createObjectURL(blob)
+      const name = getFileName()
+      setFileName(name)
+      setPreviewUrl(url)
     } catch (err) {
       console.error('PDF generation failed:', err)
       const msg = err instanceof Error ? err.message : String(err)
@@ -203,32 +178,85 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
     }
   }
 
+  function handleDownload() {
+    if (!previewUrl) return
+    const a = document.createElement('a')
+    a.href = previewUrl
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+  }
+
+  function closePreview() {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setPreviewUrl(null)
+  }
+
   const color = getColor(insurerKey, insuranceClass as InsuranceClass)
 
   return (
-    <button
-      type="button"
-      onClick={handleDownload}
-      disabled={loading}
-      style={{ borderColor: loading ? undefined : color + '66' }}
-      className="flex items-center gap-1.5 text-xs px-3 py-2 sm:py-1.5 rounded-lg border text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[36px] sm:min-h-0"
-    >
-      {loading ? (
-        <>
-          <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-          Генериране…
-        </>
-      ) : (
-        <>
-          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Изтегли PDF
-        </>
+    <>
+      <button
+        type="button"
+        onClick={handlePreview}
+        disabled={loading}
+        style={{ borderColor: loading ? undefined : color + '66' }}
+        className="flex items-center gap-1.5 text-xs px-3 py-2 sm:py-1.5 rounded-lg border text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors min-h-[36px] sm:min-h-0"
+      >
+        {loading ? (
+          <>
+            <svg className="w-3 h-3 animate-spin" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            Генериране…
+          </>
+        ) : (
+          <>
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Преглед PDF
+          </>
+        )}
+      </button>
+
+      {/* PDF Preview Modal */}
+      {previewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={closePreview}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+                <span className="text-sm font-semibold text-gray-900">{fileName}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+                >
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Изтегли
+                </button>
+                <button onClick={closePreview} className="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            {/* PDF iframe */}
+            <div className="flex-1 bg-gray-100">
+              <iframe src={previewUrl} className="w-full h-full border-0" title="PDF Preview" />
+            </div>
+          </div>
+        </div>
       )}
-    </button>
+    </>
   )
 }

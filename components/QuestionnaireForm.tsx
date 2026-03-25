@@ -178,7 +178,7 @@ const inputClass =
   'placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow shadow-sm'
 
 function TextInput({
-  value, onChange, placeholder, type = 'text', disabled, extraClass = '',
+  value, onChange, placeholder, type = 'text', disabled, extraClass = '', onBlur,
 }: {
   value: string | number | undefined
   onChange?: (v: string) => void
@@ -186,6 +186,7 @@ function TextInput({
   type?: string
   disabled?: boolean
   extraClass?: string
+  onBlur?: () => void
 }) {
   const cls = inputClass
     .replace('border-gray-300', extraClass.includes('border-red') ? 'border-red-400' : 'border-gray-300')
@@ -196,6 +197,7 @@ function TextInput({
       type={type}
       value={value ?? ''}
       onChange={(e) => onChange?.(e.target.value)}
+      onBlur={onBlur}
       placeholder={placeholder}
       disabled={disabled}
       min={type === 'number' ? 0 : undefined}
@@ -389,7 +391,7 @@ function EIKInput(props: Parameters<typeof SharedEikInput>[0]) {
 
 function FieldInput({
   field, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError,
-  beneficiaryEikStatus, onBeneficiaryEikChange,
+  beneficiaryEikStatus, onBeneficiaryEikChange, touched, markTouched,
 }: {
   field: SchemaField
   formData: FormData
@@ -402,9 +404,12 @@ function FieldInput({
   beneficiaryEikStatus?: import('./EikLookup').EikStatus
   onBeneficiaryEikChange?: (v: string) => void
   showError?: boolean
+  touched?: Set<string>
+  markTouched?: (fieldId: string) => void
 }) {
   const isEmpty = formData[field.id] === undefined || formData[field.id] === '' || formData[field.id] === null
-  const hasError = showError && field.required && isEmpty && !field.computed
+  const hasError = (showError || (touched?.has(field.id) ?? false)) && field.required && isEmpty && !field.computed
+  const handleBlur = () => markTouched?.(field.id)
   // Special render for company_name — autocomplete from Търговски регистър
   if (field.id === 'company_name') {
     return (
@@ -456,6 +461,7 @@ function FieldInput({
       <textarea
         value={String(formData[field.id] ?? '')}
         onChange={(e) => set(field.id, e.target.value)}
+        onBlur={handleBlur}
         placeholder={field.placeholder}
         rows={3}
         className={(hasError ? inputClass.replace('border-gray-300','border-red-400 bg-red-50/30') : inputClass) + ' resize-none'}
@@ -463,19 +469,19 @@ function FieldInput({
     )
   }
   if (field.type === 'number') {
-    return <TextInput type="number" value={formData[field.id]} onChange={(v) => setNum(field.id, v)} placeholder={field.placeholder ?? '0'} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} />
+    return <TextInput type="number" value={formData[field.id]} onChange={(v) => setNum(field.id, v)} placeholder={field.placeholder ?? '0'} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} onBlur={handleBlur} />
   }
   if (field.type === 'date') {
-    return <TextInput type="date" value={formData[field.id]} onChange={(v) => set(field.id, v)} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} />
+    return <TextInput type="date" value={formData[field.id]} onChange={(v) => set(field.id, v)} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} onBlur={handleBlur} />
   }
-  return <TextInput value={formData[field.id]} onChange={(v) => set(field.id, v)} placeholder={field.placeholder} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} />
+  return <TextInput value={formData[field.id]} onChange={(v) => set(field.id, v)} placeholder={field.placeholder} extraClass={hasError ? 'border-red-400 bg-red-50/30' : ''} onBlur={handleBlur} />
 }
 
 // ─── Render a layout group ───────────────────────────────────────────────────
 
 function RenderGroup({
   group, formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError,
-  beneficiaryEikStatus, onBeneficiaryEikChange,
+  beneficiaryEikStatus, onBeneficiaryEikChange, touched, markTouched,
 }: {
   group: Group
   formData: FormData
@@ -488,8 +494,10 @@ function RenderGroup({
   showError?: boolean
   beneficiaryEikStatus?: import('./EikLookup').EikStatus
   onBeneficiaryEikChange?: (v: string) => void
+  touched?: Set<string>
+  markTouched?: (fieldId: string) => void
 }) {
-  const fiProps = { formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError, beneficiaryEikStatus, onBeneficiaryEikChange }
+  const fiProps = { formData, set, setNum, total, eikStatus, onEikChange, onCompanySelect, showError, beneficiaryEikStatus, onBeneficiaryEikChange, touched, markTouched }
   if (group.type === 'period') {
     return <PeriodSelector formData={formData} set={set} />
   }
@@ -550,6 +558,7 @@ export default function QuestionnaireForm() {
   const [currentSection, setCurrentSection] = useState(0)
   const [submitting, setSubmitting] = useState(false)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
+  const [touched, setTouched] = useState<Set<string>>(new Set())
   const [prefillBanner, setPrefillBanner] = useState<string | null>(null)
   const [renewedFromId, setRenewedFromId] = useState<string | null>(null)
 
@@ -629,6 +638,14 @@ export default function QuestionnaireForm() {
   }
   function setNum(id: string, value: string) {
     setFormData((prev) => ({ ...prev, [id]: value === '' ? undefined : Number(value) }))
+  }
+
+  function markTouched(fieldId: string) {
+    setTouched(prev => {
+      const next = new Set(prev)
+      next.add(fieldId)
+      return next
+    })
   }
 
   function handleAutoFill(extracted: Record<string, string | null>) {
@@ -822,6 +839,8 @@ export default function QuestionnaireForm() {
                     showError={showFieldErrorsProp}
                     beneficiaryEikStatus={beneficiaryEikStatus}
                     onBeneficiaryEikChange={handleBeneficiaryEikChange}
+                    touched={touched}
+                    markTouched={markTouched}
                   />
                 ))}
               </div>

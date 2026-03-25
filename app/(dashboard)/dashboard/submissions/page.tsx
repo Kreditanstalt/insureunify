@@ -69,6 +69,7 @@ export default function SubmissionsPage() {
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState<string>('all')
 
+  const [selected, setSelected] = useState<Set<string>>(new Set())
   const [comparisonSubmissionIds, setComparisonSubmissionIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
@@ -139,6 +140,43 @@ export default function SubmissionsPage() {
       formData: sub.formData ?? {},
     })
     router.push(classToFormUrl(cls))
+  }
+
+  function toggleSelect(id: string) {
+    setSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function selectAll() {
+    if (selected.size === filtered.length) {
+      setSelected(new Set())
+    } else {
+      setSelected(new Set(filtered.map(s => s.id)))
+    }
+  }
+
+  async function bulkDelete() {
+    if (!confirm(`Изтриване на ${selected.size} запитвания?`)) return
+    for (const id of Array.from(selected)) {
+      await fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+    }
+    setSubmissions(prev => prev.filter(s => !selected.has(s.id)))
+    setSelected(new Set())
+  }
+
+  function bulkExport() {
+    const data = submissions.filter(s => selected.has(s.id))
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `insureunify_export_${new Date().toISOString().slice(0,10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   const filtered = useMemo(() => {
@@ -254,12 +292,30 @@ export default function SubmissionsPage() {
         ) : (
           <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
             <div className="divide-y divide-gray-50">
+              {/* Select-all header */}
+              <div className="px-4 sm:px-5 py-2 flex items-center gap-3 bg-gray-50/50 border-b border-gray-100">
+                <input
+                  type="checkbox"
+                  checked={filtered.length > 0 && selected.size === filtered.length}
+                  onChange={selectAll}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                />
+                <span className="text-xs text-gray-500">Избери всички</span>
+              </div>
               {filtered.map((sub) => {
                 const cls = CLASS_LABELS[sub.insuranceClass ?? 'property'] ?? CLASS_LABELS.property
                 const initials = getInitials(sub.clientName)
                 return (
                   <div key={sub.id} className="group px-4 sm:px-5 py-3 sm:py-4 hover:bg-gray-50/80 transition-colors">
                     <div className="flex items-center gap-3 sm:gap-4">
+                      {/* Checkbox */}
+                      <input
+                        type="checkbox"
+                        checked={selected.has(sub.id)}
+                        onChange={() => toggleSelect(sub.id)}
+                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      />
                       {/* Avatar */}
                       <div
                         className="flex-shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold"
@@ -370,6 +426,15 @@ export default function SubmissionsPage() {
         )}
 
       </div>
+
+      {selected.size > 0 && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 rounded-xl bg-gray-900 px-5 py-3 shadow-xl text-white">
+          <span className="text-sm font-medium">{selected.size} избрани</span>
+          <button onClick={bulkExport} className="rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium hover:bg-white/20 transition-colors">Експорт</button>
+          <button onClick={bulkDelete} className="rounded-lg bg-red-500/80 px-3 py-1.5 text-xs font-medium hover:bg-red-500 transition-colors">Изтрий</button>
+          <button onClick={() => setSelected(new Set())} className="text-xs text-gray-400 hover:text-white transition-colors">Отказ</button>
+        </div>
+      )}
     </div>
   )
 }
