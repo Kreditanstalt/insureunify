@@ -76,21 +76,25 @@ export async function GET(req: NextRequest) {
     // List: authenticate and filter by user's broker_id
     const auth = await getAuthFromRequest(req)
     const brokerId = auth.userId ?? req.nextUrl.searchParams.get('broker_id')
+    console.log('[GET /api/submissions] auth:', { userId: auth.userId, accountId: auth.accountId, brokerId })
 
-    let query = db.from('submissions').select('*').order('created_at', { ascending: false })
-    if (brokerId) query = query.eq('broker_id', brokerId)
-
-    const { data, error } = await query
-
-    // If filtered query returns empty but user is authenticated, try without filter
-    // (handles cases where submissions were created before broker_id was added)
-    if (!error && data?.length === 0 && brokerId) {
-      const { data: allData } = await db.from('submissions').select('*').order('created_at', { ascending: false }).limit(100)
-      if (allData && allData.length > 0) {
-        return NextResponse.json({ submissions: allData })
+    // Get submissions: match broker_id OR submissions without broker_id (legacy)
+    if (brokerId) {
+      const { data, error } = await db
+        .from('submissions')
+        .select('*')
+        .or(`broker_id.eq.${brokerId},broker_id.is.null`)
+        .order('created_at', { ascending: false })
+        .limit(200)
+      if (error) {
+        console.error('[GET /api/submissions] query error:', error)
+        return NextResponse.json({ submissions: [] })
       }
+      return NextResponse.json({ submissions: data })
     }
 
+    // No broker_id — return all (admin/fallback)
+    const { data, error } = await db.from('submissions').select('*').order('created_at', { ascending: false }).limit(200)
     if (error) return NextResponse.json({ submissions: [] })
     return NextResponse.json({ submissions: data })
   } catch (e) {
