@@ -11,30 +11,54 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [debugInfo, setDebugInfo] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email.trim() || !password) return
     setError(null)
+    setDebugInfo(null)
     setLoading(true)
 
     try {
       const supabase = getBrowserClient()
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        if (error.message.includes('Invalid login')) {
+
+      console.log('[Login] Attempting signInWithPassword for:', email)
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      })
+
+      console.log('[Login] Response:', { data: data ? { user: data.user?.id, session: !!data.session } : null, error: authError })
+
+      if (authError) {
+        console.error('[Login] Auth error:', authError.message, authError.status)
+        setDebugInfo(`Status: ${authError.status} | ${authError.message}`)
+
+        if (authError.message.includes('Invalid login credentials')) {
           setError('Грешен имейл или парола')
-        } else if (error.message.includes('Email not confirmed')) {
+        } else if (authError.message.includes('Email not confirmed')) {
           setError('Моля потвърдете имейла си първо')
         } else {
-          setError(error.message)
+          setError(authError.message)
         }
         return
       }
-      router.push('/dashboard')
-      router.refresh()
-    } catch {
-      setError('Грешка при свързване')
+
+      if (!data.session) {
+        console.error('[Login] No session returned after successful auth')
+        setError('Не беше създадена сесия. Моля опитайте отново.')
+        return
+      }
+
+      console.log('[Login] Session created successfully, user:', data.user?.id)
+
+      // Force a full page navigation to let middleware pick up the new cookie
+      window.location.href = '/dashboard'
+    } catch (err) {
+      console.error('[Login] Unexpected error:', err)
+      setError('Грешка при свързване със сървъра')
+      setDebugInfo(String(err))
     } finally {
       setLoading(false)
     }
@@ -83,6 +107,12 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-600">
               {error}
+            </div>
+          )}
+
+          {debugInfo && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 font-mono break-all">
+              {debugInfo}
             </div>
           )}
 

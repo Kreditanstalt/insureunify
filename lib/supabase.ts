@@ -1,18 +1,22 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import { createBrowserClient } from '@supabase/ssr'
+import { createBrowserClient as createSSRBrowserClient } from '@supabase/ssr'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ''
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''
 
 // ─── Browser client (for client components) ──────────────────────────────────
+// Uses @supabase/ssr createBrowserClient which handles cookie-based auth
+// compatible with the middleware.
 
 let _browser: SupabaseClient | null = null
 
 export function getBrowserClient(): SupabaseClient {
-  if (!_browser) {
-    _browser = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  if (_browser) return _browser
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY')
   }
+  _browser = createSSRBrowserClient(supabaseUrl, supabaseAnonKey)
   return _browser
 }
 

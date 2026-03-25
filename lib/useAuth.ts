@@ -28,36 +28,77 @@ export function useAuth() {
     const supabase = getBrowserClient()
 
     async function load() {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        setLoading(false)
-        return
-      }
-
-      setUser(session.user)
-
-      // Load broker profile
-      const { data: profileData } = await supabase
-        .from('broker_profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
-
-      if (profileData) {
-        setProfile(profileData)
-      } else {
-        // Auto-create profile if missing (e.g., user signed up but profile not created yet)
-        const meta = session.user.user_metadata
-        const newProfile = {
-          id: session.user.id,
-          company_name: meta?.company_name ?? session.user.email?.split('@')[0] ?? 'Моята компания',
-          email: session.user.email ?? '',
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          setLoading(false)
+          return
         }
-        await supabase.from('broker_profiles').upsert(newProfile)
-        setProfile(newProfile)
-      }
 
-      setLoading(false)
+        setUser(session.user)
+
+        // Try to load profile from broker_profiles first, then broker_accounts
+        let profileData: Record<string, unknown> | null = null
+
+        // Try broker_profiles (our table)
+        const { data: bp } = await supabase
+          .from('broker_profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        if (bp) {
+          profileData = bp
+        } else {
+          // Try broker_users → broker_accounts (user's custom tables)
+          const { data: bu } = await supabase
+            .from('broker_users')
+            .select('*, broker_accounts(*)')
+            .eq('user_id', session.user.id)
+            .maybeSingle()
+
+          if (bu) {
+            const account = (bu as Record<string, unknown>).broker_accounts as Record<string, unknown> | null
+            profileData = {
+              id: session.user.id,
+              company_name: account?.company_name ?? account?.name ?? session.user.email?.split('@')[0],
+              email: session.user.email ?? '',
+              phone: account?.phone ?? null,
+              address: account?.address ?? null,
+              logo_url: account?.logo_url ?? null,
+              subscription_plan: account?.plan_id ? 'active' : 'trial',
+            }
+          }
+        }
+
+        if (profileData) {
+          setProfile({
+            id: String(profileData.id ?? session.user.id),
+            company_name: String(profileData.company_name ?? session.user.email?.split('@')[0] ?? 'Моята компания'),
+            email: String(profileData.email ?? session.user.email ?? ''),
+            phone: profileData.phone ? String(profileData.phone) : undefined,
+            address: profileData.address ? String(profileData.address) : undefined,
+            logo_url: profileData.logo_url ? String(profileData.logo_url) : undefined,
+            brand_color: profileData.brand_color ? String(profileData.brand_color) : undefined,
+            subscription_plan: profileData.subscription_plan ? String(profileData.subscription_plan) : 'trial',
+            trial_ends_at: profileData.trial_ends_at ? String(profileData.trial_ends_at) : undefined,
+            is_active: profileData.is_active !== false,
+          })
+        } else {
+          // No profile found in any table — create a minimal one from user metadata
+          const meta = session.user.user_metadata
+          setProfile({
+            id: session.user.id,
+            company_name: meta?.company_name ?? session.user.email?.split('@')[0] ?? 'Моята компания',
+            email: session.user.email ?? '',
+            subscription_plan: 'trial',
+          })
+        }
+      } catch (err) {
+        console.error('[useAuth] Error loading profile:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     load()
@@ -68,6 +109,10 @@ export function useAuth() {
         setProfile(null)
       } else {
         setUser(session.user)
+        // Reload profile when auth state changes
+        if (_event === 'SIGNED_IN') {
+          load()
+        }
       }
     })
 
@@ -77,8 +122,7 @@ export function useAuth() {
   async function signOut() {
     const supabase = getBrowserClient()
     await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    window.location.href = '/login'
   }
 
   return { user, profile, loading, signOut, setProfile }

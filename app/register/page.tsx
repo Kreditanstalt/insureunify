@@ -58,17 +58,19 @@ export default function RegisterPage() {
         return
       }
 
-      // 2. Create broker profile
+      // 2. Create broker profile (try broker_profiles, fall back silently if table doesn't exist)
       if (data.user) {
-        await supabase.from('broker_profiles').upsert({
-          id: data.user.id,
-          company_name: companyName.trim(),
-          email,
-        })
+        try {
+          await supabase.from('broker_profiles').upsert({
+            id: data.user.id,
+            company_name: companyName.trim(),
+            email,
+          })
+        } catch { /* table may not exist */ }
       }
 
-      router.push('/dashboard')
-      router.refresh()
+      // Use full page navigation to ensure cookies are picked up
+      window.location.href = '/dashboard'
     } catch {
       setError('Грешка при регистрация')
     } finally {

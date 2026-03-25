@@ -37,16 +37,26 @@ export default function SettingsPage() {
     if (!user || !companyName.trim()) return
     setSaving(true)
     const supabase = getBrowserClient()
-    const { error } = await supabase
+    // Try broker_profiles first, then broker_accounts
+    let updateError = null
+    const { error: e1 } = await supabase
       .from('broker_profiles')
-      .update({
-        company_name: companyName.trim(),
-        phone: phone || null,
-        address: address || null,
-      })
+      .update({ company_name: companyName.trim(), phone: phone || null, address: address || null })
       .eq('id', user.id)
+    updateError = e1
+    if (e1) {
+      // Fallback: try broker_accounts via broker_users
+      const { data: bu } = await supabase.from('broker_users').select('account_id').eq('user_id', user.id).maybeSingle()
+      if (bu?.account_id) {
+        const { error: e2 } = await supabase
+          .from('broker_accounts')
+          .update({ company_name: companyName.trim(), phone: phone || null, address: address || null })
+          .eq('id', bu.account_id)
+        updateError = e2
+      }
+    }
 
-    if (!error && profile) {
+    if (!updateError && profile) {
       setProfile({ ...profile, company_name: companyName.trim(), phone, address })
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)

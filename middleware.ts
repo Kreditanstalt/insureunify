@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  let res = NextResponse.next({ request: req })
+  // Create a response that we can modify
+  const res = NextResponse.next({ request: req })
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,9 +15,11 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          // Set cookies on both the request (for downstream) and response (for browser)
+          cookiesToSet.forEach(({ name, value }) => {
             req.cookies.set(name, value)
-            res = NextResponse.next({ request: req })
+          })
+          cookiesToSet.forEach(({ name, value, options }) => {
             res.cookies.set(name, value, options)
           })
         },
@@ -24,7 +27,8 @@ export async function middleware(req: NextRequest) {
     }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
+  // Use getUser() — more reliable than getSession() for middleware
+  const { data: { user } } = await supabase.auth.getUser()
 
   const path = req.nextUrl.pathname
 
@@ -34,15 +38,17 @@ export async function middleware(req: NextRequest) {
     path.startsWith('/register') ||
     path.startsWith('/forgot-password') ||
     path.startsWith('/reset-password') ||
-    path.startsWith('/auth/callback')
+    path.startsWith('/auth/callback') ||
+    path.startsWith('/onboarding')
 
-  // Not logged in → redirect to login
-  if (!session && !isPublic) {
-    return NextResponse.redirect(new URL('/login', req.url))
+  // Not logged in → redirect to login (except public pages)
+  if (!user && !isPublic) {
+    const loginUrl = new URL('/login', req.url)
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Logged in → redirect away from auth pages
-  if (session && (path === '/login' || path === '/register')) {
+  // Logged in → redirect away from login/register
+  if (user && (path === '/login' || path === '/register')) {
     return NextResponse.redirect(new URL('/dashboard', req.url))
   }
 
