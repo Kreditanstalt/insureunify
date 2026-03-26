@@ -4,7 +4,7 @@ import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const DEVELOPER_EMAIL = process.env.DEVELOPER_EMAIL ?? 'smitchev@yahoo.com'
-const FROM_EMAIL = process.env.BROKER_FROM_EMAIL ?? 'noreply@insureunify.vercel.app'
+const FROM_EMAIL = process.env.BROKER_FROM_EMAIL ?? 'info@insureunify.online'
 
 export async function POST(req: NextRequest) {
   try {
