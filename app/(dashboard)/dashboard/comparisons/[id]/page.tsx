@@ -273,6 +273,8 @@ export default function ComparisonWorkspacePage() {
   const [expandCoverages, setExpandCoverages] = useState(false)
   const [expandExclusions, setExpandExclusions] = useState(false)
   const [expandConditions, setExpandConditions] = useState(false)
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
+  const [pdfFileName, setPdfFileName] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const showToast = (msg: string) => {
@@ -517,24 +519,39 @@ export default function ComparisonWorkspacePage() {
   async function generatePDF() {
     if (!comparison) return
     showToast('Генериране на PDF...')
-    const { pdf } = await import('@react-pdf/renderer')
-    const { ComparisonPDF } = await import('@/components/pdf/ComparisonPDF')
-    const profile = { companyName: authProfile?.company_name ?? '', email: authProfile?.email ?? '' }
-    const blob = await pdf(
-      ComparisonPDF({
-        clientName: comparison.client_name,
-        insuranceClass: comparison.insurance_class,
-        offers,
-        brokerName: profile.email,
-        brokerCompany: profile.companyName,
-      }),
-    ).toBlob()
-    const url = URL.createObjectURL(blob)
+    try {
+      const { pdf } = await import('@react-pdf/renderer')
+      const { ComparisonPDF } = await import('@/components/pdf/ComparisonPDF')
+      const profile = { companyName: authProfile?.company_name ?? '', email: authProfile?.email ?? '' }
+      const blob = await pdf(
+        ComparisonPDF({
+          clientName: comparison.client_name,
+          insuranceClass: comparison.insurance_class,
+          offers,
+          brokerName: profile.email,
+          brokerCompany: profile.companyName,
+        }),
+      ).toBlob()
+      const url = URL.createObjectURL(blob)
+      setPdfFileName(`Сравнение_${comparison.client_name || 'оферти'}.pdf`)
+      setPdfPreviewUrl(url)
+    } catch (err) {
+      console.error('PDF generation failed:', err)
+      showToast('Грешка при генериране на PDF')
+    }
+  }
+
+  function downloadPdf() {
+    if (!pdfPreviewUrl) return
     const a = document.createElement('a')
-    a.href = url
-    a.download = `Сравнение_${comparison.client_name || 'оферти'}.pdf`
+    a.href = pdfPreviewUrl
+    a.download = pdfFileName
     a.click()
-    URL.revokeObjectURL(url)
+  }
+
+  function closePdfPreview() {
+    if (pdfPreviewUrl) URL.revokeObjectURL(pdfPreviewUrl)
+    setPdfPreviewUrl(null)
   }
 
   // ── Send to client ──
@@ -627,7 +644,8 @@ export default function ComparisonWorkspacePage() {
           </button>
           <button onClick={generatePDF} disabled={offers.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
-            PDF
+            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            Преглед PDF
           </button>
           <button onClick={async () => { const { exportComparisonToExcel } = await import('@/lib/exportComparison'); exportComparisonToExcel(comparison!, offers) }} disabled={offers.length === 0}
             className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors">
@@ -1029,6 +1047,46 @@ export default function ComparisonWorkspacePage() {
           </div>
           <h3 className="mb-1 text-sm font-semibold text-gray-900">Качете първата оферта</h3>
           <p className="text-xs text-gray-400">Въведете името на застрахователя и качете файла с офертата</p>
+        </div>
+      )}
+
+      {/* PDF Preview Modal */}
+      {pdfPreviewUrl && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:p-4" onClick={closePdfPreview}>
+          <div className="bg-white w-full h-[95vh] sm:h-[85vh] sm:max-w-4xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <svg className="h-4 w-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                <span className="text-xs sm:text-sm font-semibold text-gray-900 truncate">{pdfFileName}</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-2">
+                <button onClick={downloadPdf} className="flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs font-semibold text-white hover:bg-blue-700 transition-colors">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  <span className="hidden sm:inline">Изтегли</span>
+                </button>
+                <button onClick={closePdfPreview} className="rounded-lg p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                  <svg className="h-5 w-5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 bg-gray-100 overflow-auto">
+              <object data={pdfPreviewUrl} type="application/pdf" className="w-full h-full hidden sm:block">
+                <iframe src={pdfPreviewUrl} className="w-full h-full border-0" title="PDF Preview" />
+              </object>
+              <div className="flex sm:hidden flex-col items-center justify-center h-full px-6 text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+                  <svg className="h-8 w-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                </div>
+                <h3 className="text-base font-bold text-gray-900 mb-1">PDF е готов</h3>
+                <p className="text-sm text-gray-500 mb-5">{pdfFileName}</p>
+                <button onClick={downloadPdf} className="flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                  Изтегли PDF
+                </button>
+                <button onClick={closePdfPreview} className="mt-3 text-sm text-gray-500">Затвори</button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
