@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('POST /api/comparisons/send error:', e)
-    return NextResponse.json({ ok: false, error: 'Send failed' }, { status: 500 })
+    const msg = e instanceof Error ? e.message : String(e)
+    return NextResponse.json({ ok: false, error: `Грешка при изпращане: ${msg}` }, { status: 500 })
   }
 }

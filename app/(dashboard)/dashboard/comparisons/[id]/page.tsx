@@ -558,22 +558,28 @@ export default function ComparisonWorkspacePage() {
   async function sendToClient(email: string, name: string, message: string) {
     setShowSendModal(false)
     showToast('Изпращане...')
-    const res = await fetch('/api/comparisons/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        comparison_id: id,
-        client_email: email,
-        client_name: name || comparison?.client_name,
-        message,
-      }),
-    })
-    const data = await res.json()
-    if (data.ok) {
-      setComparison((prev) => prev ? { ...prev, status: 'sent' } : prev)
-      showToast('Изпратено успешно')
-    } else {
-      showToast(data.error ?? 'Грешка при изпращане')
+    try {
+      const res = await fetch('/api/comparisons/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          comparison_id: id,
+          client_email: email,
+          client_name: name || comparison?.client_name,
+          message,
+        }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        setComparison((prev) => prev ? { ...prev, status: 'sent' } : prev)
+        showToast('Изпратено успешно')
+      } else {
+        console.error('[Send] API error:', data)
+        showToast(data.error ?? `Грешка при изпращане (${res.status})`)
+      }
+    } catch (err) {
+      console.error('[Send] Network error:', err)
+      showToast('Грешка при връзка със сървъра')
     }
   }
 
