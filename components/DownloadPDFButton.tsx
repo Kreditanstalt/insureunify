@@ -74,7 +74,7 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
     const safe = clientName.replace(/\s+/g, '_')
     const prefixMap: Record<string, Record<string, string>> = {
       occupational_accident: { allianz: 'Allianz_TZ', groupama: 'Groupama_TZ', ozk: 'OZK_TZ' },
-      general_liability: { generali: 'Generali_OGO', bulstrad: 'Bulstrad_OGO', ozk: 'OZK_OGO' },
+      general_liability: { generali: 'Generali_OGO', bulstrad: 'Bulstrad_OGO', ozk: 'OZK_OGO', axiom: 'Axiom_OGO_C2' },
       professional_liability: { axiom: 'Axiom_PO', bulstrad: 'Bulstrad_PO', euroins: 'Euroins_PO', ozk: 'OZK_PO' },
       trade_credit: { atradius: 'Atradius_TK', allianz_trade: 'AllianzTrade_TK' },
       property: { bulstrad: 'Bulstrad_Imushestvo', generali: 'Generali_IMSB', instinct: 'Instinct_AllRisks', ozk: 'OZK_Imushestvo' },
@@ -109,6 +109,9 @@ export function DownloadPDFButton({ insurerKey, formData, clientName, insuranceC
         if (insurerKey === 'generali') {
           const { GeneraliGLPDF } = await import('./pdf/GeneraliGLPDF')
           element = React.createElement(GeneraliGLPDF, { formData: formData as GLFormData, clientName })
+        } else if (insurerKey === 'axiom') {
+          const { AxiomGLPDF } = await import('./pdf/AxiomGLPDF')
+          element = React.createElement(AxiomGLPDF, { formData: formData as GLFormData, clientName })
         } else if (insurerKey === 'ozk') {
           toastWarning('PDF шаблонът за ОЗК (ОГО) предстои да бъде добавен.')
           setLoading(false)

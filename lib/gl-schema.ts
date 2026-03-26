@@ -10,8 +10,8 @@ import type { InsurerKey, SchemaField, SchemaSection } from './schema'
 
 // ─── GL Insurer subset ────────────────────────────────────────────────────────
 
-export type GLInsurerKey = 'generali' | 'bulstrad' | 'ozk'
-export const GL_INSURER_KEYS: GLInsurerKey[] = ['generali', 'bulstrad', 'ozk']
+export type GLInsurerKey = 'generali' | 'bulstrad' | 'ozk' | 'axiom'
+export const GL_INSURER_KEYS: GLInsurerKey[] = ['generali', 'bulstrad', 'ozk', 'axiom']
 
 export interface GLInsurerMeta {
   key: InsurerKey
@@ -47,6 +47,14 @@ export const GL_INSURERS: Record<GLInsurerKey, GLInsurerMeta> = {
     description: 'Обща гражданска отговорност · ОЗК Застраховане АД',
     logo:        '/logos/ozk.png',
   },
+  axiom: {
+    key:         'axiom',
+    name:        'Аксиом',
+    color:       '#6B21A8',
+    formCode:    'ОГО-С2',
+    description: 'ОГО Клауза С2 · Юрид./физ. лица — непроизводствени дейности',
+    logo:        '/logos/axiom.jpg',
+  },
 }
 
 export type GLFormData = Record<string, string | number | undefined>
@@ -80,27 +88,27 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_company_name', label: 'Наименование', type: 'text', required: true,
         placeholder: 'Фирма ЕООД / Иван Иванов',
-        mapping: { generali: 'Кандидат за застраховане', bulstrad: 'Застрахован / Insured' },
+        mapping: { generali: 'Кандидат за застраховане', bulstrad: 'Застрахован / Insured', axiom: 'Наименование на фирмата' },
       } satisfies SchemaField,
       {
         id: 'gl_eik', label: 'ЕИК / ЕГН', type: 'text', required: true,
         placeholder: '123456789',
-        mapping: { generali: 'ЕИК / ЕГН', bulstrad: 'ЕИК, БУЛСТАТ / UIC' },
+        mapping: { generali: 'ЕИК / ЕГН', bulstrad: 'ЕИК, БУЛСТАТ / UIC', axiom: 'Данъчен No/Булстат' },
       } satisfies SchemaField,
       {
         id: 'gl_city', label: 'Град', type: 'text', required: true,
         placeholder: 'София',
-        mapping: { generali: 'Град', bulstrad: 'Град' },
+        mapping: { generali: 'Град', bulstrad: 'Град', axiom: 'Град' },
       } satisfies SchemaField,
       {
         id: 'gl_address', label: 'Адрес', type: 'text', required: true,
         placeholder: 'ул. / бул., номер, етаж',
-        mapping: { generali: 'Адрес на управление', bulstrad: 'Адрес / Address' },
+        mapping: { generali: 'Адрес на управление', bulstrad: 'Адрес / Address', axiom: 'Адрес' },
       } satisfies SchemaField,
       {
         id: 'gl_phone', label: 'Телефон', type: 'text', required: true,
         placeholder: '+359 2 …',
-        mapping: { generali: 'Тел / Факс.', bulstrad: 'Телефонен номер / Phone number' },
+        mapping: { generali: 'Тел / Факс.', bulstrad: 'Телефонен номер / Phone number', axiom: 'Тел.' },
       } satisfies SchemaField,
       {
         id: 'gl_mobile', label: 'Мобилен телефон', type: 'text', required: false,
@@ -110,7 +118,7 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_email', label: 'Ел. поща', type: 'text', required: true,
         placeholder: 'office@firma.bg',
-        mapping: { generali: 'e-mail', bulstrad: 'Електронна поща / e-mail' },
+        mapping: { generali: 'e-mail', bulstrad: 'Електронна поща / e-mail', axiom: 'e-mail' },
       } satisfies SchemaField,
       {
         id: 'gl_representative', label: 'Представляван от', type: 'text', required: false,
@@ -135,7 +143,7 @@ export const GL_SCHEMA: SchemaSection[] = [
           { value: 'it', label: 'IT / Технологии' },
           { value: 'other', label: 'Друго' },
         ],
-        mapping: { generali: 'Основна дейност', bulstrad: 'Описание на Дейността / Description of insured activity' },
+        mapping: { generali: 'Основна дейност', bulstrad: 'Описание на Дейността / Description of insured activity', axiom: 'Описание на дейността' },
       } satisfies SchemaField,
       {
         id: 'gl_activity_code', label: 'Код по КИД/НКИД', type: 'text', required: false,
@@ -168,19 +176,19 @@ export const GL_SCHEMA: SchemaSection[] = [
         id: 'gl_cover_employer', label: 'Отговорност на работодателя',
         type: 'select', required: false, options: YES_NO,
         helpText: 'Покрива щети на служители при трудова злополука. При Булстрад — основно покритие.',
-        mapping: { generali: 'Желая покритие — Отговорност на работодателя' },
+        mapping: { generali: 'Желая покритие — Отговорност на работодателя', axiom: 'Клауза А — Работодател' },
       } satisfies SchemaField,
       {
         id: 'gl_cover_activity', label: 'Отговорност за дейността',
         type: 'select', required: false, options: YES_NO,
         helpText: 'Покрива щети на трети лица от вашата дейност.',
-        mapping: { generali: 'Желая покритие — Отговорност за дейността' },
+        mapping: { generali: 'Желая покритие — Отговорност за дейността', axiom: 'Клауза С — Дейност' },
       } satisfies SchemaField,
       {
         id: 'gl_cover_product', label: 'Отговорност за продукта',
         type: 'select', required: false, options: YES_NO,
         helpText: 'Покрива щети причинени от вашите продукти.',
-        mapping: { generali: 'Желая покритие — Отговорност за продукта' },
+        mapping: { generali: 'Желая покритие — Отговорност за продукта', axiom: 'Клауза В — Продукт' },
       } satisfies SchemaField,
       {
         id: 'gl_cover_tenant', label: 'Отговорност на наемателя',
@@ -215,7 +223,7 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_employees_count', label: 'Брой работници и служители — общо',
         type: 'number', required: true, placeholder: '25',
-        mapping: { generali: 'Брой на вашите служители и работници', bulstrad: 'Общо / Total лица' },
+        mapping: { generali: 'Брой на вашите служители и работници', bulstrad: 'Общо / Total лица', axiom: 'Общ брой работници и служители' },
       } satisfies SchemaField,
       {
         id: 'gl_employees_admin', label: 'в т.ч. администрация',
@@ -230,7 +238,7 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_annual_wage_fund', label: 'Годишен фонд „Работна заплата" (изминала год.)',
         type: 'number', required: true, placeholder: '500000',
-        mapping: { generali: 'Годишен фонд Работна заплата (изминала год.)', bulstrad: 'Годишен фонд работна заплата / Annual wage fund' },
+        mapping: { generali: 'Годишен фонд Работна заплата (изминала год.)', bulstrad: 'Годишен фонд работна заплата / Annual wage fund', axiom: 'Годишен фонд работна заплата' },
       } satisfies SchemaField,
       {
         id: 'gl_wage_fund_forecast', label: 'Прогнозен фонд „Работна заплата" (настояща год.)',
@@ -287,17 +295,17 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_annual_turnover', label: 'Годишен търговски оборот (изминала год.)',
         type: 'number', required: false, placeholder: '1000000',
-        mapping: { generali: 'Годишен търговски оборот (изминала год.)', bulstrad: 'Годишен приход / Total annual turnover' },
+        mapping: { generali: 'Годишен търговски оборот (изминала год.)', bulstrad: 'Годишен приход / Total annual turnover', axiom: 'Годишен оборот (прогноза)' },
       } satisfies SchemaField,
       {
         id: 'gl_turnover_forecast', label: 'Прогнозен оборот (настояща год.)',
         type: 'number', required: false, placeholder: '1100000',
-        mapping: { generali: 'Прогнозен оборот (настояща год.)' },
+        mapping: { generali: 'Прогнозен оборот (настояща год.)', axiom: 'Годишен оборот (текуща година)' },
       } satisfies SchemaField,
       {
         id: 'gl_revenue_prev_year', label: 'Приход предходна година (2024)',
         type: 'number', required: false, placeholder: '900000',
-        mapping: { bulstrad: 'Приход 2024' },
+        mapping: { bulstrad: 'Приход 2024', axiom: 'Годишен оборот (предходна година)' },
       } satisfies SchemaField,
       {
         id: 'gl_revenue_current_year', label: 'Приход текуща година (2025)',
@@ -379,17 +387,17 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_single_limit', label: 'Лимит за едно събитие',
         type: 'number', required: true, placeholder: '100000',
-        mapping: { generali: 'Лимит за едно събитие', bulstrad: 'Единичен лимит / Limit per one occurrence' },
+        mapping: { generali: 'Лимит за едно събитие', bulstrad: 'Единичен лимит / Limit per one occurrence', axiom: 'Лимит за едно събитие' },
       } satisfies SchemaField,
       {
         id: 'gl_aggregate_limit', label: 'Агрегатен лимит',
         type: 'number', required: true, placeholder: '200000',
-        mapping: { generali: 'В агрегат', bulstrad: 'Агрегатен лимит / Aggregate limit' },
+        mapping: { generali: 'В агрегат', bulstrad: 'Агрегатен лимит / Aggregate limit', axiom: 'Агрегатен лимит' },
       } satisfies SchemaField,
       {
         id: 'gl_deductible', label: 'Самоучастие',
         type: 'text', required: false, placeholder: '500 EUR или 5%',
-        mapping: { generali: 'Самоучастие', bulstrad: 'Самоучастие / Deductible' },
+        mapping: { generali: 'Самоучастие', bulstrad: 'Самоучастие / Deductible', axiom: 'Самоучастие' },
       } satisfies SchemaField,
       {
         id: 'gl_currency', label: 'Валута',
@@ -406,17 +414,17 @@ export const GL_SCHEMA: SchemaSection[] = [
           { value: 'worldwide', label: 'Целият свят' },
           { value: 'other', label: 'Друго' },
         ],
-        mapping: { bulstrad: 'Териториална валидност / Territorial validity' },
+        mapping: { bulstrad: 'Териториална валидност / Territorial validity', axiom: 'Териториална валидност' },
       } satisfies SchemaField,
       {
         id: 'gl_period_from', label: 'Начална дата',
         type: 'date', required: false,
-        mapping: { bulstrad: 'Начало / Inception date' },
+        mapping: { bulstrad: 'Начало / Inception date', axiom: 'Начало' },
       } satisfies SchemaField,
       {
         id: 'gl_period_to', label: 'Крайна дата',
         type: 'date', required: false,
-        mapping: { bulstrad: 'Край / Expiry date' },
+        mapping: { bulstrad: 'Край / Expiry date', axiom: 'Край' },
       } satisfies SchemaField,
       {
         id: 'gl_retroactive_date', label: 'Ретроактивна дата',
@@ -426,12 +434,84 @@ export const GL_SCHEMA: SchemaSection[] = [
       {
         id: 'gl_prev_insurance', label: 'Имали ли сте такава застраховка преди?',
         type: 'select', required: false, options: YES_NO,
-        mapping: { bulstrad: 'Имали ли сте действаща/предишна такава застраховка' },
+        mapping: { bulstrad: 'Имали ли сте действаща/предишна такава застраховка', axiom: 'Предишна застраховка' },
       } satisfies SchemaField,
       {
         id: 'gl_prev_labor_insurance', label: 'Задължителна з-ка Трудова злополука (действаща/предишна)?',
         type: 'select', required: false, options: YES_NO,
         mapping: { bulstrad: 'Действаща/предишна Задължителна з-ка Трудова злополука' },
+      } satisfies SchemaField,
+    ],
+  },
+
+  // ═══════════════════════════════════════════════════════════
+  // Секция 6: Допълнителна информация (Аксиом)
+  // ═══════════════════════════════════════════════════════════
+  {
+    id: 'gl_axiom_extra',
+    label: 'Допълнителна информация (Аксиом)',
+    shortLabel: 'Аксиом доп.',
+    icon: '📝',
+    fields: [
+      {
+        id: 'gl_ax_licensing_authority', label: 'Лицензиращ орган',
+        type: 'text', required: false, placeholder: 'напр. КФН, МЗ, ДНСК...',
+        mapping: { axiom: 'Лицензиращ орган' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_registration_date', label: 'От кога е регистрирана фирмата',
+        type: 'text', required: false, placeholder: '2010',
+        mapping: { axiom: 'От кога е регистрирана фирмата' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_clients_count', label: 'Брой обслужвани клиенти/обекти',
+        type: 'number', required: false, placeholder: '100',
+        mapping: { axiom: 'Брой обслужвани клиенти/обекти' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_premises_fenced', label: 'Обектът ограден/заключен ли е?',
+        type: 'select', required: false, options: YES_NO,
+        mapping: { axiom: 'Обектът ограден/заключен?' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_free_movement', label: 'Клиентите имат ли право на свободно движение?',
+        type: 'select', required: false, options: YES_NO,
+        mapping: { axiom: 'Свободно движение на клиенти?' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_premises_description', label: 'Описание на обекта и прилежащите площи',
+        type: 'textarea', required: false, placeholder: 'Описание на обекти, площи, паркинги...',
+        mapping: { axiom: 'Описание на обекта' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_third_party_property', label: 'Чужди имущества на грижата на Застрахования',
+        type: 'textarea', required: false,
+        mapping: { axiom: 'Чужди имущества' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_buildings_staff', label: 'Брой сгради и служители за всеки адрес',
+        type: 'textarea', required: false,
+        mapping: { axiom: 'Сгради и служители по адреси' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_equipment', label: 'Оборудване използвано в обекта',
+        type: 'textarea', required: false,
+        mapping: { axiom: 'Оборудване в обекта' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_claims_history', label: 'История на претенции',
+        type: 'textarea', required: false, placeholder: '2024: 2 щети, 5000 EUR платено, 1000 EUR висящо',
+        mapping: { axiom: 'История на претенции' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_declined', label: 'Отклонявано ли е предложение за такава застраховка?',
+        type: 'select', required: false, options: YES_NO,
+        mapping: { axiom: 'Отклонявано предложение' },
+      } satisfies SchemaField,
+      {
+        id: 'gl_ax_circumstances', label: 'Обстоятелства за бъдещи претенции?',
+        type: 'select', required: false, options: YES_NO,
+        mapping: { axiom: 'Обстоятелства за бъдещи претенции' },
       } satisfies SchemaField,
     ],
   },

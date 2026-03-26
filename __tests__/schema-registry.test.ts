@@ -56,12 +56,13 @@ describe('Insurers', () => {
     expect(insurers.ozk).toBeDefined()
   })
 
-  it('GL has 3 insurers', () => {
+  it('GL has 4 insurers', () => {
     const insurers = getInsurersForClass('general_liability')
-    expect(Object.keys(insurers).length).toBe(3)
+    expect(Object.keys(insurers).length).toBe(4)
     expect(insurers.generali).toBeDefined()
     expect(insurers.bulstrad).toBeDefined()
     expect(insurers.ozk).toBeDefined()
+    expect(insurers.axiom).toBeDefined()
   })
 
   it('OA has 3 insurers', () => {

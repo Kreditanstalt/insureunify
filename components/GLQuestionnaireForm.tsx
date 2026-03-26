@@ -296,7 +296,7 @@ function RenderSection({
 
 export default function GLQuestionnaireForm() {
   const router = useRouter()
-  const [selectedInsurers, setSelectedInsurers] = useState<GLInsurerKey[]>(['generali', 'bulstrad', 'ozk'])
+  const [selectedInsurers, setSelectedInsurers] = useState<GLInsurerKey[]>(['generali', 'bulstrad', 'ozk', 'axiom'])
   const [formData, setFormData] = useState<GLFormData>({})
   const [submitting, setSubmitting] = useState(false)
   const [attemptedSubmit, setAttemptedSubmit] = useState(false)
