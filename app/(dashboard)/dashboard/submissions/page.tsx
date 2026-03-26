@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { INSURERS } from '@/lib/schema'
 import { OA_INSURERS } from '@/lib/oa-schema'
 import { storeRenewalData, classToFormUrl } from '@/lib/renewal'
+import { fmtDate, fmtDateFull, getInitials, normalizeSubmission } from '@/lib/formatters'
 
 interface Submission {
   id: string
@@ -39,30 +40,6 @@ const FILTER_LABELS: Record<string, string> = {
   trade_credit: 'Търг. кредит',
 }
 
-function fmtDate(iso: string) {
-  const d = new Date(iso)
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (mins < 1)   return 'Току-що'
-  if (mins < 60)  return `преди ${mins} мин`
-  if (hours < 24) return `преди ${hours} ч`
-  if (days < 7)   return `преди ${days} дни`
-  return d.toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
-function fmtDateFull(iso: string) {
-  return new Date(iso).toLocaleDateString('bg-BG', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
-}
-
-function getInitials(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
-}
-
 export default function SubmissionsPage() {
   const router = useRouter()
   const [submissions, setSubmissions] = useState<Submission[]>([])
@@ -78,7 +55,7 @@ export default function SubmissionsPage() {
       const comps = JSON.parse(localStorage.getItem('iu_comparisons') ?? '[]')
       const ids = new Set<string>(comps.map((c: { submission_id?: string }) => c.submission_id).filter(Boolean))
       setComparisonSubmissionIds(ids)
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to parse localStorage comparisons:', e) }
     // Also try Supabase
     fetch('/api/comparisons')
       .then((r) => r.json())
@@ -88,7 +65,7 @@ export default function SubmissionsPage() {
           setComparisonSubmissionIds(ids)
         }
       })
-      .catch(() => {})
+      .catch((e) => console.error('Failed to fetch comparisons:', e))
 
     // Try Supabase first, fall back to localStorage
     fetch('/api/submissions')
@@ -96,28 +73,22 @@ export default function SubmissionsPage() {
       .then((d) => {
         if (d.submissions?.length) {
           // Normalize snake_case from Supabase → camelCase
-          const normalized = d.submissions.map((s: Record<string, unknown>) => ({
-            id:               s.id,
-            clientName:       s.client_name ?? s.clientName ?? (s.form_data as Record<string,unknown>)?._client_name ?? 'Без клиент',
-            insuranceClass:   s.insurance_class ?? s.insuranceClass,
-            selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
-            formData:         s.form_data ?? s.formData ?? {},
-            createdAt:        s.created_at ?? s.createdAt,
-          }))
+          const normalized = d.submissions.map((s: Record<string, unknown>) => normalizeSubmission(s))
           setSubmissions(normalized)
         }
       })
-      .catch(() => {
+      .catch((e) => {
+        console.error('Failed to fetch submissions:', e)
         try {
           const raw = localStorage.getItem('iu_submissions')
           if (raw) setSubmissions(JSON.parse(raw))
-        } catch { /* ignore */ }
+        } catch (parseErr) { console.error('Failed to parse localStorage submissions:', parseErr) }
       })
     // Also load from localStorage immediately as cache
     try {
       const raw = localStorage.getItem('iu_submissions')
       if (raw) setSubmissions(JSON.parse(raw))
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to parse localStorage submissions:', e) }
   }, [])
 
   function deleteSubmission(id: string) {
@@ -164,13 +135,13 @@ export default function SubmissionsPage() {
     const ids = Array.from(selected)
     // Delete from API (parallel)
     await Promise.all(ids.map(id =>
-      fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
+      fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch((e) => console.error('Failed to delete submission:', e))
     ))
     // Update state
     setSubmissions(prev => {
       const next = prev.filter(s => !selected.has(s.id))
       // Update localStorage cache
-      try { localStorage.setItem('iu_submissions', JSON.stringify(next)) } catch {}
+      try { localStorage.setItem('iu_submissions', JSON.stringify(next)) } catch (e) { console.error('Failed to update localStorage:', e) }
       return next
     })
     setSelected(new Set())

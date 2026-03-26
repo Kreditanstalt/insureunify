@@ -84,8 +84,7 @@ export default function ReviewPage() {
         try {
           const list: StoredSubmission[] = JSON.parse(raw)
           found = list.find((s) => s.id === id) ?? null
-          if (found) console.log('[review] localStorage formData keys:', Object.keys((found as {formData?: Record<string,unknown>}).formData ?? {}).length)
-        } catch { /* ignore */ }
+        } catch (e) { console.error('Failed to parse localStorage submissions:', e) }
       }
 
       // If not in localStorage, try Supabase
@@ -93,7 +92,6 @@ export default function ReviewPage() {
         try {
           const res = await fetch(`/api/submissions?id=${id}`)
           const data = await res.json()
-          console.log('[review] Supabase response keys:', Object.keys(data.submission ?? {}))
           if (data.submission) {
             const s = data.submission
             found = {
@@ -105,9 +103,8 @@ export default function ReviewPage() {
               createdAt:        s.created_at ?? s.createdAt,
               renewedFromId:    s.renewed_from_id ?? s.renewedFromId ?? undefined,
             } as StoredSubmission
-            console.log('[review] Supabase formData keys:', Object.keys((found.formData as Record<string,unknown>) ?? {}).length)
           }
-        } catch (e) { console.log('[review] Supabase error:', e) }
+        } catch (e) { console.error('Failed to fetch submission from Supabase:', e) }
       }
 
       if (!found) { setNotFound(true); return }
@@ -156,7 +153,7 @@ export default function ReviewPage() {
       })
       recordSubmissionForClient(eik, name, found.createdAt)
       void client
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to auto-save client profile:', e) }
 
     if (found.insuranceClass === 'occupational_accident') {
       const oa = found as OASubmission
@@ -251,13 +248,13 @@ export default function ReviewPage() {
                   const all = JSON.parse(localStorage.getItem('iu_comparisons') ?? '[]')
                   all.unshift(newComp)
                   localStorage.setItem('iu_comparisons', JSON.stringify(all))
-                } catch { /* ignore */ }
+                } catch (e) { console.error('Failed to save comparison to localStorage:', e) }
                 // Sync to Supabase in background
                 fetch('/api/comparisons', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(newComp),
-                }).catch(() => {})
+                }).catch((e) => console.error('Failed to sync comparison to Supabase:', e))
                 router.push(`/dashboard/comparisons/${newComp.id}`)
               }}
               className="text-xs px-3 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-colors font-medium whitespace-nowrap"

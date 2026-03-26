@@ -3,22 +3,13 @@
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getClients, deleteClient, syncClientsFromSubmissions, type ClientProfile } from '@/lib/clients'
+import { fmtDate, getInitials } from '@/lib/formatters'
 import QuickStartMenu from './QuickStartMenu'
 import ExcelImport from './ExcelImport'
 
-function fmtDate(iso?: string): string {
+function fmtDateLocal(iso?: string): string {
   if (!iso) return '—'
-  const d = new Date(iso)
-  const now = new Date()
-  const days = Math.floor((now.getTime() - d.getTime()) / 86400000)
-  if (days === 0) return 'Днес'
-  if (days === 1) return 'Вчера'
-  if (days < 7)   return `преди ${days} дни`
-  return d.toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
-function getInitials(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
+  return fmtDate(iso)
 }
 
 const AVATAR_COLORS = [
@@ -61,7 +52,7 @@ export default function ClientsList() {
           setClients(d.clients)
         }
       })
-      .catch(() => {/* offline */})
+      .catch((e) => console.error('Failed to fetch clients:', e))
   }, [])
 
   function handleDelete(id: string) {
@@ -180,7 +171,7 @@ export default function ClientsList() {
                           <p className="text-[10px] text-gray-400">запитвания</p>
                         </div>
                         <div className="text-center hidden lg:block">
-                          <p className="text-xs font-medium text-gray-700">{fmtDate(client.last_submission_at)}</p>
+                          <p className="text-xs font-medium text-gray-700">{fmtDate(client.last_submission_at ?? '')}</p>
                           <p className="text-[10px] text-gray-400">последно</p>
                         </div>
                       </div>

@@ -21,13 +21,10 @@ export default function LoginPage() {
     try {
       const supabase = getBrowserClient()
 
-      console.log('[Login] Attempting signInWithPassword for:', email)
       const { data, error: authError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       })
-
-      console.log('[Login] Response:', { data: data ? { user: data.user?.id, session: !!data.session } : null, error: authError })
 
       if (authError) {
         console.error('[Login] Auth error:', authError.message, authError.status)
@@ -47,8 +44,6 @@ export default function LoginPage() {
         setError('Не беше създадена сесия. Моля опитайте отново.')
         return
       }
-
-      console.log('[Login] Session created successfully, user:', data.user?.id)
 
       // Force a full page navigation to let middleware pick up the new cookie
       window.location.href = '/dashboard'

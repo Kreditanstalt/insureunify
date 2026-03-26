@@ -198,7 +198,7 @@ export default function TCQuestionnaireForm() {
         tc_activity:       p.activity       ?? prev.tc_activity,
       }))
       setPrefillBanner(p.company_name ?? null)
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to load client prefill:', e) }
   }, [])
 
   const handleAutoFill = useCallback((extracted: Record<string, string | null>) => {
@@ -270,7 +270,8 @@ export default function TCQuestionnaireForm() {
       draft.clearDraft()
       import('@/lib/confetti').then(({ fireConfetti }) => fireConfetti())
       router.push(`/review/${id}`)
-    } catch {
+    } catch (e) {
+      console.error('Failed to submit TC questionnaire:', e)
       setSubmitting(false)
     }
   }

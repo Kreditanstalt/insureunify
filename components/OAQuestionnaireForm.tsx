@@ -324,7 +324,7 @@ export default function OAQuestionnaireForm() {
         oa_annual_wage_fund: p.annual_wage_fund ? String(p.annual_wage_fund) : prev.oa_annual_wage_fund,
       }))
       setPrefillBanner(p.company_name ?? null)
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to load client prefill:', e) }
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

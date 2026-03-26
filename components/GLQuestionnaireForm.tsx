@@ -345,7 +345,7 @@ export default function GLQuestionnaireForm() {
         gl_representative: p.representative ?? prev.gl_representative,
       }))
       setPrefillBanner(p.company_name ?? null)
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to load client prefill:', e) }
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

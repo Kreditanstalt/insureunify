@@ -439,7 +439,7 @@ export default function ComparisonWorkspacePage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ extracted_data: newData, manually_edited: true }),
-    }).catch(() => {})
+    }).catch((e) => console.error('Failed to update offer field:', e))
   }
 
   // ── Toggle recommendation ──
@@ -462,13 +462,13 @@ export default function ComparisonWorkspacePage() {
           body: JSON.stringify({ is_recommended: o.is_recommended }),
         }),
       ),
-    ).catch(() => {})
+    ).catch((e) => console.error('Failed to toggle recommendation:', e))
   }
 
   // ── Delete offer ──
   async function deleteOffer(offerId: string) {
     setOffers((prev) => { const next = prev.filter((o) => o.id !== offerId); lsSaveOffers(next); return next })
-    fetch(`/api/offers?id=${offerId}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/offers?id=${offerId}`, { method: 'DELETE' }).catch((e) => console.error('Failed to delete offer:', e))
   }
 
   // ── Save comparison ──
@@ -484,7 +484,7 @@ export default function ComparisonWorkspacePage() {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: updated.status, notes: comparison.notes }),
-    }).catch(() => {})
+    }).catch((e) => console.error('Failed to save comparison:', e))
     setSaving(false)
     showToast('Запазено')
   }

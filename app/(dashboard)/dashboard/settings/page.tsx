@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/useAuth'
 import { useToast } from '@/components/ToastProvider'
@@ -29,13 +29,14 @@ export default function SettingsPage() {
   const [passwordSaved, setPasswordSaved] = useState(false)
 
   // Sync form state when profile loads
-  useState(() => {
+  useEffect(() => {
     if (profile) {
       setCompanyName(profile.company_name)
       setPhone(profile.phone ?? '')
       setAddress(profile.address ?? '')
+      setBrandColor(profile.brand_color ?? '#2563EB')
     }
-  })
+  }, [profile])
 
   async function saveProfile() {
     if (!user || !companyName.trim()) return
@@ -95,7 +96,7 @@ export default function SettingsPage() {
           .getPublicUrl(path)
         logoUrl = urlData.publicUrl
       } else {
-        console.warn('[Logo] Storage upload failed, using data URL fallback:', uploadError.message)
+        // Storage upload failed, using data URL fallback
         // Fallback: convert to base64 data URL and store directly
         const reader = new FileReader()
         logoUrl = await new Promise<string>((resolve) => {

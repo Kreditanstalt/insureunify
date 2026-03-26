@@ -56,7 +56,7 @@ export default function ComparisonsPage() {
           saveComparisons(d.comparisons)
         }
       })
-      .catch(() => {})
+      .catch((e) => console.error('Failed to fetch comparisons:', e))
   }, [])
 
   async function createNew() {
@@ -100,7 +100,7 @@ export default function ComparisonsPage() {
     const updated = comparisons.filter((c) => c.id !== id)
     setComparisons(updated)
     saveComparisons(updated)
-    fetch(`/api/comparisons?id=${id}`, { method: 'DELETE' }).catch(() => {})
+    fetch(`/api/comparisons?id=${id}`, { method: 'DELETE' }).catch((e) => console.error('Failed to delete comparison:', e))
     toast.success('Сравнението е изтрито')
   }
 
@@ -119,7 +119,7 @@ export default function ComparisonsPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newComp),
-    }).catch(() => {})
+    }).catch((e) => console.error('Failed to duplicate comparison:', e))
     toast.success('Сравнението е копирано')
   }
 

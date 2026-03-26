@@ -140,10 +140,6 @@ export async function POST(req: NextRequest) {
         const senderEmail = parsed.from?.value?.[0]?.address || ''
         detectedInsurer = detectInsurerFromEmail(senderEmail)
 
-        console.log('[EML] Subject:', emailSubject)
-        console.log('[EML] Sender:', senderEmail)
-        console.log('[EML] Detected insurer:', detectedInsurer || '(none)')
-        console.log('[EML] Text length:', emailText.length)
       } catch (emlErr) {
         console.error('[EML] Parse error:', emlErr)
         // Fallback: try raw text extraction

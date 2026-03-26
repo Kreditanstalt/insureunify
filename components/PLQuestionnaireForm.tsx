@@ -75,7 +75,7 @@ function CompanyNameInput({
         setResults(data.results ?? [])
         setOpen((data.results ?? []).length > 0)
       }
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to search company names:', e) }
     setSearching(false)
   }
 
@@ -99,7 +99,7 @@ function CompanyNameInput({
         })
         return
       }
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to fetch EIK details:', e) }
     onSelect({ company_name: item.name, eik: item.uic })
   }
 
@@ -509,7 +509,7 @@ export default function PLQuestionnaireForm() {
         pl_employees_count: p.employees_count ? String(p.employees_count) : prev.pl_employees_count,
       }))
       setPrefillBanner(p.company_name ?? null)
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to load client prefill:', e) }
   }, [])
 
   function set(id: string, v: string) {

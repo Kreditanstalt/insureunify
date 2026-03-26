@@ -619,7 +619,7 @@ export default function QuestionnaireForm() {
         security_system:   p.security_system   ?? prev.security_system,
       }))
       setPrefillBanner(p.company_name ?? null)
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to load client prefill:', e) }
   }, [])
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -10,6 +10,7 @@ import { storeRenewalData, classToFormUrl } from '@/lib/renewal'
 import { getAllDrafts, deleteDraft, CLASS_META, timeAgo } from '@/lib/drafts'
 import type { Draft } from '@/lib/drafts'
 import { useAuth } from '@/lib/useAuth'
+import { fmtDate, getInitials, normalizeSubmission } from '@/lib/formatters'
 import { PLAN_LABELS } from '@/lib/planLimits'
 import { DashboardSkeleton } from '@/components/Skeletons'
 import OnboardingWizard from '@/components/OnboardingWizard'
@@ -45,29 +46,11 @@ const QUICK_ACTIONS = [
   { icon: '💳', label: 'Търг. кредит',      href: '/dashboard/new/trade-credit',           accent: '#92400e' },
 ]
 
-function fmtDate(iso: string) {
-  const d = new Date(iso)
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
-  const mins = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-  if (mins < 1) return 'Току-що'
-  if (mins < 60) return `преди ${mins} мин`
-  if (hours < 24) return `преди ${hours} ч`
-  if (days < 7) return `преди ${days} дни`
-  return d.toLocaleDateString('bg-BG', { day: '2-digit', month: '2-digit', year: 'numeric' })
-}
-
 function getGreeting() {
   const h = new Date().getHours()
   if (h < 12) return 'Добро утро'
   if (h < 18) return 'Добър ден'
   return 'Добър вечер'
-}
-
-function getInitials(name: string) {
-  return name.split(/\s+/).slice(0, 2).map((w: string) => w[0]).join('').toUpperCase()
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
@@ -87,32 +70,26 @@ export default function DashboardPage() {
     try {
       const raw = localStorage.getItem('iu_submissions')
       if (raw) setSubmissions(JSON.parse(raw))
-    } catch { /* ignore */ }
+    } catch (e) { console.error('Failed to parse localStorage submissions:', e) }
     setDrafts(getAllDrafts())
     fetch(`/api/submissions?broker_id=${user.id}`)
       .then((r) => r.json())
       .then((d) => {
         if (d.submissions?.length) {
-          const normalized = d.submissions.map((s: Record<string, unknown>) => ({
-            id: s.id, clientName: s.client_name ?? s.clientName ?? (s.form_data as Record<string,unknown>)?._client_name ?? 'Без клиент',
-            insuranceClass: s.insurance_class ?? s.insuranceClass,
-            selectedInsurers: s.selected_insurers ?? s.selectedInsurers ?? [],
-            formData: s.form_data ?? s.formData ?? {},
-            createdAt: s.created_at ?? s.createdAt,
-          }))
+          const normalized = d.submissions.map((s: Record<string, unknown>) => normalizeSubmission(s))
           setSubmissions(normalized)
           // Cache in localStorage for faster load next time
-          try { localStorage.setItem('iu_submissions', JSON.stringify(normalized)) } catch {}
+          try { localStorage.setItem('iu_submissions', JSON.stringify(normalized)) } catch (e) { console.error('Failed to cache submissions:', e) }
         }
       })
-      .catch(() => {})
+      .catch((e) => console.error('Failed to fetch submissions:', e))
   }, [authLoading, user])
 
   function deleteSubmission(id: string) {
     const updated = submissions.filter((s) => s.id !== id)
     setSubmissions(updated)
     localStorage.setItem('iu_submissions', JSON.stringify(updated))
-    fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => {})
+    fetch('/api/submissions', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch((e) => console.error('Failed to delete submission:', e))
   }
 
   function renewSubmission(sub: Submission) {
