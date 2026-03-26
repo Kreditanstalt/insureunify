@@ -59,23 +59,40 @@ export default function ComparisonsPage() {
       .catch(() => {})
   }, [])
 
-  function createNew() {
-    const newComp: Comparison = {
-      id: uuidv4(),
-      client_name: '',
-      insurance_class: 'property',
-      status: 'draft',
-      created_at: new Date().toISOString(),
+  async function createNew() {
+    try {
+      const res = await fetch('/api/comparisons', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ client_name: '', insurance_class: 'property' }),
+      })
+      const data = await res.json()
+      if (data.ok && data.comparison?.id) {
+        const comp = {
+          id: data.comparison.id,
+          client_name: '',
+          insurance_class: 'property',
+          status: 'draft',
+          created_at: data.comparison.created_at ?? new Date().toISOString(),
+        }
+        const updated = [comp, ...comparisons]
+        setComparisons(updated)
+        saveComparisons(updated)
+        router.push(`/dashboard/comparisons/${comp.id}`)
+      } else {
+        // Fallback: create locally with uuid
+        const comp = { id: uuidv4(), client_name: '', insurance_class: 'property', status: 'draft', created_at: new Date().toISOString() }
+        const updated = [comp, ...comparisons]
+        setComparisons(updated)
+        saveComparisons(updated)
+        router.push(`/dashboard/comparisons/${comp.id}`)
+      }
+    } catch {
+      const comp = { id: uuidv4(), client_name: '', insurance_class: 'property', status: 'draft', created_at: new Date().toISOString() }
+      setComparisons([comp, ...comparisons])
+      saveComparisons([comp, ...comparisons])
+      router.push(`/dashboard/comparisons/${comp.id}`)
     }
-    const updated = [newComp, ...comparisons]
-    setComparisons(updated)
-    saveComparisons(updated)
-    fetch('/api/comparisons', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newComp),
-    }).catch(() => {})
-    router.push(`/dashboard/comparisons/${newComp.id}`)
   }
 
   function deleteComparison(id: string) {

@@ -50,25 +50,23 @@ export async function POST(req: NextRequest) {
       submission_id: body.submission_id || null,
       comparison_data: comparisonData,
     }
-    // If body.id provided, use it
-    if (body.id) row.id = body.id
 
     if (!db) {
-      return NextResponse.json({ ok: true, comparison: { id: body.id ?? crypto.randomUUID(), ...row, ...comparisonData, created_at: new Date().toISOString() } })
+      return NextResponse.json({ ok: true, comparison: { id: body.id ?? crypto.randomUUID(), ...comparisonData, created_at: new Date().toISOString() } })
     }
 
+    // Try insert (let Supabase auto-generate ID)
     const { data, error } = await db
       .from('offer_comparisons')
-      .upsert(row, { onConflict: 'id' })
+      .insert(row)
       .select()
       .single()
 
     if (error) {
-      console.error('Comparison create error:', error)
+      console.error('Comparison create error:', error, 'row:', JSON.stringify(row))
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
 
-    // Merge for frontend
     const merged = data ? { ...data, ...(data.comparison_data as Record<string, unknown> ?? {}) } : data
     return NextResponse.json({ ok: true, comparison: merged })
   } catch (e) {
