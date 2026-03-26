@@ -165,34 +165,39 @@ export const GL_SCHEMA: SchemaSection[] = [
     icon: '☑️',
     fields: [
       {
-        id: 'gl_cover_employer', label: 'Клауза „Отговорност на работодателя"',
+        id: 'gl_cover_employer', label: 'Отговорност на работодателя',
         type: 'select', required: false, options: YES_NO,
-        helpText: 'При Булстрад — основно покритие, включено автоматично',
+        helpText: 'Покрива щети на служители при трудова злополука. При Булстрад — основно покритие.',
         mapping: { generali: 'Желая покритие — Отговорност на работодателя' },
       } satisfies SchemaField,
       {
-        id: 'gl_cover_activity', label: 'Клауза „Отговорност за дейността"',
+        id: 'gl_cover_activity', label: 'Отговорност за дейността',
         type: 'select', required: false, options: YES_NO,
+        helpText: 'Покрива щети на трети лица от вашата дейност.',
         mapping: { generali: 'Желая покритие — Отговорност за дейността' },
       } satisfies SchemaField,
       {
-        id: 'gl_cover_product', label: 'Клауза „Отговорност за продукта"',
+        id: 'gl_cover_product', label: 'Отговорност за продукта',
         type: 'select', required: false, options: YES_NO,
+        helpText: 'Покрива щети причинени от вашите продукти.',
         mapping: { generali: 'Желая покритие — Отговорност за продукта' },
       } satisfies SchemaField,
       {
-        id: 'gl_cover_tenant', label: 'Клауза „Отговорност на наемателя"',
+        id: 'gl_cover_tenant', label: 'Отговорност на наемателя',
         type: 'select', required: false, options: YES_NO,
+        helpText: 'Покрива щети на наетия имот.',
         mapping: { generali: 'Желая покритие — Отговорност на наемателя' },
       } satisfies SchemaField,
       {
-        id: 'gl_cover_pollution', label: 'Клауза „Инцидентно замърсяване"',
+        id: 'gl_cover_pollution', label: 'Инцидентно замърсяване',
         type: 'select', required: false, options: YES_NO,
+        helpText: 'Покрива внезапно замърсяване на околната среда.',
         mapping: { generali: 'Желая покритие — Инцидентно замърсяване' },
       } satisfies SchemaField,
       {
-        id: 'gl_cover_repair', label: 'Клауза „Ремонтна дейност"',
+        id: 'gl_cover_repair', label: 'Ремонтна дейност',
         type: 'select', required: false, options: YES_NO,
+        helpText: 'Покрива щети при извършване на ремонтни дейности.',
         mapping: { generali: 'Желая покритие — Ремонтна дейност' },
       } satisfies SchemaField,
     ],
@@ -310,8 +315,13 @@ export const GL_SCHEMA: SchemaSection[] = [
         mapping: { bulstrad: '☐ EUR (приходи)' },
       } satisfies SchemaField,
       {
+        id: 'gl_premises_city', label: 'Град (помещения)',
+        type: 'text', required: false, placeholder: 'София',
+        mapping: { generali: 'Град (помещения)' },
+      } satisfies SchemaField,
+      {
         id: 'gl_premises_address', label: 'Адрес на помещенията',
-        type: 'text', required: false, placeholder: 'гр. София, ул. … (производство/офис)',
+        type: 'text', required: false, placeholder: 'ул. / бул., номер',
         mapping: { generali: 'Местонахождение на помещенията' },
       } satisfies SchemaField,
       {
@@ -388,7 +398,14 @@ export const GL_SCHEMA: SchemaSection[] = [
       } satisfies SchemaField,
       {
         id: 'gl_territory', label: 'Териториална валидност',
-        type: 'text', required: false, placeholder: 'Република България',
+        type: 'select', required: false,
+        options: [
+          { value: 'bg', label: 'Република България' },
+          { value: 'bg_eu', label: 'България + ЕС' },
+          { value: 'bg_eu_third', label: 'България + ЕС + трети страни' },
+          { value: 'worldwide', label: 'Целият свят' },
+          { value: 'other', label: 'Друго' },
+        ],
         mapping: { bulstrad: 'Териториална валидност / Territorial validity' },
       } satisfies SchemaField,
       {

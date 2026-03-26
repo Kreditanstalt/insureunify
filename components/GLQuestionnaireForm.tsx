@@ -114,7 +114,7 @@ function FieldInput({
     : inputClass
 
   // City — with autocomplete dropdown
-  if (field.id === 'gl_city') {
+  if (field.id === 'gl_city' || field.id === 'gl_premises_city') {
     return <CityInput value={formData[field.id] as string | undefined} onChange={(v) => set(field.id, v)} hasError={hasError} />
   }
 
@@ -236,7 +236,7 @@ function RenderSection({
   showError?:      boolean
 }) {
   // Filter out fields handled specially
-  const SKIP_IDS = new Set(['gl_period_to', 'gl_currency', 'gl_revenue_currency'])
+  const SKIP_IDS = new Set(['gl_period_to', 'gl_currency', 'gl_revenue_currency', 'gl_wage_currency'])
   const filteredFields = section.fields.filter((f) => !SKIP_IDS.has(f.id))
 
   const pairs: (SchemaField[] | 'period')[] = []
