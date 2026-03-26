@@ -38,6 +38,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Comparison not found' }, { status: 404 })
     }
 
+    // Merge comparison_data into top level
+    const compData = (comparison.comparison_data as Record<string, unknown>) ?? {}
+    const compClientName = compData.client_name ?? comparison.client_name ?? ''
+    const compInsuranceClass = compData.insurance_class ?? comparison.insurance_class ?? ''
+
     const { data: offers } = await db
       .from('offers')
       .select('*')
@@ -49,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const recommended = offers.find((o: { is_recommended: boolean }) => o.is_recommended)
-    const classLabel = CLASS_LABELS[comparison.insurance_class] ?? comparison.insurance_class
+    const classLabel = CLASS_LABELS[String(compInsuranceClass)] ?? String(compInsuranceClass)
 
     // Build comparison HTML table
     const tableRows = offers.map((o: { insurer_name: string; extracted_data: Record<string, unknown>; is_recommended: boolean }) => {
@@ -66,7 +71,7 @@ export async function POST(req: NextRequest) {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
         <h2 style="color:#1f2937">Сравнение на застрахователни оферти</h2>
-        <p style="color:#6b7280">Клиент: <strong>${client_name || comparison.client_name}</strong></p>
+        <p style="color:#6b7280">Клиент: <strong>${client_name || compClientName}</strong></p>
         <p style="color:#6b7280">Клас: <strong>${classLabel}</strong></p>
         ${message ? `<p style="color:#374151;background:#f9fafb;padding:12px;border-radius:8px">${message}</p>` : ''}
         <table style="width:100%;border-collapse:collapse;margin:16px 0">

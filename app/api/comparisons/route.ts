@@ -10,27 +10,24 @@ export async function GET(req: NextRequest) {
     const id = req.nextUrl.searchParams.get('id')
 
     if (id) {
-      const { data, error } = await db
-        .from('offer_comparisons')
-        .select('*')
-        .eq('id', id)
-        .single()
+      const { data, error } = await db.from('offer_comparisons').select('*').eq('id', id).single()
       if (error) return NextResponse.json({ comparisons: [] })
-      return NextResponse.json({ comparisons: data ? [data] : [] })
+      // Merge comparison_data into top level for frontend compat
+      const merged = data ? { ...data, ...(data.comparison_data as Record<string, unknown> ?? {}) } : null
+      return NextResponse.json({ comparisons: merged ? [merged] : [] })
     }
 
-    let query = db
-      .from('offer_comparisons')
-      .select('*')
-      .order('created_at', { ascending: false })
-
-    if (submissionId) {
-      query = query.eq('submission_id', submissionId)
-    }
+    let query = db.from('offer_comparisons').select('*').order('created_at', { ascending: false })
+    if (submissionId) query = query.eq('submission_id', submissionId)
 
     const { data, error } = await query
     if (error) return NextResponse.json({ comparisons: [] })
-    return NextResponse.json({ comparisons: data })
+    // Merge comparison_data into each item
+    const merged = (data ?? []).map((c: Record<string, unknown>) => ({
+      ...c,
+      ...(c.comparison_data as Record<string, unknown> ?? {}),
+    }))
+    return NextResponse.json({ comparisons: merged })
   } catch {
     return NextResponse.json({ comparisons: [] })
   }
@@ -41,21 +38,28 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const db = getServiceClient()
 
-    const row = {
-      submission_id: body.submission_id || null,
+    // Store client_name, insurance_class, status, notes in comparison_data JSONB
+    const comparisonData = {
       client_name: body.client_name ?? '',
       insurance_class: body.insurance_class ?? '',
-      status: 'draft',
+      status: body.status ?? 'draft',
+      notes: body.notes ?? '',
     }
 
+    const row: Record<string, unknown> = {
+      submission_id: body.submission_id || null,
+      comparison_data: comparisonData,
+    }
+    // If body.id provided, use it
+    if (body.id) row.id = body.id
+
     if (!db) {
-      // Return a fake ID for offline mode
-      return NextResponse.json({ ok: true, comparison: { id: crypto.randomUUID(), ...row, created_at: new Date().toISOString() } })
+      return NextResponse.json({ ok: true, comparison: { id: body.id ?? crypto.randomUUID(), ...row, ...comparisonData, created_at: new Date().toISOString() } })
     }
 
     const { data, error } = await db
       .from('offer_comparisons')
-      .insert(row)
+      .upsert(row, { onConflict: 'id' })
       .select()
       .single()
 
@@ -64,7 +68,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, comparison: data })
+    // Merge for frontend
+    const merged = data ? { ...data, ...(data.comparison_data as Record<string, unknown> ?? {}) } : data
+    return NextResponse.json({ ok: true, comparison: merged })
   } catch (e) {
     console.error('POST /api/comparisons error:', e)
     return NextResponse.json({ ok: false }, { status: 500 })
@@ -79,9 +85,7 @@ export async function DELETE(req: NextRequest) {
     const db = getServiceClient()
     if (!db) return NextResponse.json({ ok: true })
 
-    // Delete offers associated with this comparison first
     await db.from('offers').delete().eq('comparison_id', id)
-    // Delete the comparison itself
     await db.from('offer_comparisons').delete().eq('id', id)
 
     return NextResponse.json({ ok: true })
@@ -100,13 +104,18 @@ export async function PATCH(req: NextRequest) {
     const db = getServiceClient()
     if (!db) return NextResponse.json({ ok: true })
 
-    const update: Record<string, unknown> = { updated_at: new Date().toISOString() }
-    if (body.status !== undefined) update.status = body.status
-    if (body.notes !== undefined) update.notes = body.notes
+    // Read existing comparison_data, merge updates
+    const { data: existing } = await db.from('offer_comparisons').select('comparison_data').eq('id', id).single()
+    const existingData = (existing?.comparison_data as Record<string, unknown>) ?? {}
+    const updatedData = { ...existingData }
+
+    if (body.status !== undefined) updatedData.status = body.status
+    if (body.notes !== undefined) updatedData.notes = body.notes
+    if (body.client_name !== undefined) updatedData.client_name = body.client_name
 
     const { data, error } = await db
       .from('offer_comparisons')
-      .update(update)
+      .update({ comparison_data: updatedData, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single()
@@ -116,7 +125,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
     }
 
-    return NextResponse.json({ ok: true, comparison: data })
+    const merged = data ? { ...data, ...(data.comparison_data as Record<string, unknown> ?? {}) } : data
+    return NextResponse.json({ ok: true, comparison: merged })
   } catch (e) {
     console.error('PATCH /api/comparisons error:', e)
     return NextResponse.json({ ok: false }, { status: 500 })
