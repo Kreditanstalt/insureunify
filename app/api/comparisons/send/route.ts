@@ -86,12 +86,18 @@ export async function POST(req: NextRequest) {
       </div>
     `
 
-    await resend.emails.send({
-      from: FROM_EMAIL,
-      to: client_email,
-      subject: `Сравнение на застрахователни оферти — ${classLabel}`,
-      html,
-    })
+    try {
+      await resend.emails.send({
+        from: FROM_EMAIL,
+        to: client_email,
+        subject: `Сравнение на застрахователни оферти — ${classLabel}`,
+        html,
+      })
+    } catch (emailErr) {
+      console.error('Resend email error:', emailErr)
+      const msg = emailErr instanceof Error ? emailErr.message : String(emailErr)
+      return NextResponse.json({ ok: false, error: `Грешка при изпращане на имейл: ${msg}` }, { status: 500 })
+    }
 
     // Update comparison status
     await db

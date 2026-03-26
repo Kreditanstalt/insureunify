@@ -573,7 +573,7 @@ export default function ComparisonWorkspacePage() {
       setComparison((prev) => prev ? { ...prev, status: 'sent' } : prev)
       showToast('Изпратено успешно')
     } else {
-      showToast('Грешка при изпращане')
+      showToast(data.error ?? 'Грешка при изпращане')
     }
   }
 
