@@ -56,55 +56,66 @@ export async function POST(req: NextRequest) {
     const recommended = offers.find((o: { is_recommended: boolean }) => o.is_recommended)
     const classLabel = CLASS_LABELS[String(compInsuranceClass)] ?? String(compInsuranceClass)
 
-    // Build comparison HTML table
-    const thStyle = 'padding:8px 12px;border:1px solid #e5e7eb;text-align:left;font-size:13px;background:#f3f4f6'
-    const tdStyle = 'padding:8px 12px;border:1px solid #e5e7eb;font-size:13px'
+    // Build vertical card layout — one card per insurer
+    const rowStyle = 'padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:13px'
+    const labelStyle = 'color:#6b7280;font-size:12px'
+    const valueStyle = 'font-weight:600;color:#111827;font-size:14px'
 
-    const tableRows = offers.map((o: { insurer_name: string; extracted_data: Record<string, unknown>; is_recommended: boolean }) => {
+    const offerCards = offers.map((o: { insurer_name: string; extracted_data: Record<string, unknown>; is_recommended: boolean }) => {
       const d = o.extracted_data || {}
-      const bg = o.is_recommended ? '#f0fdf4' : '#ffffff'
-      const coverages = Array.isArray(d.coverages) ? (d.coverages as string[]).join(', ') : '-'
-      return `<tr style="background:${bg}">
-        <td style="${tdStyle};font-weight:600">${o.insurer_name}${o.is_recommended ? ' ⭐' : ''}</td>
-        <td style="${tdStyle}">${d.premium_annual != null ? `${d.premium_annual} EUR` : '-'}</td>
-        <td style="${tdStyle}">${d.insured_sum != null ? `${d.insured_sum} EUR` : '-'}</td>
-        <td style="${tdStyle}">${d.deductible ?? '-'}</td>
-        <td style="${tdStyle}">${d.payment_terms ?? '-'}</td>
-        <td style="${tdStyle}">${d.territory ?? '-'}</td>
-      </tr>
-      <tr style="background:${bg}">
-        <td colspan="6" style="${tdStyle};font-size:11px;color:#6b7280">
-          <strong>Покрития:</strong> ${coverages}
-        </td>
-      </tr>`
+      const coverages = Array.isArray(d.coverages) ? (d.coverages as string[]) : []
+      const borderColor = o.is_recommended ? '#22c55e' : '#e5e7eb'
+      const headerBg = o.is_recommended ? '#f0fdf4' : '#f9fafb'
+
+      const fields = [
+        { label: 'Годишна премия', value: d.premium_annual != null ? `${Number(d.premium_annual).toLocaleString('bg-BG')} EUR` : null },
+        { label: 'Застрахователна сума', value: d.insured_sum != null ? `${Number(d.insured_sum).toLocaleString('bg-BG')} EUR` : null },
+        { label: 'Самоучастие', value: d.deductible },
+        { label: 'Начин на плащане', value: d.payment_terms },
+        { label: 'Територия', value: d.territory },
+        { label: 'Валидна до', value: d.valid_until },
+        { label: 'Уреждане на щети', value: d.claim_settlement },
+      ].filter(f => f.value != null && f.value !== '' && f.value !== '-')
+
+      return `
+        <div style="border:2px solid ${borderColor};border-radius:12px;margin-bottom:16px;overflow:hidden">
+          <div style="background:${headerBg};padding:12px 16px;border-bottom:1px solid ${borderColor}">
+            <div style="font-size:16px;font-weight:700;color:#111827">${o.insurer_name}${o.is_recommended ? ' ⭐ <span style="color:#16a34a;font-size:12px;font-weight:600">ПРЕПОРЪЧАНА</span>' : ''}</div>
+            ${d.premium_annual != null ? `<div style="font-size:20px;font-weight:800;color:#2563eb;margin-top:4px">${Number(d.premium_annual).toLocaleString('bg-BG')} EUR<span style="font-size:12px;font-weight:400;color:#6b7280"> / годишно</span></div>` : ''}
+          </div>
+          <div style="padding:12px 16px">
+            ${fields.map(f => `
+              <div style="${rowStyle}">
+                <div style="${labelStyle}">${f.label}</div>
+                <div style="${valueStyle}">${f.value}</div>
+              </div>
+            `).join('')}
+            ${coverages.length > 0 ? `
+              <div style="margin-top:8px">
+                <div style="${labelStyle};margin-bottom:4px">Покрития:</div>
+                <div style="display:flex;flex-wrap:wrap;gap:4px">
+                  ${coverages.map(c => `<span style="display:inline-block;background:#f3f4f6;border-radius:4px;padding:2px 8px;font-size:11px;color:#374151;margin:2px">${c}</span>`).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        </div>`
     }).join('')
 
     const dateStr = new Date().toLocaleDateString('bg-BG', { day: '2-digit', month: 'long', year: 'numeric' })
 
     const html = `
-      <div style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto">
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto">
         <div style="background:#2563eb;padding:20px 24px;border-radius:12px 12px 0 0">
-          <h2 style="color:#ffffff;margin:0;font-size:18px">Сравнение на застрахователни оферти</h2>
+          <h2 style="color:#ffffff;margin:0;font-size:18px">Сравнение на оферти</h2>
           <p style="color:#bfdbfe;margin:4px 0 0;font-size:13px">${classLabel} · ${dateStr}</p>
         </div>
         <div style="background:#ffffff;padding:20px 24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px">
-          <p style="color:#6b7280;font-size:14px">Клиент: <strong style="color:#111827">${client_name || compClientName}</strong></p>
-          ${message ? `<div style="color:#374151;background:#f9fafb;padding:12px 16px;border-radius:8px;margin:12px 0;font-size:13px;border-left:3px solid #2563eb">${message}</div>` : ''}
-          <table style="width:100%;border-collapse:collapse;margin:16px 0">
-            <thead>
-              <tr>
-                <th style="${thStyle}">Застраховател</th>
-                <th style="${thStyle}">Годишна премия</th>
-                <th style="${thStyle}">Застр. сума</th>
-                <th style="${thStyle}">Самоучастие</th>
-                <th style="${thStyle}">Плащане</th>
-                <th style="${thStyle}">Територия</th>
-              </tr>
-          </thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-          ${recommended ? `<div style="color:#166534;background:#f0fdf4;padding:12px 16px;border-radius:8px;margin:16px 0;font-size:13px">⭐ Препоръчана оферта: <strong>${recommended.insurer_name}</strong></div>` : ''}
-          <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0" />
+          <p style="color:#6b7280;font-size:14px;margin-bottom:4px">Клиент: <strong style="color:#111827">${client_name || compClientName}</strong></p>
+          <p style="color:#9ca3af;font-size:12px;margin-bottom:16px">${offers.length} ${offers.length === 1 ? 'оферта' : 'оферти'}</p>
+          ${message ? `<div style="color:#374151;background:#f9fafb;padding:12px 16px;border-radius:8px;margin-bottom:16px;font-size:13px;border-left:3px solid #2563eb">${message}</div>` : ''}
+          ${offerCards}
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0" />
           <p style="color:#9ca3af;font-size:11px;text-align:center">Изпратено от InsureUnify · insureunify.online</p>
         </div>
       </div>
