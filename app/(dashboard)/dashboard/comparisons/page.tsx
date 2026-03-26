@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { v4 as uuidv4 } from 'uuid'
 import { useToast } from '@/components/ToastProvider'
+import { SubmissionsSkeleton } from '@/components/Skeletons'
 
 interface Comparison {
   id: string
@@ -142,7 +143,7 @@ export default function ComparisonsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-16 text-gray-400 text-sm">Зареждане...</div>
+        <SubmissionsSkeleton />
       ) : comparisons.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">

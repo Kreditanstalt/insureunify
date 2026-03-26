@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useToast } from '@/components/ToastProvider'
 
 interface FormRequest {
   id: string
@@ -49,9 +50,8 @@ function formatFileSize(bytes: number): string {
 export default function FormRequestsPage() {
   const [requests, setRequests] = useState<FormRequest[]>([])
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const toast = useToast()
 
   const [insurerName, setInsurerName] = useState('')
   const [insurerCustom, setInsurerCustom] = useState('')
@@ -103,8 +103,6 @@ export default function FormRequestsPage() {
     if (!effectiveInsurer || selectedClasses.size === 0 || selectedFiles.length === 0) return
 
     setLoading(true)
-    setError(null)
-    setSuccess(false)
 
     try {
       const classStr = Array.from(selectedClasses).join(', ')
@@ -124,7 +122,7 @@ export default function FormRequestsPage() {
       }
 
       if (okCount > 0) {
-        setSuccess(true)
+        toast.success('Заявката е изпратена успешно!')
         setInsurerName('')
         setInsurerCustom('')
         setSelectedClasses(new Set())
@@ -133,10 +131,10 @@ export default function FormRequestsPage() {
         if (fileRef.current) fileRef.current.value = ''
         fetchRequests()
       } else {
-        setError('Грешка при изпращане')
+        toast.error('Грешка при изпращане')
       }
     } catch {
-      setError('Грешка при връзката със сървъра')
+      toast.error('Грешка при връзката със сървъра')
     } finally {
       setLoading(false)
     }
@@ -151,18 +149,6 @@ export default function FormRequestsPage() {
           Качи формуляр от застраховател който още не е в системата.
           Ще го прегледаме и добавим в рамките на 5 работни дни.
         </p>
-
-        {success && (
-          <div className="mt-4 rounded-lg bg-green-50 border border-green-200 p-4 text-sm text-green-800">
-            Заявката е изпратена успешно! Ще се свържем с вас до 5 работни дни.
-          </div>
-        )}
-
-        {error && (
-          <div className="mt-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
           {/* Insurer — dropdown */}

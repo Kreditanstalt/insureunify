@@ -4,6 +4,8 @@ import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { getClients, deleteClient, syncClientsFromSubmissions, type ClientProfile } from '@/lib/clients'
 import { fmtDate, getInitials } from '@/lib/formatters'
+import { SubmissionsSkeleton } from '@/components/Skeletons'
+import { useToast } from '@/components/ToastProvider'
 import QuickStartMenu from './QuickStartMenu'
 import ExcelImport from './ExcelImport'
 
@@ -29,6 +31,7 @@ function avatarColor(name: string) {
 
 export default function ClientsList() {
   const router = useRouter()
+  const toast = useToast()
   const [clients, setClients] = useState<ClientProfile[]>([])
   const [search, setSearch] = useState('')
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
@@ -121,7 +124,7 @@ export default function ClientsList() {
 
         {/* ── List ── */}
         {!synced ? (
-          <SkeletonList />
+          <SubmissionsSkeleton />
         ) : filtered.length === 0 ? (
           <EmptyState hasSearch={!!search.trim()} onCreate={() => router.push('/dashboard/clients/new')} />
         ) : (

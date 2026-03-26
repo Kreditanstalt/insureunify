@@ -6,6 +6,7 @@ import { INSURERS } from '@/lib/schema'
 import { OA_INSURERS } from '@/lib/oa-schema'
 import { storeRenewalData, classToFormUrl } from '@/lib/renewal'
 import { fmtDate, fmtDateFull, getInitials, normalizeSubmission } from '@/lib/formatters'
+import { SubmissionsSkeleton } from '@/components/Skeletons'
 
 interface Submission {
   id: string
@@ -43,6 +44,7 @@ const FILTER_LABELS: Record<string, string> = {
 export default function SubmissionsPage() {
   const router = useRouter()
   const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [classFilter, setClassFilter] = useState<string>('all')
 
@@ -67,6 +69,11 @@ export default function SubmissionsPage() {
       })
       .catch((e) => console.error('Failed to fetch comparisons:', e))
 
+    // Also load from localStorage immediately as cache
+    try {
+      const raw = localStorage.getItem('iu_submissions')
+      if (raw) setSubmissions(JSON.parse(raw))
+    } catch (e) { console.error('Failed to parse localStorage submissions:', e) }
     // Try Supabase first, fall back to localStorage
     fetch('/api/submissions')
       .then((r) => r.json())
@@ -84,11 +91,7 @@ export default function SubmissionsPage() {
           if (raw) setSubmissions(JSON.parse(raw))
         } catch (parseErr) { console.error('Failed to parse localStorage submissions:', parseErr) }
       })
-    // Also load from localStorage immediately as cache
-    try {
-      const raw = localStorage.getItem('iu_submissions')
-      if (raw) setSubmissions(JSON.parse(raw))
-    } catch (e) { console.error('Failed to parse localStorage submissions:', e) }
+      .finally(() => setLoading(false))
   }, [])
 
   function deleteSubmission(id: string) {
@@ -174,6 +177,10 @@ export default function SubmissionsPage() {
     })
     return counts
   }, [submissions])
+
+  if (loading) {
+    return <SubmissionsSkeleton />
+  }
 
   return (
     <div className="min-h-full bg-gray-50/60">
